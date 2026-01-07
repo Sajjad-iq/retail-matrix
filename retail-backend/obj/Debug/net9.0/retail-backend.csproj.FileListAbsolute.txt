@@ -31,3 +31,5 @@
 /home/sajjad/Documents/retail-matrix/retail-backend/obj/Debug/net9.0/retail-backend.pdb
 /home/sajjad/Documents/retail-matrix/retail-backend/obj/Debug/net9.0/retail-backend.genruntimeconfig.cache
 /home/sajjad/Documents/retail-matrix/retail-backend/obj/Debug/net9.0/ref/retail-backend.dll
+/home/sajjad/Documents/retail-matrix/retail-backend/bin/Debug/net9.0/BCrypt.Net-Next.dll
+/home/sajjad/Documents/retail-matrix/retail-backend/obj/Debug/net9.0/retail-backend.sourcelink.json
