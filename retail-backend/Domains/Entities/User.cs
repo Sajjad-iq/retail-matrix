@@ -11,7 +11,7 @@ public class User : BaseEntity
         string email,
         string passwordHash,
         string phoneNumber,
-        List<Role> roles,
+        List<Roles> roles,
         string? address = null,
         string? avatar = null,
         string? memberOfOrganization = null,
@@ -43,7 +43,7 @@ public class User : BaseEntity
     public string PhoneNumber { get; private set; }
     public string? Address { get; private set; }
     public string? Avatar { get; private set; }
-    public List<Role> UserRoles { get; private set; }
+    public List<Roles> UserRoles { get; private set; }
 
     // Status & Verification
     public bool IsActive { get; private set; }
@@ -68,14 +68,14 @@ public class User : BaseEntity
         string? address = null,
         string? avatar = null)
     {
-        ValidateUserForCreation(name, email, password, phoneNumber, Role.BusinessOwner);
+        ValidateUserForCreation(name, email, password, Roles.BusinessOwner);
 
         return new User(
             name: name,
             email: email,
             passwordHash: passwordHasher.HashPassword(password),
             phoneNumber: phoneNumber,
-            roles: [Role.BusinessOwner],
+            roles: [Roles.BusinessOwner],
             address: address,
             avatar: avatar
         );
@@ -95,14 +95,14 @@ public class User : BaseEntity
         if (string.IsNullOrWhiteSpace(memberOfOrganization))
             throw new ArgumentException("معرف المؤسسة مطلوب للموظف", nameof(memberOfOrganization));
 
-        ValidateUserForCreation(name, email, password, phoneNumber, Role.Employee);
+        ValidateUserForCreation(name, email, password, Roles.Employee);
 
         return new User(
             name: name,
             email: email,
             passwordHash: passwordHasher.HashPassword(password),
             phoneNumber: phoneNumber,
-            roles: [Role.Employee],
+            roles: [Roles.Employee],
             address: address,
             avatar: avatar,
             memberOfOrganization: memberOfOrganization,
@@ -119,14 +119,14 @@ public class User : BaseEntity
         string? address = null,
         string? avatar = null)
     {
-        ValidateUserForCreation(name, email, password, phoneNumber, Role.Customer);
+        ValidateUserForCreation(name, email, password, Roles.Customer);
 
         return new User(
             name: name,
             email: email,
             passwordHash: passwordHasher.HashPassword(password),
             phoneNumber: phoneNumber,
-            roles: [Role.Customer],
+            roles: [Roles.Customer],
             address: address,
             avatar: avatar
         );
@@ -266,7 +266,7 @@ public class User : BaseEntity
     }
 
     // Private Validation Methods
-    private static void ValidateUserForCreation(string name, string email, string password, string phoneNumber, Role role)
+    private static void ValidateUserForCreation(string name, string email, string password, Roles role)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("الاسم مطلوب", nameof(name));
@@ -274,7 +274,7 @@ public class User : BaseEntity
         if (name.Length < 2 || name.Length > 100)
             throw new ArgumentException("الاسم يجب أن يكون بين 2 و 100 حرف", nameof(name));
 
-        if (role != Role.Customer && string.IsNullOrWhiteSpace(email))
+        if (role != Roles.Customer && string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("البريد الإلكتروني مطلوب", nameof(email));
 
         if (!string.IsNullOrWhiteSpace(email) && !IsValidEmail(email))
@@ -304,11 +304,4 @@ public class User : BaseEntity
 }
 
 
-public enum Role
-{
-    Admin,
-    BusinessOwner,
-    Customer,
-    Employee
-}
 
