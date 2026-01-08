@@ -5,6 +5,16 @@ namespace Domains.Entities;
 
 public class User : BaseEntity
 {
+    // Parameterless constructor for EF Core
+    private User()
+    {
+        Name = string.Empty;
+        Email = string.Empty;
+        PasswordHash = string.Empty;
+        PhoneNumber = string.Empty;
+        UserRoles = new List<Roles>();
+    }
+
     // Private constructor to enforce factory methods
     private User(
         string name,

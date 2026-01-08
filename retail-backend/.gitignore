@@ -1,0 +1,56 @@
+# Build results
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Visual Studio
+.vs/
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# .NET Tools
+.config/
+.dotnet/
+*.dotnet-tools.json
+
+# Environment files - keep templates but ignore with actual credentials
+# Uncomment these if you want to ignore appsettings files with secrets
+# appsettings.*.json
+# !appsettings.Development.json
+# !appsettings.json
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Migrations (optional - uncomment if you want to ignore migrations)
+# Migrations/
