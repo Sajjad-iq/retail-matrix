@@ -1,5 +1,6 @@
 using Domains.Shared;
 using Domains.Services;
+using Domains.ValueObjects;
 
 namespace Domains.Entities;
 
@@ -29,7 +30,7 @@ public class User : BaseEntity
     {
         Id = Guid.NewGuid();
         Name = name;
-        Email = email.ToLowerInvariant();
+        Email = email;
         PasswordHash = passwordHash;
         PhoneNumber = phoneNumber;
         Address = address;
@@ -78,13 +79,17 @@ public class User : BaseEntity
         string? address = null,
         string? avatar = null)
     {
-        ValidateUserForCreation(name, email, password, Roles.BusinessOwner);
+        // Validate using value objects
+        var userName = ValueObjects.Name.Create(name, minLength: 2, maxLength: 100);
+        var userEmail = ValueObjects.Email.Create(email);
+        var userPhone = Phone.Create(phoneNumber);
+        var validPassword = ValueObjects.Password.Create(password);
 
         return new User(
-            name: name,
-            email: email,
+            name: userName,
+            email: userEmail,
             passwordHash: passwordHasher.HashPassword(password),
-            phoneNumber: phoneNumber,
+            phoneNumber: userPhone,
             roles: [Roles.BusinessOwner],
             address: address,
             avatar: avatar
@@ -105,13 +110,17 @@ public class User : BaseEntity
         if (string.IsNullOrWhiteSpace(memberOfOrganization))
             throw new ArgumentException("معرف المؤسسة مطلوب للموظف", nameof(memberOfOrganization));
 
-        ValidateUserForCreation(name, email, password, Roles.Employee);
+        // Validate using value objects
+        var userName = ValueObjects.Name.Create(name, minLength: 2, maxLength: 100);
+        var userEmail = ValueObjects.Email.Create(email);
+        var userPhone = Phone.Create(phoneNumber);
+        var validPassword = ValueObjects.Password.Create(password);
 
         return new User(
-            name: name,
-            email: email,
+            name: userName,
+            email: userEmail,
             passwordHash: passwordHasher.HashPassword(password),
-            phoneNumber: phoneNumber,
+            phoneNumber: userPhone,
             roles: [Roles.Employee],
             address: address,
             avatar: avatar,
@@ -129,13 +138,17 @@ public class User : BaseEntity
         string? address = null,
         string? avatar = null)
     {
-        ValidateUserForCreation(name, email, password, Roles.Customer);
+        // Validate using value objects
+        var userName = ValueObjects.Name.Create(name, minLength: 2, maxLength: 100);
+        var userEmail = ValueObjects.Email.Create(email);
+        var userPhone = Phone.Create(phoneNumber);
+        var validPassword = ValueObjects.Password.Create(password);
 
         return new User(
-            name: name,
-            email: email,
+            name: userName,
+            email: userEmail,
             passwordHash: passwordHasher.HashPassword(password),
-            phoneNumber: phoneNumber,
+            phoneNumber: userPhone,
             roles: [Roles.Customer],
             address: address,
             avatar: avatar
@@ -153,13 +166,9 @@ public class User : BaseEntity
 
     public void UpdateProfile(string name, string? address = null, string? avatar = null)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("الاسم مطلوب", nameof(name));
+        var userName = ValueObjects.Name.Create(name, minLength: 2, maxLength: 100);
 
-        if (name.Length < 2 || name.Length > 100)
-            throw new ArgumentException("الاسم يجب أن يكون بين 2 و 100 حرف", nameof(name));
-
-        Name = name;
+        Name = userName;
         Address = address;
         Avatar = avatar;
         UpdateDate = DateTime.UtcNow;
@@ -167,23 +176,18 @@ public class User : BaseEntity
 
     public void UpdatePhoneNumber(string phoneNumber)
     {
-        if (string.IsNullOrWhiteSpace(phoneNumber))
-            throw new ArgumentException("رقم الهاتف مطلوب", nameof(phoneNumber));
+        var userPhone = Phone.Create(phoneNumber);
 
-        PhoneNumber = phoneNumber;
+        PhoneNumber = userPhone;
         PhoneVerified = false; // Reset verification when phone changes
         UpdateDate = DateTime.UtcNow;
     }
 
     public void UpdateEmail(string email)
     {
-        if (string.IsNullOrWhiteSpace(email))
-            throw new ArgumentException("البريد الإلكتروني مطلوب", nameof(email));
+        var userEmail = ValueObjects.Email.Create(email);
 
-        if (!IsValidEmail(email))
-            throw new ArgumentException("صيغة البريد الإلكتروني غير صحيحة", nameof(email));
-
-        Email = email.ToLowerInvariant();
+        Email = userEmail;
         EmailVerified = false; // Reset verification when email changes
         UpdateDate = DateTime.UtcNow;
     }
@@ -225,17 +229,9 @@ public class User : BaseEntity
             throw new InvalidOperationException("كلمة المرور الحالية غير صحيحة");
         }
 
-        if (string.IsNullOrWhiteSpace(newPassword))
-        {
-            throw new ArgumentException("كلمة المرور الجديدة مطلوبة", nameof(newPassword));
-        }
+        var validPassword = ValueObjects.Password.Create(newPassword);
 
-        if (newPassword.Length < 8)
-        {
-            throw new ArgumentException("كلمة المرور يجب أن تكون 8 أحرف على الأقل", nameof(newPassword));
-        }
-
-        PasswordHash = passwordHasher.HashPassword(newPassword);
+        PasswordHash = passwordHasher.HashPassword(validPassword);
         UpdateDate = DateTime.UtcNow;
     }
 
@@ -275,41 +271,6 @@ public class User : BaseEntity
         return false;
     }
 
-    // Private Validation Methods
-    private static void ValidateUserForCreation(string name, string email, string password, Roles role)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("الاسم مطلوب", nameof(name));
-
-        if (name.Length < 2 || name.Length > 100)
-            throw new ArgumentException("الاسم يجب أن يكون بين 2 و 100 حرف", nameof(name));
-
-        if (role != Roles.Customer && string.IsNullOrWhiteSpace(email))
-            throw new ArgumentException("البريد الإلكتروني مطلوب", nameof(email));
-
-        if (!string.IsNullOrWhiteSpace(email) && !IsValidEmail(email))
-            throw new ArgumentException("صيغة البريد الإلكتروني غير صحيحة", nameof(email));
-
-        if (string.IsNullOrWhiteSpace(password))
-            throw new ArgumentException("كلمة المرور مطلوبة", nameof(password));
-
-        if (password.Length < 8)
-            throw new ArgumentException("كلمة المرور يجب أن تكون 8 أحرف على الأقل", nameof(password));
-
-    }
-
-    private static bool IsValidEmail(string email)
-    {
-        try
-        {
-            var addr = new System.Net.Mail.MailAddress(email);
-            return addr.Address == email;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 
 }
 

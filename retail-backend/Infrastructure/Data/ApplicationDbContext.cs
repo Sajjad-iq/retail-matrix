@@ -17,6 +17,7 @@ public class ApplicationDbContext : DbContext
 
     // DbSets
     public DbSet<User> Users => Set<User>();
+    public DbSet<Organization> Organizations => Set<Organization>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,9 +25,11 @@ public class ApplicationDbContext : DbContext
 
         // Apply entity configurations
         modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
 
         // Global query filter for soft delete
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
+        modelBuilder.Entity<Organization>().HasQueryFilter(o => !o.IsDeleted);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
