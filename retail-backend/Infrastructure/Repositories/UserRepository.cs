@@ -1,4 +1,5 @@
 using Domains.Entities;
+using Domains.Enums;
 using Domains.Repositories;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

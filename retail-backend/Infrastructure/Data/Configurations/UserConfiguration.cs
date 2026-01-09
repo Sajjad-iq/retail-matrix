@@ -1,4 +1,5 @@
 using Domains.Entities;
+using Domains.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Text.Json;
@@ -61,12 +62,17 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.MemberOfOrganization)
             .HasMaxLength(100);
 
+        // AccountType - Store as string
+        builder.Property(u => u.AccountType)
+            .IsRequired()
+            .HasConversion<string>();
+
         // UserRoles - Store as JSON
         builder.Property(u => u.UserRoles)
             .IsRequired()
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                v => JsonSerializer.Deserialize<List<Roles>>(v, (JsonSerializerOptions?)null) ?? new List<Roles>()
+                v => JsonSerializer.Deserialize<HashSet<Roles>>(v, (JsonSerializerOptions?)null) ?? new HashSet<Roles>()
             )
             .HasColumnType("json");
 

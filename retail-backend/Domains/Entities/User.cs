@@ -1,3 +1,4 @@
+using Domains.Enums;
 using Domains.Shared;
 using Domains.Services;
 using Domains.ValueObjects;
@@ -13,7 +14,7 @@ public class User : BaseEntity
         Email = string.Empty;
         PasswordHash = string.Empty;
         PhoneNumber = string.Empty;
-        UserRoles = new List<Roles>();
+        UserRoles = new HashSet<Roles>();
     }
 
     // Private constructor to enforce factory methods
@@ -22,7 +23,8 @@ public class User : BaseEntity
         string email,
         string passwordHash,
         string phoneNumber,
-        List<Roles> roles,
+        AccountType accountType,
+        HashSet<Roles> roles,
         string? address = null,
         string? avatar = null,
         string? memberOfOrganization = null,
@@ -35,6 +37,7 @@ public class User : BaseEntity
         PhoneNumber = phoneNumber;
         Address = address;
         Avatar = avatar;
+        AccountType = accountType;
         UserRoles = roles;
         MemberOfOrganization = memberOfOrganization;
         Department = department;
@@ -54,7 +57,10 @@ public class User : BaseEntity
     public string PhoneNumber { get; private set; }
     public string? Address { get; private set; }
     public string? Avatar { get; private set; }
-    public List<Roles> UserRoles { get; private set; }
+
+    // Account Classification
+    public AccountType AccountType { get; private set; }
+    public HashSet<Roles> UserRoles { get; private set; }
 
     // Status & Verification
     public bool IsActive { get; private set; }
@@ -76,6 +82,7 @@ public class User : BaseEntity
         string password,
         string phoneNumber,
         IPasswordHasher passwordHasher,
+        HashSet<Roles>? roles = null,
         string? address = null,
         string? avatar = null)
     {
@@ -90,7 +97,8 @@ public class User : BaseEntity
             email: userEmail,
             passwordHash: passwordHasher.HashPassword(password),
             phoneNumber: userPhone,
-            roles: [Roles.BusinessOwner],
+            accountType: AccountType.BusinessOwner,
+            roles: roles ?? new HashSet<Roles> { Roles.Owner },
             address: address,
             avatar: avatar
         );
@@ -103,6 +111,7 @@ public class User : BaseEntity
         string phoneNumber,
         string memberOfOrganization,
         IPasswordHasher passwordHasher,
+        HashSet<Roles>? roles = null,
         string? department = null,
         string? address = null,
         string? avatar = null)
@@ -121,7 +130,8 @@ public class User : BaseEntity
             email: userEmail,
             passwordHash: passwordHasher.HashPassword(password),
             phoneNumber: userPhone,
-            roles: [Roles.Employee],
+            accountType: AccountType.Employee,
+            roles: roles ?? new HashSet<Roles> { Roles.User },
             address: address,
             avatar: avatar,
             memberOfOrganization: memberOfOrganization,
@@ -149,7 +159,8 @@ public class User : BaseEntity
             email: userEmail,
             passwordHash: passwordHasher.HashPassword(password),
             phoneNumber: userPhone,
-            roles: [Roles.Customer],
+            accountType: AccountType.Customer,
+            roles: new HashSet<Roles> { Roles.User },
             address: address,
             avatar: avatar
         );
