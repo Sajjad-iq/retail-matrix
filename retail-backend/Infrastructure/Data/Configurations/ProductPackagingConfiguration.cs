@@ -94,6 +94,18 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
         builder.Property(p => p.Dimensions)
             .HasMaxLength(100);
 
+        // Configure Weight value object using ComplexProperty
+        builder.ComplexProperty(p => p.Weight, weightBuilder =>
+        {
+            weightBuilder.Property(weight => weight.Value)
+                .HasColumnName("Weight")
+                .HasPrecision(18, 3);
+
+            weightBuilder.Property(weight => weight.Unit)
+                .HasColumnName("WeightUnit")
+                .HasConversion<string>();
+        });
+
         builder.Property(p => p.OrganizationId)
             .IsRequired();
 
