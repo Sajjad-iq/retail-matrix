@@ -25,12 +25,10 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 
-
     public async Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
     {
-        return await _context.Products
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Barcode == barcode, cancellationToken);
+        // Barcode is now in ProductPackaging, not Product
+        throw new NotSupportedException("Use IProductPackagingRepository.GetByBarcodeAsync instead");
     }
 
     public async Task<List<Product>> GetByOrganizationAsync(Guid organizationId, CancellationToken cancellationToken = default)
@@ -53,30 +51,20 @@ public class ProductRepository : IProductRepository
 
     public async Task<List<Product>> GetLowStockProductsAsync(Guid organizationId, CancellationToken cancellationToken = default)
     {
-        return await _context.Products
-            .AsNoTracking()
-            .Where(p => p.OrganizationId == organizationId
-                     && p.CurrentStock > 0
-                     && p.CurrentStock <= p.ReorderLevel)
-            .OrderBy(p => p.CurrentStock)
-            .ToListAsync(cancellationToken);
+        // Stock is now in ProductStock, not Product
+        throw new NotSupportedException("Use IProductStockRepository.GetLowStockItemsAsync instead");
     }
 
     public async Task<List<Product>> GetOutOfStockProductsAsync(Guid organizationId, CancellationToken cancellationToken = default)
     {
-        return await _context.Products
-            .AsNoTracking()
-            .Where(p => p.OrganizationId == organizationId && p.CurrentStock == 0)
-            .OrderBy(p => p.Name)
-            .ToListAsync(cancellationToken);
+        // Stock is now in ProductStock, not Product
+        throw new NotSupportedException("Use IProductStockRepository.GetOutOfStockItemsAsync instead");
     }
-
 
     public async Task<bool> ExistsByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
     {
-        return await _context.Products
-            .AsNoTracking()
-            .AnyAsync(p => p.Barcode == barcode, cancellationToken);
+        // Barcode is now in ProductPackaging, not Product
+        throw new NotSupportedException("Use IProductPackagingRepository.ExistsByBarcodeAsync instead");
     }
 
     public async Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)

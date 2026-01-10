@@ -47,7 +47,6 @@ public class User : BaseEntity
         FailedLoginAttempts = 0;
         LockedUntil = null;
         InsertDate = DateTime.UtcNow;
-        UpdateDate = DateTime.UtcNow;
     }
 
     // Properties with proper encapsulation
@@ -95,7 +94,7 @@ public class User : BaseEntity
         return new User(
             name: userName,
             email: userEmail,
-            passwordHash: passwordHasher.HashPassword(password),
+            passwordHash: passwordHasher.HashPassword(validPassword),
             phoneNumber: userPhone,
             accountType: AccountType.BusinessOwner,
             roles: roles ?? new HashSet<Roles> { Roles.Owner },
@@ -157,7 +156,7 @@ public class User : BaseEntity
         return new User(
             name: userName,
             email: userEmail,
-            passwordHash: passwordHasher.HashPassword(password),
+            passwordHash: passwordHasher.HashPassword(validPassword),
             phoneNumber: userPhone,
             accountType: AccountType.Customer,
             roles: new HashSet<Roles> { Roles.User },
@@ -182,7 +181,6 @@ public class User : BaseEntity
         Name = userName;
         Address = address;
         Avatar = avatar;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void UpdatePhoneNumber(string phoneNumber)
@@ -191,7 +189,6 @@ public class User : BaseEntity
 
         PhoneNumber = userPhone;
         PhoneVerified = false; // Reset verification when phone changes
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void UpdateEmail(string email)
@@ -200,37 +197,31 @@ public class User : BaseEntity
 
         Email = userEmail;
         EmailVerified = false; // Reset verification when email changes
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void UpdateAvatar(string avatarUrl)
     {
         Avatar = avatarUrl;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void VerifyEmail()
     {
         EmailVerified = true;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void VerifyPhone()
     {
         PhoneVerified = true;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void Activate()
     {
         IsActive = true;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void Deactivate()
     {
         IsActive = false;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void ChangePassword(string currentPassword, string newPassword, IPasswordHasher passwordHasher)
@@ -243,7 +234,6 @@ public class User : BaseEntity
         var validPassword = ValueObjects.Password.Create(newPassword);
 
         PasswordHash = passwordHasher.HashPassword(validPassword);
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void RecordFailedLogin(int maxAttempts = 5, int lockoutMinutes = 15)
@@ -255,14 +245,12 @@ public class User : BaseEntity
             LockedUntil = DateTime.UtcNow.AddMinutes(lockoutMinutes);
         }
 
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void ResetFailedLoginAttempts()
     {
         FailedLoginAttempts = 0;
         LockedUntil = null;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public bool IsAccountLocked()

@@ -19,6 +19,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<ProductPackaging> ProductPackagings => Set<ProductPackaging>();
+    public DbSet<ProductStock> ProductStocks => Set<ProductStock>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,11 +30,15 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductPackagingConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductStockConfiguration());
 
         // Global query filter for soft delete
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
         modelBuilder.Entity<Organization>().HasQueryFilter(o => !o.IsDeleted);
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
+        modelBuilder.Entity<ProductPackaging>().HasQueryFilter(p => !p.IsDeleted);
+        modelBuilder.Entity<ProductStock>().HasQueryFilter(s => !s.IsDeleted);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

@@ -39,7 +39,6 @@ public class Organization : BaseEntity
         LogoUrl = logoUrl;
         Status = OrganizationStatus.Active;
         InsertDate = DateTime.UtcNow;
-        UpdateDate = DateTime.UtcNow;
     }
 
     // Properties with proper encapsulation
@@ -96,21 +95,18 @@ public class Organization : BaseEntity
         Description = description?.Trim() ?? Description;
         Address = address?.Trim() ?? Address;
         LogoUrl = logoUrl ?? LogoUrl;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void UpdateDomain(string domain)
     {
         var orgDomain = DomainName.Create(domain);
         Domain = orgDomain;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void UpdatePhone(string phone)
     {
         var orgPhone = ValueObjects.Phone.Create(phone);
         Phone = orgPhone;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void UpdateLogo(string logoUrl)
@@ -119,7 +115,6 @@ public class Organization : BaseEntity
             throw new ArgumentException("رابط الشعار مطلوب", nameof(logoUrl));
 
         LogoUrl = logoUrl;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void Activate()
@@ -128,7 +123,6 @@ public class Organization : BaseEntity
             throw new InvalidOperationException("لا يمكن تفعيل مؤسسة مغلقة");
 
         Status = OrganizationStatus.Active;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void Suspend()
@@ -137,13 +131,11 @@ public class Organization : BaseEntity
             throw new InvalidOperationException("لا يمكن تعليق مؤسسة مغلقة");
 
         Status = OrganizationStatus.Suspended;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void Close()
     {
         Status = OrganizationStatus.Closed;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void ApprovePending()
@@ -152,7 +144,6 @@ public class Organization : BaseEntity
             throw new InvalidOperationException("المؤسسة ليست في حالة الانتظار");
 
         Status = OrganizationStatus.Active;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public bool IsActive() => Status == OrganizationStatus.Active;
