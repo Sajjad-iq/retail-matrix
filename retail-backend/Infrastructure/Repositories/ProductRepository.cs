@@ -1,6 +1,7 @@
 using Domains.Entities;
 using Domains.Enums;
 using Domains.Repositories;
+using Domains.Shared;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,7 @@ public class ProductRepository : IProductRepository
         _context = context;
     }
 
+    // Single item queries
     public async Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Products
@@ -31,42 +33,74 @@ public class ProductRepository : IProductRepository
         throw new NotSupportedException("Use IProductPackagingRepository.GetByBarcodeAsync instead");
     }
 
-    public async Task<List<Product>> GetByOrganizationAsync(Guid organizationId, CancellationToken cancellationToken = default)
+    // Paginated queries
+    public async Task<PagedResult<Product>> GetByOrganizationAsync(
+        Guid organizationId,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default)
     {
-        return await _context.Products
+        var query = _context.Products
             .AsNoTracking()
             .Where(p => p.OrganizationId == organizationId)
-            .OrderBy(p => p.Name)
+            .OrderBy(p => p.Name);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip(pagingParams.Skip)
+            .Take(pagingParams.Take)
             .ToListAsync(cancellationToken);
+
+        return new PagedResult<Product>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 
-    public async Task<List<Product>> GetByStatusAsync(ProductStatus status, Guid organizationId, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<Product>> GetByStatusAsync(
+        ProductStatus status,
+        Guid organizationId,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default)
     {
-        return await _context.Products
+        var query = _context.Products
             .AsNoTracking()
             .Where(p => p.Status == status && p.OrganizationId == organizationId)
-            .OrderBy(p => p.Name)
+            .OrderBy(p => p.Name);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip(pagingParams.Skip)
+            .Take(pagingParams.Take)
             .ToListAsync(cancellationToken);
+
+        return new PagedResult<Product>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 
-    public async Task<List<Product>> GetLowStockProductsAsync(Guid organizationId, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<Product>> GetLowStockProductsAsync(
+        Guid organizationId,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default)
     {
         // Stock is now in ProductStock, not Product
         throw new NotSupportedException("Use IProductStockRepository.GetLowStockItemsAsync instead");
     }
 
-    public async Task<List<Product>> GetOutOfStockProductsAsync(Guid organizationId, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<Product>> GetOutOfStockProductsAsync(
+        Guid organizationId,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default)
     {
         // Stock is now in ProductStock, not Product
         throw new NotSupportedException("Use IProductStockRepository.GetOutOfStockItemsAsync instead");
     }
 
+    // Existence checks
     public async Task<bool> ExistsByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
     {
         // Barcode is now in ProductPackaging, not Product
         throw new NotSupportedException("Use IProductPackagingRepository.ExistsByBarcodeAsync instead");
     }
 
+    // CRUD operations
     public async Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)
     {
         await _context.Products.AddAsync(product, cancellationToken);
@@ -86,7 +120,7 @@ public class ProductRepository : IProductRepository
         if (product == null)
             return false;
 
-        _context.Products.Remove(product); // Soft delete via SaveChangesAsync override
+        _context.Products.Remove(product);
         return true;
     }
 
