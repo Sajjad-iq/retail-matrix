@@ -4,9 +4,16 @@ namespace Domains.Enums;
 /// Defines roles/permissions within the system
 /// </summary>
 public enum Roles
+
+
 {
+
     /// <summary>
     /// System administrator - full access
+    /// </summary>
+    SuperAdmin,
+    /// <summary>
+    /// System administrator - limited access
     /// </summary>
     Admin,
 

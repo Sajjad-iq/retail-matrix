@@ -128,7 +128,7 @@ public class User : BaseEntity
         return new User(
             name: userName,
             email: userEmail,
-            passwordHash: passwordHasher.HashPassword(password),
+            passwordHash: passwordHasher.HashPassword(validPassword),
             phoneNumber: userPhone,
             accountType: AccountType.Employee,
             roles: roles ?? new HashSet<Roles> { Roles.User },

@@ -18,5 +18,7 @@ public enum AccountType
     /// <summary>
     /// Customer - purchases from organizations
     /// </summary>
-    Customer
+    Customer,
+
+    Admin
 }
