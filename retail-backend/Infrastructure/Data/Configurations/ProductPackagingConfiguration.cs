@@ -106,6 +106,9 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
                 .HasConversion<string>();
         });
 
+        builder.Property(p => p.Color)
+            .HasMaxLength(50);
+
         builder.Property(p => p.OrganizationId)
             .IsRequired();
 

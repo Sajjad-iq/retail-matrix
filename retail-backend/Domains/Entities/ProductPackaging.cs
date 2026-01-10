@@ -29,7 +29,8 @@ public class ProductPackaging : BaseEntity
         bool isDefault = false,
         string? imageUrl = null,
         string? dimensions = null,
-        Weight? weight = null)
+        Weight? weight = null,
+        string? color = null)
     {
         Id = Guid.NewGuid();
         ProductId = productId;
@@ -44,6 +45,7 @@ public class ProductPackaging : BaseEntity
         ImageUrl = imageUrl;
         Dimensions = dimensions;
         Weight = weight;
+        Color = color;
         OrganizationId = organizationId;
         InsertDate = DateTime.UtcNow;
     }
@@ -61,6 +63,7 @@ public class ProductPackaging : BaseEntity
     public string? ImageUrl { get; private set; }
     public string? Dimensions { get; private set; } // Dimensions as string (e.g., "10x20x30 cm", "5x8x12 in")
     public Weight? Weight { get; private set; } // Weight of the package
+    public string? Color { get; private set; } // Color of the package (e.g., "Red", "Blue", "#FF5733")
     public Guid OrganizationId { get; private set; }
 
     // Navigation properties
@@ -81,7 +84,8 @@ public class ProductPackaging : BaseEntity
         bool isDefault = false,
         string? imageUrl = null,
         string? dimensions = null,
-        Weight? weight = null)
+        Weight? weight = null,
+        string? color = null)
     {
 
         if (sellingPrice.Amount < costPrice.Amount)
@@ -117,7 +121,8 @@ public class ProductPackaging : BaseEntity
             isDefault: isDefault,
             imageUrl: imageUrl,
             dimensions: dimensions,
-            weight: weight
+            weight: weight,
+            color: color
         );
     }
 
@@ -187,6 +192,11 @@ public class ProductPackaging : BaseEntity
     public void UpdateWeight(Weight? weight)
     {
         Weight = weight;
+    }
+
+    public void UpdateColor(string? color)
+    {
+        Color = color;
     }
 
     public decimal GetProfitMargin() => SellingPrice.Subtract(CostPrice).Amount;
