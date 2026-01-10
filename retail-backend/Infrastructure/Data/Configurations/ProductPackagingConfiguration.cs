@@ -97,6 +97,8 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
         // Configure Weight value object using ComplexProperty
         builder.ComplexProperty(p => p.Weight, weightBuilder =>
         {
+            weightBuilder.IsRequired();
+
             weightBuilder.Property(weight => weight.Value)
                 .HasColumnName("Weight")
                 .HasPrecision(18, 3);

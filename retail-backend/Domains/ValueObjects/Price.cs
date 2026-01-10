@@ -8,6 +8,13 @@ public sealed class Price : IEquatable<Price>
     public decimal Amount { get; }
     public string Currency { get; }
 
+    // Parameterless constructor for EF Core
+    private Price()
+    {
+        Amount = 0;
+        Currency = "IQD";
+    }
+
     private Price(decimal amount, string currency)
     {
         Amount = amount;
