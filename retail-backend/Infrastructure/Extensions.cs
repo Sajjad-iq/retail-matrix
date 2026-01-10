@@ -21,9 +21,10 @@ public static class Extensions
 
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
 
         // Add more repositories here as you create them:
-        // services.AddScoped<IProductRepository, ProductRepository>();
         // services.AddScoped<IOrderRepository, OrderRepository>();
 
         return services;
