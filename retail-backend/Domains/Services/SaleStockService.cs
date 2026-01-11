@@ -18,13 +18,13 @@ public class SaleStockService
     /// <summary>
     /// Reserve stock for a draft sale
     /// </summary>
-    public async Task ReserveStockForSale(Sale sale, CancellationToken cancellationToken = default)
+    public async Task ReserveStockForSale(Sale sale, Guid? locationId, CancellationToken cancellationToken = default)
     {
         foreach (var item in sale.Items)
         {
             var stock = await _stockRepository.GetByPackagingAndLocationAsync(
                 item.ProductPackagingId,
-                sale.LocationId,
+                locationId,
                 cancellationToken
             );
 
@@ -41,13 +41,13 @@ public class SaleStockService
     /// <summary>
     /// Deduct stock when sale is completed
     /// </summary>
-    public async Task DeductStockForCompletedSale(Sale sale, CancellationToken cancellationToken = default)
+    public async Task DeductStockForCompletedSale(Sale sale, Guid? locationId, CancellationToken cancellationToken = default)
     {
         foreach (var item in sale.Items)
         {
             var stock = await _stockRepository.GetByPackagingAndLocationAsync(
                 item.ProductPackagingId,
-                sale.LocationId,
+                locationId,
                 cancellationToken
             );
 
@@ -65,13 +65,13 @@ public class SaleStockService
     /// <summary>
     /// Release reserved stock when sale is cancelled
     /// </summary>
-    public async Task ReleaseReservedStock(Sale sale, CancellationToken cancellationToken = default)
+    public async Task ReleaseReservedStock(Sale sale, Guid? locationId, CancellationToken cancellationToken = default)
     {
         foreach (var item in sale.Items)
         {
             var stock = await _stockRepository.GetByPackagingAndLocationAsync(
                 item.ProductPackagingId,
-                sale.LocationId,
+                locationId,
                 cancellationToken
             );
 

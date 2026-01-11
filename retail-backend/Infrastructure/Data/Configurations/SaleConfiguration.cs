@@ -35,9 +35,6 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
         builder.HasIndex(s => s.SalesPersonId)
             .HasDatabaseName("IX_Sales_SalesPerson");
 
-        builder.HasIndex(s => s.CustomerId)
-            .HasDatabaseName("IX_Sales_Customer");
-
         // Properties configuration
         builder.Property(s => s.Id)
             .ValueGeneratedNever(); // Generated in domain
@@ -48,9 +45,6 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
 
         builder.Property(s => s.SaleDate)
             .IsRequired();
-
-        builder.Property(s => s.CustomerName)
-            .HasMaxLength(200);
 
         builder.Property(s => s.SalesPersonId)
             .IsRequired();

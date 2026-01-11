@@ -37,11 +37,6 @@ public interface ISaleRepository
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
-    Task<PagedResult<Sale>> GetByCustomerAsync(
-        Guid customerId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default);
-
     // CRUD
     Task<Sale> AddAsync(Sale sale, CancellationToken cancellationToken = default);
     Task<Sale> UpdateAsync(Sale sale, CancellationToken cancellationToken = default);

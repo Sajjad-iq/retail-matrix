@@ -24,19 +24,13 @@ public class Sale : BaseEntity
     private Sale(
         string saleNumber,
         Guid organizationId,
-        Guid salesPersonId,
-        Guid? customerId,
-        string? customerName,
-        Guid? locationId)
+        Guid salesPersonId)
     {
         Id = Guid.NewGuid();
         SaleNumber = saleNumber;
         SaleDate = DateTime.UtcNow;
         OrganizationId = organizationId;
         SalesPersonId = salesPersonId;
-        CustomerId = customerId;
-        CustomerName = customerName;
-        LocationId = locationId;
         Status = SaleStatus.Draft;
         TotalDiscount = Price.Create(0, "IQD");
         GrandTotal = Price.Create(0, "IQD");
@@ -49,11 +43,8 @@ public class Sale : BaseEntity
     // Properties
     public string SaleNumber { get; private set; }
     public DateTime SaleDate { get; private set; }
-    public Guid? CustomerId { get; private set; }
-    public string? CustomerName { get; private set; }
     public Guid SalesPersonId { get; private set; }
     public Guid OrganizationId { get; private set; }
-    public Guid? LocationId { get; private set; }
     public SaleStatus Status { get; private set; }
     public Price TotalDiscount { get; private set; }
     public Price GrandTotal { get; private set; }
@@ -67,20 +58,14 @@ public class Sale : BaseEntity
     // Factory method
     public static Sale Create(
         Guid organizationId,
-        Guid salesPersonId,
-        Guid? customerId = null,
-        string? customerName = null,
-        Guid? locationId = null)
+        Guid salesPersonId)
     {
         var saleNumber = GenerateSaleNumber(organizationId);
 
         return new Sale(
             saleNumber,
             organizationId,
-            salesPersonId,
-            customerId,
-            customerName,
-            locationId
+            salesPersonId
         );
     }
 

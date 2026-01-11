@@ -132,28 +132,6 @@ public class SaleRepository : ISaleRepository
         return new PagedResult<Sale>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 
-    public async Task<PagedResult<Sale>> GetByCustomerAsync(
-        Guid customerId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        var query = _context.Sales
-            .Include(s => s.Items)
-            .Include(s => s.Payments)
-            .AsNoTracking()
-            .Where(s => s.CustomerId == customerId)
-            .OrderByDescending(s => s.SaleDate);
-
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await query
-            .Skip(pagingParams.Skip)
-            .Take(pagingParams.Take)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<Sale>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
-    }
-
     // CRUD
     public async Task<Sale> AddAsync(Sale sale, CancellationToken cancellationToken = default)
     {
