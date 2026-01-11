@@ -1,4 +1,8 @@
-using Domains.Repositories;
+using Domains.Sales.Repositories;
+using Domains.Products.Repositories;
+using Domains.Organizations.Repositories;
+using Domains.Users.Repositories;
+using Domains.Shared.Base;
 using Domains.Services;
 using Infrastructure.Repositories;
 using Infrastructure.Security;

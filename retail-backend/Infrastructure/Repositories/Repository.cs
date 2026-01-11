@@ -1,5 +1,4 @@
-using Domains.Repositories;
-using Domains.Shared;
+using Domains.Shared.Base;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

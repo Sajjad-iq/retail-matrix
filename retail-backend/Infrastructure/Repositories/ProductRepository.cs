@@ -1,7 +1,11 @@
-using Domains.Entities;
-using Domains.Enums;
-using Domains.Repositories;
-using Domains.Shared;
+using Domains.Products.Entities;
+using Domains.Products.Repositories;
+using Domains.Products.Enums;
+using Domains.Shared.Base;
+using Domains.Sales.Enums;
+using Domains.Products.Enums;
+using Domains.Organizations.Enums;
+using Domains.Users.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

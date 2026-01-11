@@ -1,5 +1,8 @@
-using Domains.Entities;
-using Domains.Shared;
+using Domains.Sales.Entities;
+using Domains.Products.Entities;
+using Domains.Organizations.Entities;
+using Domains.Users.Entities;
+using Domains.Shared.Base;
 using Infrastructure.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
 

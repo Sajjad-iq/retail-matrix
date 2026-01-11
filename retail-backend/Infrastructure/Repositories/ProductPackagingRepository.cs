@@ -1,6 +1,6 @@
-using Domains.Entities;
-using Domains.Repositories;
-using Domains.Shared;
+using Domains.Products.Entities;
+using Domains.Products.Repositories;
+using Domains.Shared.Base;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

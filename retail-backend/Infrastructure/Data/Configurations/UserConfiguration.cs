@@ -1,5 +1,6 @@
-using Domains.Entities;
-using Domains.Enums;
+using Domains.Users.Entities;
+using Domains.Users.Enums;
+using Domains.Users.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Text.Json;

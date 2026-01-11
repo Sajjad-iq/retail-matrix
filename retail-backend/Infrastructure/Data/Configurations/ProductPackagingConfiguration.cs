@@ -1,5 +1,6 @@
-using Domains.Entities;
-using Domains.Enums;
+using Domains.Products.Entities;
+using Domains.Products.Enums;
+using Domains.Shared.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

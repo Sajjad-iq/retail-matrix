@@ -1,5 +1,5 @@
-using Domains.Entities;
-using Domains.Enums;
+using Domains.Products.Entities;
+using Domains.Products.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
