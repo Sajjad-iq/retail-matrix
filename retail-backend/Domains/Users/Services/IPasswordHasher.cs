@@ -1,4 +1,4 @@
-namespace Domains.Services;
+namespace Domains.Users.Services;
 
 /// <summary>
 /// Interface for password hashing and verification operations

@@ -1,7 +1,7 @@
 using Domains.Users.Enums;
-using Domains.Shared.Base;
-using Domains.Services;
 using Domains.Users.ValueObjects;
+using Domains.Users.Services;
+using Domains.Shared.Base;
 
 namespace Domains.Users.Entities;
 
