@@ -10,21 +10,10 @@ namespace Infrastructure.Repositories;
 /// <summary>
 /// Entity Framework Core implementation of IProductRepository
 /// </summary>
-public class ProductRepository : IProductRepository
+public class ProductRepository : Repository<Product>, IProductRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public ProductRepository(ApplicationDbContext context)
+    public ProductRepository(ApplicationDbContext context) : base(context)
     {
-        _context = context;
-    }
-
-    // Single item queries
-    public async Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return await _context.Products
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 
     public async Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
@@ -33,13 +22,12 @@ public class ProductRepository : IProductRepository
         throw new NotSupportedException("Use IProductPackagingRepository.GetByBarcodeAsync instead");
     }
 
-    // Paginated queries
     public async Task<PagedResult<Product>> GetByOrganizationAsync(
         Guid organizationId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.Products
+        var query = _dbSet
             .AsNoTracking()
             .Where(p => p.OrganizationId == organizationId)
             .OrderBy(p => p.Name);
@@ -60,7 +48,7 @@ public class ProductRepository : IProductRepository
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.Products
+        var query = _dbSet
             .AsNoTracking()
             .Where(p => p.Status == status && p.OrganizationId == organizationId)
             .OrderBy(p => p.Name);
@@ -93,39 +81,9 @@ public class ProductRepository : IProductRepository
         throw new NotSupportedException("Use IProductStockRepository.GetOutOfStockItemsAsync instead");
     }
 
-    // Existence checks
     public async Task<bool> ExistsByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
     {
         // Barcode is now in ProductPackaging, not Product
         throw new NotSupportedException("Use IProductPackagingRepository.ExistsByBarcodeAsync instead");
-    }
-
-    // CRUD operations
-    public async Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)
-    {
-        await _context.Products.AddAsync(product, cancellationToken);
-        return product;
-    }
-
-    public async Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default)
-    {
-        _context.Products.Update(product);
-        return await Task.FromResult(product);
-    }
-
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        var product = await _context.Products.FindAsync(new object[] { id }, cancellationToken);
-
-        if (product == null)
-            return false;
-
-        _context.Products.Remove(product);
-        return true;
-    }
-
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        return await _context.SaveChangesAsync(cancellationToken);
     }
 }

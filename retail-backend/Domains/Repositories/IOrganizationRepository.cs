@@ -7,16 +7,8 @@ namespace Domains.Repositories;
 /// Repository interface for Organization aggregate root
 /// Defines persistence operations for Organization entities
 /// </summary>
-public interface IOrganizationRepository
+public interface IOrganizationRepository : IRepository<Organization>
 {
-    /// <summary>
-    /// Retrieves an organization by its unique identifier
-    /// </summary>
-    /// <param name="id">The organization's unique identifier</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The organization if found, null otherwise</returns>
-    Task<Organization?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-
     /// <summary>
     /// Retrieves an organization by its domain name
     /// </summary>
@@ -62,35 +54,4 @@ public interface IOrganizationRepository
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if domain exists, false otherwise</returns>
     Task<bool> ExistsByDomainAsync(string domain, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Adds a new organization to the repository
-    /// </summary>
-    /// <param name="organization">The organization entity to add</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The added organization</returns>
-    Task<Organization> AddAsync(Organization organization, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates an existing organization in the repository
-    /// </summary>
-    /// <param name="organization">The organization entity to update</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The updated organization</returns>
-    Task<Organization> UpdateAsync(Organization organization, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Soft deletes an organization by marking it as deleted
-    /// </summary>
-    /// <param name="id">The organization's unique identifier</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>True if deletion was successful, false otherwise</returns>
-    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Saves all pending changes to the underlying data store
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Number of entities affected</returns>
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

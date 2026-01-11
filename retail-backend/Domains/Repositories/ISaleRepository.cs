@@ -7,10 +7,9 @@ namespace Domains.Repositories;
 /// <summary>
 /// Repository interface for Sale entity
 /// </summary>
-public interface ISaleRepository
+public interface ISaleRepository : IRepository<Sale>
 {
     // Single queries
-    Task<Sale?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Sale?> GetBySaleNumberAsync(string saleNumber, CancellationToken cancellationToken = default);
 
     // Paginated queries
@@ -36,12 +35,6 @@ public interface ISaleRepository
         Guid salesPersonId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
-
-    // CRUD
-    Task<Sale> AddAsync(Sale sale, CancellationToken cancellationToken = default);
-    Task<Sale> UpdateAsync(Sale sale, CancellationToken cancellationToken = default);
-    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
     // Business queries
     Task<decimal> GetTotalSalesAmountAsync(

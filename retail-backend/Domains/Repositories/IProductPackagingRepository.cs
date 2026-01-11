@@ -6,10 +6,9 @@ namespace Domains.Repositories;
 /// <summary>
 /// Repository interface for ProductPackaging entity
 /// </summary>
-public interface IProductPackagingRepository
+public interface IProductPackagingRepository : IRepository<ProductPackaging>
 {
     // Single item queries
-    Task<ProductPackaging?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<ProductPackaging?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default);
     Task<ProductPackaging?> GetDefaultPackagingAsync(Guid productId, CancellationToken cancellationToken = default);
 
@@ -31,10 +30,4 @@ public interface IProductPackagingRepository
 
     // Existence checks
     Task<bool> ExistsByBarcodeAsync(string barcode, CancellationToken cancellationToken = default);
-
-    // CRUD operations
-    Task<ProductPackaging> AddAsync(ProductPackaging packaging, CancellationToken cancellationToken = default);
-    Task<ProductPackaging> UpdateAsync(ProductPackaging packaging, CancellationToken cancellationToken = default);
-    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
