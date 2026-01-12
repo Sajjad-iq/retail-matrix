@@ -13,8 +13,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace retail_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260111182725_RefactorPaymentToGenericEntity")]
-    partial class RefactorPaymentToGenericEntity
+    [Migration("20260112124432_RemovePaymentDomain")]
+    partial class RemovePaymentDomain
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -98,79 +98,6 @@ namespace retail_backend.Migrations
                         .HasDatabaseName("IX_Organizations_Status");
 
                     b.ToTable("Organizations", (string)null);
-                });
-
-            modelBuilder.Entity("Domains.Payments.Entities.Payment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime>("InsertDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("PaymentMethod")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("ReferenceNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("varchar(255)")
-                        .HasDefaultValue("Completed");
-
-                    b.Property<DateTime>("UpdateDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.ComplexProperty<Dictionary<string, object>>("Amount", "Domains.Payments.Entities.Payment.Amount#Price", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("decimal(18,2)")
-                                .HasColumnName("Amount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .ValueGeneratedOnAdd()
-                                .HasMaxLength(3)
-                                .HasColumnType("varchar(3)")
-                                .HasDefaultValue("IQD")
-                                .HasColumnName("Currency");
-                        });
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PaymentMethod")
-                        .HasDatabaseName("IX_Payments_PaymentMethod");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("IX_Payments_Status");
-
-                    b.HasIndex("EntityId", "EntityType")
-                        .HasDatabaseName("IX_Payments_Entity");
-
-                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("Domains.Products.Entities.Product", b =>
