@@ -79,14 +79,21 @@ public class SaleItem : BaseEntity
 
         Quantity = newQuantity;
         CalculateLineTotal();
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void UpdateDiscount(Discount? discount)
     {
         Discount = discount;
         CalculateLineTotal();
-        UpdateDate = DateTime.UtcNow;
+    }
+
+    public void UpdatePrice(Price newPrice)
+    {
+        if (newPrice.Amount <= 0)
+            throw new ArgumentException("السعر يجب أن يكون أكبر من صفر", nameof(newPrice));
+
+        UnitPrice = newPrice;
+        CalculateLineTotal();
     }
 
     public void CalculateLineTotal()

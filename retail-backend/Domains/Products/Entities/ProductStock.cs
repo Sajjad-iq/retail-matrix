@@ -71,7 +71,7 @@ public class ProductStock : BaseEntity
     }
 
     // Domain Methods
-    public void AdjustStock(int quantity, string reason)
+    public void AdjustStock(int quantity)
     {
         var newStock = CurrentStock + quantity;
 

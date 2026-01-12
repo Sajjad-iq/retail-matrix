@@ -255,21 +255,41 @@ public class User : BaseEntity
 
     public bool IsAccountLocked()
     {
-        if (LockedUntil.HasValue && LockedUntil.Value > DateTime.UtcNow)
-        {
-            return true;
-        }
-
-        // Auto-unlock if lock period has expired
-        if (LockedUntil.HasValue && LockedUntil.Value <= DateTime.UtcNow)
-        {
-            LockedUntil = null;
-            FailedLoginAttempts = 0;
-        }
-
-        return false;
+        // Pure query - no side effects
+        return LockedUntil.HasValue && LockedUntil.Value > DateTime.UtcNow;
     }
 
+    public void UnlockAccount()
+    {
+        LockedUntil = null;
+        FailedLoginAttempts = 0;
+    }
+
+    // Role Management Methods
+    public void AddRole(Roles role)
+    {
+        if (UserRoles.Contains(role))
+            throw new InvalidOperationException($"المستخدم لديه بالفعل دور {role}");
+
+        UserRoles.Add(role);
+    }
+
+    public void RemoveRole(Roles role)
+    {
+        if (!UserRoles.Contains(role))
+            throw new InvalidOperationException($"المستخدم ليس لديه دور {role}");
+
+        if (UserRoles.Count == 1)
+            throw new InvalidOperationException("لا يمكن إزالة الدور الأخير للمستخدم");
+
+        UserRoles.Remove(role);
+    }
+
+    public bool HasRole(Roles role) => UserRoles.Contains(role);
+
+    public bool HasAnyRole(params Roles[] roles) => roles.Any(role => UserRoles.Contains(role));
+
+    public bool HasAllRoles(params Roles[] roles) => roles.All(role => UserRoles.Contains(role));
 
 }
 

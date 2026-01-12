@@ -128,8 +128,13 @@ public class Sale : BaseEntity
         if (paymentAmount.Amount <= 0)
             throw new ArgumentException("المبلغ يجب أن يكون أكبر من صفر", nameof(paymentAmount));
 
+        // Validate overpayment
+        var totalAfterPayment = AmountPaid.Add(paymentAmount);
+        if (totalAfterPayment.Amount > GrandTotal.Amount)
+            throw new InvalidOperationException("المبلغ المدفوع يتجاوز الإجمالي المطلوب");
+
         // Update amount paid
-        AmountPaid = AmountPaid.Add(paymentAmount);
+        AmountPaid = totalAfterPayment;
 
         // Update sale status
         UpdateStatusBasedOnPayment();
@@ -147,7 +152,6 @@ public class Sale : BaseEntity
             throw new InvalidOperationException("المبلغ المدفوع أقل من الإجمالي");
 
         Status = SaleStatus.Completed;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void CancelSale()
@@ -156,13 +160,11 @@ public class Sale : BaseEntity
             throw new InvalidOperationException("لا يمكن إلغاء بيع مكتمل");
 
         Status = SaleStatus.Cancelled;
-        UpdateDate = DateTime.UtcNow;
     }
 
     public void AddNotes(string notes)
     {
         Notes = notes;
-        UpdateDate = DateTime.UtcNow;
     }
 
     // Private helpers
@@ -180,22 +182,15 @@ public class Sale : BaseEntity
 
         TotalDiscount = Price.Create(totalDiscount, "IQD");
         GrandTotal = Price.Create(itemsTotal, "IQD");
-
-        UpdateDate = DateTime.UtcNow;
     }
 
     private void UpdateStatusBasedOnPayment()
     {
-        if (AmountPaid.Amount >= GrandTotal.Amount && Status == SaleStatus.Draft)
-        {
-            Status = SaleStatus.Completed;
-        }
-        else if (AmountPaid.Amount > 0 && AmountPaid.Amount < GrandTotal.Amount)
+        // Only update to PartiallyPaid, never auto-complete
+        if (AmountPaid.Amount > 0 && AmountPaid.Amount < GrandTotal.Amount)
         {
             Status = SaleStatus.PartiallyPaid;
         }
-
-        UpdateDate = DateTime.UtcNow;
     }
 
     private static string GenerateSaleNumber(Guid organizationId)

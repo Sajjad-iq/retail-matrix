@@ -29,6 +29,12 @@ public class Discount
 
     public static Discount Create(decimal value, DiscountType type)
     {
+        if (value < 0)
+            throw new ArgumentException("الخصم لا يمكن أن يكون سالباً", nameof(value));
+
+        if (type == DiscountType.Percentage && value > 100)
+            throw new ArgumentException("نسبة الخصم لا يمكن أن تتجاوز 100%", nameof(value));
+
         return new Discount(value, type);
     }
 
@@ -43,7 +49,9 @@ public class Discount
         }
         else
         {
-            return Price.Create(Value, originalPrice.Currency);
+            // Cap fixed discount at original price to prevent negative totals
+            var discountAmount = Math.Min(Value, originalPrice.Amount);
+            return Price.Create(discountAmount, originalPrice.Currency);
         }
     }
 
