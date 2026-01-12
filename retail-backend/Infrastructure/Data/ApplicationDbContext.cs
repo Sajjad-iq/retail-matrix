@@ -2,6 +2,7 @@ using Domains.Sales.Entities;
 using Domains.Products.Entities;
 using Domains.Organizations.Entities;
 using Domains.Users.Entities;
+using Domains.Common.Currency.Entities;
 using Domains.Shared.Base;
 using Infrastructure.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProductStock> ProductStocks => Set<ProductStock>();
     public DbSet<Sale> Sales => Set<Sale>();
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
+    public DbSet<Currency> Currencies => Set<Currency>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +41,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ProductStockConfiguration());
         modelBuilder.ApplyConfiguration(new SaleConfiguration());
         modelBuilder.ApplyConfiguration(new SaleItemConfiguration());
+        modelBuilder.ApplyConfiguration(new CurrencyConfiguration());
 
         // Global query filter for soft delete
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
