@@ -10,6 +10,8 @@ namespace Domains.Sales.Entities;
 /// </summary>
 public class Sale : BaseEntity
 {
+    private const int MaxItemsPerSale = 1000;
+
     // Parameterless constructor for EF Core
     private Sale()
     {
@@ -81,6 +83,19 @@ public class Sale : BaseEntity
         if (quantity <= 0)
             throw new ArgumentException("الكمية يجب أن تكون أكبر من صفر", nameof(quantity));
 
+        // Validate maximum items limit
+        if (Items.Count >= MaxItemsPerSale)
+            throw new InvalidOperationException($"لا يمكن إضافة أكثر من {MaxItemsPerSale} عنصر");
+
+        // Check for duplicate item and update quantity instead
+        var existingItem = Items.FirstOrDefault(i => i.ProductPackagingId == productPackagingId);
+        if (existingItem != null)
+        {
+            existingItem.UpdateQuantity(existingItem.Quantity + quantity);
+            RecalculateTotals();
+            return;
+        }
+
         var item = SaleItem.Create(
             Id,
             productPackagingId,
@@ -100,11 +115,11 @@ public class Sale : BaseEntity
             throw new InvalidOperationException("لا يمكن تعديل بيع مكتمل");
 
         var item = Items.FirstOrDefault(i => i.Id == itemId);
-        if (item != null)
-        {
-            Items.Remove(item);
-            RecalculateTotals();
-        }
+        if (item == null)
+            throw new InvalidOperationException("العنصر غير موجود في البيع");
+
+        Items.Remove(item);
+        RecalculateTotals();
     }
 
     public void UpdateItemQuantity(Guid itemId, int newQuantity)
@@ -116,11 +131,11 @@ public class Sale : BaseEntity
             throw new ArgumentException("الكمية يجب أن تكون أكبر من صفر", nameof(newQuantity));
 
         var item = Items.FirstOrDefault(i => i.Id == itemId);
-        if (item != null)
-        {
-            item.UpdateQuantity(newQuantity);
-            RecalculateTotals();
-        }
+        if (item == null)
+            throw new InvalidOperationException("العنصر غير موجود في البيع");
+
+        item.UpdateQuantity(newQuantity);
+        RecalculateTotals();
     }
 
     public void RecordPayment(Price paymentAmount)
@@ -142,11 +157,17 @@ public class Sale : BaseEntity
 
     public void CompleteSale()
     {
-        if (Status != SaleStatus.Draft && Status != SaleStatus.PartiallyPaid)
+        if (Status == SaleStatus.Completed)
             throw new InvalidOperationException("البيع مكتمل بالفعل");
+
+        if (Status == SaleStatus.Cancelled)
+            throw new InvalidOperationException("لا يمكن إكمال بيع ملغي");
 
         if (Items.Count == 0)
             throw new InvalidOperationException("لا يمكن إكمال بيع بدون عناصر");
+
+        if (GrandTotal.Amount <= 0)
+            throw new InvalidOperationException("إجمالي البيع يجب أن يكون أكبر من صفر");
 
         if (AmountPaid.Amount < GrandTotal.Amount)
             throw new InvalidOperationException("المبلغ المدفوع أقل من الإجمالي");
@@ -195,9 +216,9 @@ public class Sale : BaseEntity
 
     private static string GenerateSaleNumber(Guid organizationId)
     {
-        // Format: SAL-YYYYMMDD-XXXXX
+        // Format: SAL-YYYYMMDD-GUID (thread-safe and guaranteed unique)
         var date = DateTime.UtcNow.ToString("yyyyMMdd");
-        var random = new Random().Next(10000, 99999);
-        return $"SAL-{date}-{random}";
+        var uniqueId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+        return $"SAL-{date}-{uniqueId}";
     }
 }

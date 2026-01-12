@@ -124,6 +124,9 @@ public class Organization : BaseEntity
         if (Status == OrganizationStatus.Closed)
             throw new InvalidOperationException("لا يمكن تفعيل مؤسسة مغلقة");
 
+        if (Status == OrganizationStatus.Pending)
+            throw new InvalidOperationException("المؤسسة في حالة الانتظار، يجب الموافقة عليها أولاً");
+
         Status = OrganizationStatus.Active;
     }
 

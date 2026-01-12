@@ -83,11 +83,6 @@ public class ProductStock : BaseEntity
 
         CurrentStock = newStock;
 
-        if (quantity > 0)
-        {
-            LastRestockDate = DateTime.UtcNow;
-        }
-
     }
 
     public void SetStock(int quantity)
@@ -105,6 +100,9 @@ public class ProductStock : BaseEntity
     {
         if (quantity <= 0)
             throw new ArgumentException("الكمية المحجوزة يجب أن تكون أكبر من صفر", nameof(quantity));
+
+        if (IsExpired())
+            throw new InvalidOperationException("لا يمكن حجز مخزون منتهي الصلاحية");
 
         var newReservedStock = ReservedStock + quantity;
 

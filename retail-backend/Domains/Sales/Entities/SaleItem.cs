@@ -92,6 +92,9 @@ public class SaleItem : BaseEntity
         if (newPrice.Amount <= 0)
             throw new ArgumentException("السعر يجب أن يكون أكبر من صفر", nameof(newPrice));
 
+        if (newPrice.Currency != UnitPrice.Currency)
+            throw new InvalidOperationException($"العملة يجب أن تكون {UnitPrice.Currency}");
+
         UnitPrice = newPrice;
         CalculateLineTotal();
     }
