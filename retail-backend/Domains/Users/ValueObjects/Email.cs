@@ -35,7 +35,7 @@ public sealed class Email : IEquatable<Email>
             var addr = new System.Net.Mail.MailAddress(email);
             return addr.Address == email;
         }
-        catch
+        catch (FormatException)
         {
             return false;
         }

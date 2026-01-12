@@ -62,7 +62,15 @@ public sealed class Price : IEquatable<Price>
         if (factor < 0)
             throw new ArgumentException("المضاعف لا يمكن أن يكون سالب", nameof(factor));
 
-        return new Price(Amount * factor, Currency);
+        try
+        {
+            var result = checked(Amount * factor);
+            return new Price(result, Currency);
+        }
+        catch (OverflowException)
+        {
+            throw new InvalidOperationException("نتيجة الضرب تتجاوز الحد الأقصى المسموح");
+        }
     }
 
     public bool Equals(Price? other)

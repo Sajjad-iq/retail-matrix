@@ -83,11 +83,7 @@ public class Sale : BaseEntity
         if (quantity <= 0)
             throw new ArgumentException("الكمية يجب أن تكون أكبر من صفر", nameof(quantity));
 
-        // Validate maximum items limit
-        if (Items.Count >= MaxItemsPerSale)
-            throw new InvalidOperationException($"لا يمكن إضافة أكثر من {MaxItemsPerSale} عنصر");
-
-        // Check for duplicate item and update quantity instead
+        // Check for duplicate item first (might not add new item)
         var existingItem = Items.FirstOrDefault(i => i.ProductPackagingId == productPackagingId);
         if (existingItem != null)
         {
@@ -95,6 +91,10 @@ public class Sale : BaseEntity
             RecalculateTotals();
             return;
         }
+
+        // Validate maximum items limit only when adding new item
+        if (Items.Count >= MaxItemsPerSale)
+            throw new InvalidOperationException($"لا يمكن إضافة أكثر من {MaxItemsPerSale} عنصر");
 
         var item = SaleItem.Create(
             Id,
@@ -143,7 +143,7 @@ public class Sale : BaseEntity
         if (paymentAmount.Amount <= 0)
             throw new ArgumentException("المبلغ يجب أن يكون أكبر من صفر", nameof(paymentAmount));
 
-        // Validate overpayment
+        // Validate overpayment (Price.Add will validate currency)
         var totalAfterPayment = AmountPaid.Add(paymentAmount);
         if (totalAfterPayment.Amount > GrandTotal.Amount)
             throw new InvalidOperationException("المبلغ المدفوع يتجاوز الإجمالي المطلوب");
@@ -151,8 +151,11 @@ public class Sale : BaseEntity
         // Update amount paid
         AmountPaid = totalAfterPayment;
 
-        // Update sale status
-        UpdateStatusBasedOnPayment();
+        // Only update to PartiallyPaid, never auto-complete
+        if (AmountPaid.Amount > 0 && AmountPaid.Amount < GrandTotal.Amount)
+        {
+            Status = SaleStatus.PartiallyPaid;
+        }
     }
 
     public void CompleteSale()
@@ -180,6 +183,9 @@ public class Sale : BaseEntity
         if (Status == SaleStatus.Completed)
             throw new InvalidOperationException("لا يمكن إلغاء بيع مكتمل");
 
+        if (AmountPaid.Amount > 0)
+            throw new InvalidOperationException("لا يمكن إلغاء بيع تم الدفع فيه، يجب استرداد المبلغ أولاً");
+
         Status = SaleStatus.Cancelled;
     }
 
@@ -191,6 +197,9 @@ public class Sale : BaseEntity
     // Private helpers
     private void RecalculateTotals()
     {
+        // Get currency from first item, default to IQD if no items
+        var currency = Items.FirstOrDefault()?.UnitPrice.Currency ?? "IQD";
+
         // Calculate grand total from all line items
         var itemsTotal = Items.Sum(i => i.LineTotal.Amount);
 
@@ -201,18 +210,17 @@ public class Sale : BaseEntity
                 Price.Create(i.UnitPrice.Amount * i.Quantity, i.UnitPrice.Currency)
             ).Amount);
 
-        TotalDiscount = Price.Create(totalDiscount, "IQD");
-        GrandTotal = Price.Create(itemsTotal, "IQD");
-    }
+        TotalDiscount = Price.Create(totalDiscount, currency);
+        GrandTotal = Price.Create(itemsTotal, currency);
 
-    private void UpdateStatusBasedOnPayment()
-    {
-        // Only update to PartiallyPaid, never auto-complete
-        if (AmountPaid.Amount > 0 && AmountPaid.Amount < GrandTotal.Amount)
+        // Enforce invariant: AmountPaid cannot exceed GrandTotal
+        if (AmountPaid.Amount > GrandTotal.Amount)
         {
-            Status = SaleStatus.PartiallyPaid;
+            // Reset AmountPaid to GrandTotal (auto-refund excess)
+            AmountPaid = GrandTotal;
         }
     }
+
 
     private static string GenerateSaleNumber(Guid organizationId)
     {
