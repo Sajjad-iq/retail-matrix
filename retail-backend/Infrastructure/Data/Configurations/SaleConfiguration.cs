@@ -112,11 +112,6 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
             .HasForeignKey(i => i.SaleId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(s => s.Payments)
-            .WithOne()
-            .HasForeignKey(p => p.SaleId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         // Soft delete
         builder.Property(s => s.IsDeleted)
             .IsRequired()

@@ -15,7 +15,6 @@ public class Sale : BaseEntity
     {
         SaleNumber = string.Empty;
         Items = new List<SaleItem>();
-        Payments = new List<Payment>();
         TotalDiscount = Price.Create(0, "IQD");
         GrandTotal = Price.Create(0, "IQD");
         AmountPaid = Price.Create(0, "IQD");
@@ -37,7 +36,6 @@ public class Sale : BaseEntity
         GrandTotal = Price.Create(0, "IQD");
         AmountPaid = Price.Create(0, "IQD");
         Items = new List<SaleItem>();
-        Payments = new List<Payment>();
         InsertDate = DateTime.UtcNow;
     }
 
@@ -54,7 +52,6 @@ public class Sale : BaseEntity
 
     // Navigation properties
     public List<SaleItem> Items { get; private set; }
-    public List<Payment> Payments { get; private set; }
 
     // Factory method
     public static Sale Create(
@@ -126,19 +123,13 @@ public class Sale : BaseEntity
         }
     }
 
-    public void AddPayment(PaymentMethod method, Price amount, string? referenceNumber = null)
+    public void RecordPayment(Price paymentAmount)
     {
-        if (amount.Amount <= 0)
-            throw new ArgumentException("المبلغ يجب أن يكون أكبر من صفر", nameof(amount));
-
-        var payment = Payment.Create(Id, method, amount, referenceNumber);
-        Payments.Add(payment);
+        if (paymentAmount.Amount <= 0)
+            throw new ArgumentException("المبلغ يجب أن يكون أكبر من صفر", nameof(paymentAmount));
 
         // Update amount paid
-        AmountPaid = Price.Create(
-            Payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.Amount.Amount),
-            "IQD"
-        );
+        AmountPaid = AmountPaid.Add(paymentAmount);
 
         // Update sale status
         UpdateStatusBasedOnPayment();

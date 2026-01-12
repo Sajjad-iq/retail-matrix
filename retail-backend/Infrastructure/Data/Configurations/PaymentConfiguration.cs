@@ -1,5 +1,5 @@
-using Domains.Sales.Entities;
-using Domains.Sales.Enums;
+using Domains.Payments.Entities;
+using Domains.Payments.Enums;
 using Domains.Shared.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -20,8 +20,8 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.HasKey(p => p.Id);
 
         // Indexes
-        builder.HasIndex(p => p.SaleId)
-            .HasDatabaseName("IX_Payments_Sale");
+        builder.HasIndex(p => new { p.EntityId, p.EntityType })
+            .HasDatabaseName("IX_Payments_Entity");
 
         builder.HasIndex(p => p.PaymentMethod)
             .HasDatabaseName("IX_Payments_PaymentMethod");
@@ -33,8 +33,12 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(p => p.Id)
             .ValueGeneratedNever(); // Generated in domain
 
-        builder.Property(p => p.SaleId)
+        builder.Property(p => p.EntityId)
             .IsRequired();
+
+        builder.Property(p => p.EntityType)
+            .IsRequired()
+            .HasConversion<string>();
 
         builder.Property(p => p.PaymentMethod)
             .IsRequired()

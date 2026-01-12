@@ -1,11 +1,11 @@
 using Domains.Shared.ValueObjects;  // For Price
-using Domains.Sales.Enums;
+using Domains.Payments.Enums;
 using Domains.Shared.Base;
 
-namespace Domains.Sales.Entities;
+namespace Domains.Payments.Entities;
 
 /// <summary>
-/// Payment entity - represents a payment transaction for a sale
+/// Payment entity - represents a payment transaction for any entity type
 /// </summary>
 public class Payment : BaseEntity
 {
@@ -17,13 +17,15 @@ public class Payment : BaseEntity
 
     // Private constructor to enforce factory methods
     private Payment(
-        Guid saleId,
+        Guid entityId,
+        PaymentEntityType entityType,
         PaymentMethod paymentMethod,
         Price amount,
         string? referenceNumber)
     {
         Id = Guid.NewGuid();
-        SaleId = saleId;
+        EntityId = entityId;
+        EntityType = entityType;
         PaymentMethod = paymentMethod;
         Amount = amount;
         PaymentDate = DateTime.UtcNow;
@@ -33,7 +35,8 @@ public class Payment : BaseEntity
     }
 
     // Properties
-    public Guid SaleId { get; private set; }
+    public Guid EntityId { get; private set; }
+    public PaymentEntityType EntityType { get; private set; }
     public PaymentMethod PaymentMethod { get; private set; }
     public Price Amount { get; private set; }
     public DateTime PaymentDate { get; private set; }
@@ -42,16 +45,21 @@ public class Payment : BaseEntity
 
     // Factory method
     public static Payment Create(
-        Guid saleId,
+        Guid entityId,
+        PaymentEntityType entityType,
         PaymentMethod paymentMethod,
         Price amount,
         string? referenceNumber = null)
     {
+        if (entityId == Guid.Empty)
+            throw new ArgumentException("معرف الكيان مطلوب", nameof(entityId));
+
         if (amount.Amount <= 0)
             throw new ArgumentException("المبلغ يجب أن يكون أكبر من صفر", nameof(amount));
 
         return new Payment(
-            saleId,
+            entityId,
+            entityType,
             paymentMethod,
             amount,
             referenceNumber

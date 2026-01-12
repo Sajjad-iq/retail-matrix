@@ -2,7 +2,6 @@ using Domains.Sales.Entities;
 using Domains.Sales.Repositories;
 using Domains.Sales.Enums;
 using Domains.Shared.Base;
-using Domains.Sales.Enums;
 using Domains.Products.Enums;
 using Domains.Organizations.Enums;
 using Domains.Users.Enums;
@@ -24,7 +23,6 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
     {
         return await _dbSet
             .Include(s => s.Items)
-            .Include(s => s.Payments)
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.SaleNumber == saleNumber, cancellationToken);
     }
@@ -36,7 +34,6 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
     {
         var query = _dbSet
             .Include(s => s.Items)
-            .Include(s => s.Payments)
             .AsNoTracking()
             .Where(s => s.OrganizationId == organizationId)
             .OrderByDescending(s => s.SaleDate);
@@ -60,7 +57,6 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
     {
         var query = _dbSet
             .Include(s => s.Items)
-            .Include(s => s.Payments)
             .AsNoTracking()
             .Where(s => s.OrganizationId == organizationId
                      && s.SaleDate >= startDate
@@ -85,7 +81,6 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
     {
         var query = _dbSet
             .Include(s => s.Items)
-            .Include(s => s.Payments)
             .AsNoTracking()
             .Where(s => s.OrganizationId == organizationId && s.Status == status)
             .OrderByDescending(s => s.SaleDate);
@@ -107,7 +102,6 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
     {
         var query = _dbSet
             .Include(s => s.Items)
-            .Include(s => s.Payments)
             .AsNoTracking()
             .Where(s => s.SalesPersonId == salesPersonId)
             .OrderByDescending(s => s.SaleDate);
@@ -142,7 +136,6 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
     {
         return await _dbSet
             .Include(s => s.Items)
-            .Include(s => s.Payments)
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }

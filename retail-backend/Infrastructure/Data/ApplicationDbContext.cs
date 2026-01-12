@@ -2,6 +2,7 @@ using Domains.Sales.Entities;
 using Domains.Products.Entities;
 using Domains.Organizations.Entities;
 using Domains.Users.Entities;
+using Domains.Payments.Entities;
 using Domains.Shared.Base;
 using Infrastructure.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ProductPackaging>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<ProductStock>().HasQueryFilter(s => !s.IsDeleted);
         modelBuilder.Entity<Sale>().HasQueryFilter(s => !s.IsDeleted);
+        modelBuilder.Entity<Payment>().HasQueryFilter(p => !p.IsDeleted);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

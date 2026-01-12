@@ -1,4 +1,4 @@
-namespace Domains.Sales.Enums;
+namespace Domains.Payments.Enums;
 
 public enum PaymentMethod
 {
