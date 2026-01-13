@@ -2,6 +2,7 @@ using Domains.Shared.ValueObjects;  // For Price
 using Domains.Sales.ValueObjects;  // For Discount
 using Domains.Sales.Enums;
 using Domains.Shared.Base;
+using Domains.Common.Currency.Services;
 
 namespace Domains.Sales.Entities;
 
@@ -60,7 +61,7 @@ public class Sale : BaseEntity
         Guid organizationId,
         Guid salesPersonId)
     {
-        var saleNumber = GenerateSaleNumber(organizationId);
+        var saleNumber = GenerateSaleNumber();
 
         return new Sale(
             saleNumber,
@@ -70,12 +71,14 @@ public class Sale : BaseEntity
     }
 
     // Domain methods
-    public void AddItem(
+    public async Task AddItemAsync(
         Guid productPackagingId,
         string productName,
         int quantity,
         Price unitPrice,
-        Discount? discount = null)
+        ICurrencyConversionService currencyService,
+        Discount? discount = null,
+        CancellationToken cancellationToken = default)
     {
         if (Status != SaleStatus.Draft)
             throw new InvalidOperationException("لا يمكن تعديل بيع مكتمل");
@@ -88,7 +91,7 @@ public class Sale : BaseEntity
         if (existingItem != null)
         {
             existingItem.UpdateQuantity(existingItem.Quantity + quantity);
-            RecalculateTotals();
+            await RecalculateTotalsAsync(currencyService, cancellationToken);
             return;
         }
 
@@ -106,10 +109,13 @@ public class Sale : BaseEntity
         );
 
         Items.Add(item);
-        RecalculateTotals();
+        await RecalculateTotalsAsync(currencyService, cancellationToken);
     }
 
-    public void RemoveItem(Guid itemId)
+    public async Task RemoveItemAsync(
+        Guid itemId,
+        ICurrencyConversionService currencyService,
+        CancellationToken cancellationToken = default)
     {
         if (Status != SaleStatus.Draft)
             throw new InvalidOperationException("لا يمكن تعديل بيع مكتمل");
@@ -119,10 +125,14 @@ public class Sale : BaseEntity
             throw new InvalidOperationException("العنصر غير موجود في البيع");
 
         Items.Remove(item);
-        RecalculateTotals();
+        await RecalculateTotalsAsync(currencyService, cancellationToken);
     }
 
-    public void UpdateItemQuantity(Guid itemId, int newQuantity)
+    public async Task UpdateItemQuantityAsync(
+        Guid itemId,
+        int newQuantity,
+        ICurrencyConversionService currencyService,
+        CancellationToken cancellationToken = default)
     {
         if (Status != SaleStatus.Draft)
             throw new InvalidOperationException("لا يمكن تعديل بيع مكتمل");
@@ -135,7 +145,7 @@ public class Sale : BaseEntity
             throw new InvalidOperationException("العنصر غير موجود في البيع");
 
         item.UpdateQuantity(newQuantity);
-        RecalculateTotals();
+        await RecalculateTotalsAsync(currencyService, cancellationToken);
     }
 
     public void RecordPayment(Price paymentAmount)
@@ -195,23 +205,54 @@ public class Sale : BaseEntity
     }
 
     // Private helpers
-    private void RecalculateTotals()
+    private async Task RecalculateTotalsAsync(
+        ICurrencyConversionService currencyService,
+        CancellationToken cancellationToken = default)
     {
-        // Get currency from first item, default to IQD if no items
-        var currency = Items.FirstOrDefault()?.UnitPrice.Currency ?? "IQD";
+        if (!Items.Any())
+        {
+            // No items, reset to zero in IQD
+            TotalDiscount = Price.Create(0, "IQD");
+            GrandTotal = Price.Create(0, "IQD");
+            return;
+        }
 
-        // Calculate grand total from all line items
-        var itemsTotal = Items.Sum(i => i.LineTotal.Amount);
+        // Get base currency for organization
+        var baseCurrency = await currencyService.GetBaseCurrencyCodeAsync(OrganizationId, cancellationToken);
 
-        // Calculate total discount from all items
-        var totalDiscount = Items
-            .Where(i => i.Discount != null)
-            .Sum(i => i.Discount!.CalculateDiscount(
-                Price.Create(i.UnitPrice.Amount * i.Quantity, i.UnitPrice.Currency)
-            ).Amount);
+        decimal totalInBase = 0;
+        decimal discountInBase = 0;
 
-        TotalDiscount = Price.Create(totalDiscount, currency);
-        GrandTotal = Price.Create(itemsTotal, currency);
+        // Convert each item to base currency
+        foreach (var item in Items)
+        {
+            // Convert line total to base currency
+            var itemTotalInBase = await currencyService.ConvertToBaseCurrencyAsync(
+                item.LineTotal.Amount,
+                item.UnitPrice.Currency,
+                OrganizationId,
+                cancellationToken);
+
+            totalInBase += itemTotalInBase;
+
+            // Convert discount if exists
+            if (item.Discount != null)
+            {
+                var itemBasePrice = Price.Create(item.UnitPrice.Amount * item.Quantity, item.UnitPrice.Currency);
+                var discountAmount = item.Discount.CalculateDiscount(itemBasePrice).Amount;
+
+                var discountInBaseCurrency = await currencyService.ConvertToBaseCurrencyAsync(
+                    discountAmount,
+                    item.UnitPrice.Currency,
+                    OrganizationId,
+                    cancellationToken);
+
+                discountInBase += discountInBaseCurrency;
+            }
+        }
+
+        TotalDiscount = Price.Create(discountInBase, baseCurrency);
+        GrandTotal = Price.Create(totalInBase, baseCurrency);
 
         // Enforce invariant: AmountPaid cannot exceed GrandTotal
         if (AmountPaid.Amount > GrandTotal.Amount)
@@ -222,7 +263,7 @@ public class Sale : BaseEntity
     }
 
 
-    private static string GenerateSaleNumber(Guid organizationId)
+    private static string GenerateSaleNumber()
     {
         // Format: SAL-YYYYMMDD-GUID (thread-safe and guaranteed unique)
         var date = DateTime.UtcNow.ToString("yyyyMMdd");

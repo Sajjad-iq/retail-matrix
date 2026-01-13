@@ -3,10 +3,12 @@ using Domains.Products.Repositories;
 using Domains.Organizations.Repositories;
 using Domains.Users.Repositories;
 using Domains.Common.Currency.Repositories;
+using Domains.Common.Currency.Services;
 using Domains.Users.Services;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Infrastructure.Security;
+using Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure;
@@ -21,8 +23,12 @@ public static class Extensions
     /// </summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
+        // Memory Cache
+        services.AddMemoryCache();
+
         // Domain Services
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+        services.AddScoped<ICurrencyConversionService, CurrencyConversionService>();
 
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
