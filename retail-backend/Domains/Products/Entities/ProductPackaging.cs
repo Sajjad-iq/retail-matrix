@@ -13,8 +13,8 @@ public class ProductPackaging : BaseEntity
     // Parameterless constructor for EF Core
     private ProductPackaging()
     {
-        CostPrice = Price.Create(0, "IQD");
-        SellingPrice = Price.Create(0, "IQD");
+        CostPrice = null!;      // Will be set by EF Core
+        SellingPrice = null!;   // Will be set by EF Core
     }
 
     // Private constructor to enforce factory methods

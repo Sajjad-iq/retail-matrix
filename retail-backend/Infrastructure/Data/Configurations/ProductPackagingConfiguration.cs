@@ -59,8 +59,7 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
             priceBuilder.Property(price => price.Currency)
                 .HasColumnName("CostCurrency")
                 .IsRequired()
-                .HasMaxLength(3)
-                .HasDefaultValue("IQD");
+                .HasMaxLength(3);
         });
 
         builder.ComplexProperty(p => p.SellingPrice, priceBuilder =>
@@ -73,8 +72,7 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
             priceBuilder.Property(price => price.Currency)
                 .HasColumnName("SellingCurrency")
                 .IsRequired()
-                .HasMaxLength(3)
-                .HasDefaultValue("IQD");
+                .HasMaxLength(3);
         });
 
         builder.Property(p => p.ReorderLevel)
@@ -131,8 +129,8 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
 
         // Relationships
         builder.HasOne(p => p.Product)
-            .WithMany()
+            .WithMany(prod => prod.Packagings)
             .HasForeignKey(p => p.ProductId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

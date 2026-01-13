@@ -25,6 +25,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductPackaging> ProductPackagings => Set<ProductPackaging>();
     public DbSet<ProductStock> ProductStocks => Set<ProductStock>();
+    public DbSet<Category> Categories => Set<Category>();
     public DbSet<Sale> Sales => Set<Sale>();
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
     public DbSet<Currency> Currencies => Set<Currency>();
@@ -39,6 +40,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new ProductPackagingConfiguration());
         modelBuilder.ApplyConfiguration(new ProductStockConfiguration());
+        modelBuilder.ApplyConfiguration(new CategoryConfiguration());
         modelBuilder.ApplyConfiguration(new SaleConfiguration());
         modelBuilder.ApplyConfiguration(new SaleItemConfiguration());
         modelBuilder.ApplyConfiguration(new CurrencyConfiguration());
@@ -49,6 +51,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<ProductPackaging>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<ProductStock>().HasQueryFilter(s => !s.IsDeleted);
+        modelBuilder.Entity<Category>().HasQueryFilter(c => !c.IsDeleted);
         modelBuilder.Entity<Sale>().HasQueryFilter(s => !s.IsDeleted);
     }
 

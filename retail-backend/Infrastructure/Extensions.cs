@@ -36,6 +36,7 @@ public static class Extensions
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductPackagingRepository, ProductPackagingRepository>();
         services.AddScoped<IProductStockRepository, ProductStockRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ICurrencyRepository, CurrencyRepository>();
 
         // Add more repositories here as you create them:

@@ -1,5 +1,6 @@
 using Domains.Products.Enums;
 using Domains.Shared.Base;
+using Domains.Shared.ValueObjects;
 using NameVO = Domains.Users.ValueObjects.Name;
 
 namespace Domains.Products.Entities;
@@ -14,6 +15,7 @@ public class Product : BaseEntity
     {
         Name = string.Empty;
         Description = string.Empty;
+        Packagings = new List<ProductPackaging>();
     }
 
     // Private constructor to enforce factory methods
@@ -29,6 +31,7 @@ public class Product : BaseEntity
         OrganizationId = organizationId;
         ImageUrl = imageUrl;
         Status = ProductStatus.Active;
+        Packagings = new List<ProductPackaging>();
         InsertDate = DateTime.UtcNow;
     }
 
@@ -38,6 +41,11 @@ public class Product : BaseEntity
     public ProductStatus Status { get; private set; }
     public Guid OrganizationId { get; private set; }
     public string? ImageUrl { get; private set; }
+    public Guid? CategoryId { get; private set; }
+
+    // Navigation properties
+    public Category? Category { get; private set; }
+    public List<ProductPackaging> Packagings { get; private set; }
 
     /// <summary>
     /// Factory method to create a new product
@@ -91,5 +99,60 @@ public class Product : BaseEntity
     public void Discontinue()
     {
         Status = ProductStatus.Discontinued;
+    }
+
+    public void AssignCategory(Guid categoryId)
+    {
+        if (categoryId == Guid.Empty)
+            throw new ArgumentException("معرف الفئة غير صالح", nameof(categoryId));
+
+        CategoryId = categoryId;
+    }
+
+    public void UnassignCategory()
+    {
+        CategoryId = null;
+    }
+
+    public ProductPackaging AddPackaging(
+        Price costPrice,
+        Price sellingPrice,
+        UnitOfMeasure unitOfMeasure,
+        string? barcode = null,
+        int unitsPerPackage = 1,
+        int reorderLevel = 10,
+        bool isDefault = false,
+        string? imageUrl = null,
+        string? dimensions = null,
+        Weight? weight = null,
+        string? color = null)
+    {
+        var packaging = ProductPackaging.Create(
+            productId: Id,
+            costPrice: costPrice,
+            sellingPrice: sellingPrice,
+            unitOfMeasure: unitOfMeasure,
+            organizationId: OrganizationId,
+            barcode: barcode,
+            unitsPerPackage: unitsPerPackage,
+            reorderLevel: reorderLevel,
+            isDefault: isDefault,
+            imageUrl: imageUrl,
+            dimensions: dimensions,
+            weight: weight,
+            color: color
+        );
+
+        Packagings.Add(packaging);
+        return packaging;
+    }
+
+    public void RemovePackaging(Guid packagingId)
+    {
+        var packaging = Packagings.FirstOrDefault(p => p.Id == packagingId);
+        if (packaging == null)
+            throw new InvalidOperationException("العبوة غير موجودة");
+
+        Packagings.Remove(packaging);
     }
 }

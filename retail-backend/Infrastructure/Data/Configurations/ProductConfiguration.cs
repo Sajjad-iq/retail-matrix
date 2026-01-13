@@ -25,6 +25,9 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(p => p.Status)
             .HasDatabaseName("IX_Products_Status");
 
+        builder.HasIndex(p => p.CategoryId)
+            .HasDatabaseName("IX_Products_Category");
+
         // Properties configuration
         builder.Property(p => p.Id)
             .ValueGeneratedNever(); // Generated in domain
@@ -60,5 +63,16 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.DeletedAt)
             .IsRequired(false);
+
+        // Relationships
+        builder.HasOne(p => p.Category)
+            .WithMany()
+            .HasForeignKey(p => p.CategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasMany(p => p.Packagings)
+            .WithOne(pp => pp.Product)
+            .HasForeignKey(pp => pp.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
