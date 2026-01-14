@@ -16,6 +16,7 @@ public class Product : BaseEntity
         Name = string.Empty;
         Description = string.Empty;
         Packagings = new List<ProductPackaging>();
+        ImageUrls = new List<string>();
     }
 
     // Private constructor to enforce factory methods
@@ -23,13 +24,13 @@ public class Product : BaseEntity
         string name,
         Guid organizationId,
         string? description = null,
-        string? imageUrl = null)
+        List<string>? imageUrls = null)
     {
         Id = Guid.NewGuid();
         Name = name;
         Description = description ?? string.Empty;
         OrganizationId = organizationId;
-        ImageUrl = imageUrl;
+        ImageUrls = imageUrls ?? new List<string>();
         Status = ProductStatus.Active;
         Packagings = new List<ProductPackaging>();
         InsertDate = DateTime.UtcNow;
@@ -40,7 +41,7 @@ public class Product : BaseEntity
     public string Description { get; private set; }
     public ProductStatus Status { get; private set; }
     public Guid OrganizationId { get; private set; }
-    public string? ImageUrl { get; private set; }
+    public List<string> ImageUrls { get; private set; }
     public Guid? CategoryId { get; private set; }
 
     // Navigation properties
@@ -54,7 +55,7 @@ public class Product : BaseEntity
         string name,
         Guid organizationId,
         string? description = null,
-        string? imageUrl = null)
+        List<string>? imageUrls = null)
     {
         // Validate using value objects
         var productName = NameVO.Create(name, minLength: 2, maxLength: 200);
@@ -66,7 +67,7 @@ public class Product : BaseEntity
             name: productName,
             organizationId: organizationId,
             description: description?.Trim(),
-            imageUrl: imageUrl
+            imageUrls: imageUrls
         );
     }
 
@@ -74,13 +75,13 @@ public class Product : BaseEntity
     public void UpdateBasicInfo(
         string name,
         string? description = null,
-        string? imageUrl = null)
+        List<string>? imageUrls = null)
     {
         var productName = NameVO.Create(name, minLength: 2, maxLength: 200);
 
         Name = productName;
         Description = description?.Trim() ?? Description;
-        ImageUrl = imageUrl ?? ImageUrl;
+        ImageUrls = imageUrls ?? ImageUrls;
     }
 
     public void Activate()

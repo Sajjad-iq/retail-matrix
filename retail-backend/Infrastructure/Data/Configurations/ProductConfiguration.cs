@@ -47,8 +47,11 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.OrganizationId)
             .IsRequired();
 
-        builder.Property(p => p.ImageUrl)
-            .HasMaxLength(500);
+        builder.Property(p => p.ImageUrls)
+            .HasConversion(
+                v => string.Join(",", v),
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList())
+            .HasMaxLength(2000);
 
         builder.Property(p => p.IsDeleted)
             .IsRequired()
