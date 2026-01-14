@@ -14,6 +14,7 @@ public class ProductPackaging : BaseEntity
     private ProductPackaging()
     {
         SellingPrice = null!;   // Will be set by EF Core
+        ImageUrls = new List<string>();  // Initialize empty list
     }
 
     // Private constructor to enforce factory methods
@@ -26,7 +27,7 @@ public class ProductPackaging : BaseEntity
         int unitsPerPackage = 1,
         int reorderLevel = 10,
         bool isDefault = false,
-        string? imageUrl = null,
+        List<string>? imageUrls = null,
         string? dimensions = null,
         Weight? weight = null,
         string? color = null)
@@ -40,7 +41,7 @@ public class ProductPackaging : BaseEntity
         ReorderLevel = reorderLevel;
         IsDefault = isDefault;
         IsActive = true;
-        ImageUrl = imageUrl;
+        ImageUrls = imageUrls ?? new List<string>();
         Dimensions = dimensions;
         Weight = weight;
         Color = color;
@@ -57,7 +58,7 @@ public class ProductPackaging : BaseEntity
     public int ReorderLevel { get; private set; }
     public bool IsDefault { get; private set; }
     public bool IsActive { get; private set; }
-    public string? ImageUrl { get; private set; }
+    public List<string> ImageUrls { get; private set; }
     public string? Dimensions { get; private set; } // Dimensions as string (e.g., "10x20x30 cm", "5x8x12 in")
     public Weight? Weight { get; private set; } // Weight of the package
     public string? Color { get; private set; } // Color of the package (e.g., "Red", "Blue", "#FF5733")
@@ -78,7 +79,7 @@ public class ProductPackaging : BaseEntity
         int unitsPerPackage = 1,
         int reorderLevel = 10,
         bool isDefault = false,
-        string? imageUrl = null,
+        List<string>? imageUrls = null,
         string? dimensions = null,
         Weight? weight = null,
         string? color = null)
@@ -110,7 +111,7 @@ public class ProductPackaging : BaseEntity
             unitsPerPackage: unitsPerPackage,
             reorderLevel: reorderLevel,
             isDefault: isDefault,
-            imageUrl: imageUrl,
+            imageUrls: imageUrls,
             dimensions: dimensions,
             weight: weight,
             color: color
@@ -166,9 +167,9 @@ public class ProductPackaging : BaseEntity
         IsActive = false;
     }
 
-    public void UpdateImage(string? imageUrl)
+    public void UpdateImages(List<string>? imageUrls)
     {
-        ImageUrl = imageUrl;
+        ImageUrls = imageUrls ?? new List<string>();
     }
 
     public void UpdateDimensions(string? dimensions)

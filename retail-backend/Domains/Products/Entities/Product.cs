@@ -121,7 +121,7 @@ public class Product : BaseEntity
         int unitsPerPackage = 1,
         int reorderLevel = 10,
         bool isDefault = false,
-        string? imageUrl = null,
+        List<string>? imageUrls = null,
         string? dimensions = null,
         Weight? weight = null,
         string? color = null)
@@ -135,7 +135,7 @@ public class Product : BaseEntity
             unitsPerPackage: unitsPerPackage,
             reorderLevel: reorderLevel,
             isDefault: isDefault,
-            imageUrl: imageUrl,
+            imageUrls: imageUrls,
             dimensions: dimensions,
             weight: weight,
             color: color

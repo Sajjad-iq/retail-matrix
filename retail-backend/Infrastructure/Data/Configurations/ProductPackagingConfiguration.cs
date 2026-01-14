@@ -74,8 +74,11 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
             .IsRequired()
             .HasDefaultValue(true);
 
-        builder.Property(p => p.ImageUrl)
-            .HasMaxLength(500);
+        builder.Property(p => p.ImageUrls)
+            .HasConversion(
+                v => string.Join(",", v),  // Convert list to comma-separated string
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList())  // Convert back to list
+            .HasMaxLength(2000);  // Increased for multiple URLs
 
         builder.Property(p => p.Dimensions)
             .HasMaxLength(100);
