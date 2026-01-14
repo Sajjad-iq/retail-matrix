@@ -13,6 +13,7 @@ public class ProductPackaging : BaseEntity
     // Parameterless constructor for EF Core
     private ProductPackaging()
     {
+        Name = string.Empty;
         SellingPrice = null!;   // Will be set by EF Core
         ImageUrls = new List<string>();  // Initialize empty list
     }
@@ -20,9 +21,9 @@ public class ProductPackaging : BaseEntity
     // Private constructor to enforce factory methods
     private ProductPackaging(
         Guid productId,
+        string name,
         Price sellingPrice,
         UnitOfMeasure unitOfMeasure,
-        Guid organizationId,
         string? barcode = null,
         string? description = null,
         int unitsPerPackage = 1,
@@ -35,6 +36,7 @@ public class ProductPackaging : BaseEntity
     {
         Id = Guid.NewGuid();
         ProductId = productId;
+        Name = name;
         Barcode = barcode;
         Description = description;
         UnitsPerPackage = unitsPerPackage;
@@ -46,13 +48,13 @@ public class ProductPackaging : BaseEntity
         Dimensions = dimensions;
         Weight = weight;
         Color = color;
-        OrganizationId = organizationId;
         InsertDate = DateTime.UtcNow;
         Status = ProductStatus.Active;  // Default to Active
     }
 
     // Properties
     public Guid ProductId { get; private set; }
+    public string Name { get; private set; }
     public string? Barcode { get; private set; }
     public string? Description { get; private set; }
     public int UnitsPerPackage { get; private set; }
@@ -65,7 +67,6 @@ public class ProductPackaging : BaseEntity
     public string? Dimensions { get; private set; } // Dimensions as string (e.g., "10x20x30 cm", "5x8x12 in")
     public Weight? Weight { get; private set; } // Weight of the package
     public string? Color { get; private set; } // Color of the package (e.g., "Red", "Blue", "#FF5733")
-    public Guid OrganizationId { get; private set; }
 
     // Navigation properties
     public Product? Product { get; private set; }
@@ -75,9 +76,9 @@ public class ProductPackaging : BaseEntity
     /// </summary>
     public static ProductPackaging Create(
         Guid productId,
+        string name,
         Price sellingPrice,
         UnitOfMeasure unitOfMeasure,
-        Guid organizationId,
         string? barcode = null,
         string? description = null,
         int unitsPerPackage = 1,
@@ -97,9 +98,6 @@ public class ProductPackaging : BaseEntity
         if (productId == Guid.Empty)
             throw new ArgumentException("معرف المنتج مطلوب", nameof(productId));
 
-        if (organizationId == Guid.Empty)
-            throw new ArgumentException("معرف المؤسسة مطلوب", nameof(organizationId));
-
         if (unitsPerPackage <= 0)
             throw new ArgumentException("عدد الوحدات في العبوة يجب أن يكون أكبر من صفر", nameof(unitsPerPackage));
 
@@ -108,9 +106,9 @@ public class ProductPackaging : BaseEntity
 
         return new ProductPackaging(
             productId: productId,
+            name: name,
             sellingPrice: sellingPrice,
             unitOfMeasure: unitOfMeasure,
-            organizationId: organizationId,
             barcode: barcode,
             description: description,
             unitsPerPackage: unitsPerPackage,

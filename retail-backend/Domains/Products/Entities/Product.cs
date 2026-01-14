@@ -13,35 +13,23 @@ public class Product : BaseEntity
     // Parameterless constructor for EF Core
     private Product()
     {
-        Name = string.Empty;
-        Description = string.Empty;
         Packagings = new List<ProductPackaging>();
-        ImageUrls = new List<string>();
     }
 
     // Private constructor to enforce factory methods
     private Product(
-        string name,
-        Guid organizationId,
-        string? description = null,
-        List<string>? imageUrls = null)
+        Guid organizationId)
     {
         Id = Guid.NewGuid();
-        Name = name;
-        Description = description ?? string.Empty;
         OrganizationId = organizationId;
-        ImageUrls = imageUrls ?? new List<string>();
         Status = ProductStatus.Active;
         Packagings = new List<ProductPackaging>();
         InsertDate = DateTime.UtcNow;
     }
 
     // Properties with proper encapsulation
-    public string Name { get; private set; }
-    public string Description { get; private set; }
     public ProductStatus Status { get; private set; }
     public Guid OrganizationId { get; private set; }
-    public List<string> ImageUrls { get; private set; }
     public Guid? CategoryId { get; private set; }
 
     // Navigation properties
@@ -52,37 +40,17 @@ public class Product : BaseEntity
     /// Factory method to create a new product
     /// </summary>
     public static Product Create(
-        string name,
-        Guid organizationId,
-        string? description = null,
-        List<string>? imageUrls = null)
+        Guid organizationId)
     {
-        // Validate using value objects
-        var productName = NameVO.Create(name, minLength: 2, maxLength: 200);
-
         if (organizationId == Guid.Empty)
             throw new ArgumentException("معرف المؤسسة مطلوب", nameof(organizationId));
 
         return new Product(
-            name: productName,
-            organizationId: organizationId,
-            description: description?.Trim(),
-            imageUrls: imageUrls
+            organizationId: organizationId
         );
     }
 
-    // Domain Methods
-    public void UpdateBasicInfo(
-        string name,
-        string? description = null,
-        List<string>? imageUrls = null)
-    {
-        var productName = NameVO.Create(name, minLength: 2, maxLength: 200);
 
-        Name = productName;
-        Description = description?.Trim() ?? Description;
-        ImageUrls = imageUrls ?? ImageUrls;
-    }
 
     public void Activate()
     {
@@ -116,6 +84,7 @@ public class Product : BaseEntity
     }
 
     public ProductPackaging AddPackaging(
+        string name,
         Price sellingPrice,
         UnitOfMeasure unitOfMeasure,
         string? barcode = null,
@@ -130,9 +99,9 @@ public class Product : BaseEntity
     {
         var packaging = ProductPackaging.Create(
             productId: Id,
+            name: name,
             sellingPrice: sellingPrice,
             unitOfMeasure: unitOfMeasure,
-            organizationId: OrganizationId,
             barcode: barcode,
             description: description,
             unitsPerPackage: unitsPerPackage,

@@ -5,6 +5,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -12,9 +13,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace retail_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260114104759_MovePropertiesToProductPackaging")]
+    partial class MovePropertiesToProductPackaging
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -309,6 +312,9 @@ namespace retail_backend.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("char(36)");
+
                     b.Property<Guid>("ProductId")
                         .HasColumnType("char(36)");
 
@@ -374,6 +380,9 @@ namespace retail_backend.Migrations
 
                     b.HasIndex("IsDefault")
                         .HasDatabaseName("IX_ProductPackagings_IsDefault");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("IX_ProductPackagings_Organization");
 
                     b.HasIndex("ProductId")
                         .HasDatabaseName("IX_ProductPackagings_Product");

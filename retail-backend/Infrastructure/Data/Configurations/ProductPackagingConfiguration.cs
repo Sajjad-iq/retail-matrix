@@ -27,15 +27,16 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
         builder.HasIndex(p => p.ProductId)
             .HasDatabaseName("IX_ProductPackagings_Product");
 
-        builder.HasIndex(p => p.OrganizationId)
-            .HasDatabaseName("IX_ProductPackagings_Organization");
-
         builder.HasIndex(p => p.IsDefault)
             .HasDatabaseName("IX_ProductPackagings_IsDefault");
 
         // Properties configuration
         builder.Property(p => p.Id)
             .ValueGeneratedNever(); // Generated in domain
+
+        builder.Property(p => p.Name)
+            .IsRequired()
+            .HasMaxLength(200);
 
         builder.Property(p => p.Barcode)
             .HasMaxLength(13);
@@ -103,9 +104,6 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
 
         builder.Property(p => p.Color)
             .HasMaxLength(50);
-
-        builder.Property(p => p.OrganizationId)
-            .IsRequired();
 
         builder.Property(p => p.IsDeleted)
             .IsRequired()

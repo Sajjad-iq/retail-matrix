@@ -57,7 +57,8 @@ public class ProductPackagingRepository : Repository<ProductPackaging>, IProduct
     {
         var query = _dbSet
             .AsNoTracking()
-            .Where(p => p.OrganizationId == organizationId)
+            .Include(p => p.Product)
+            .Where(p => p.Product!.OrganizationId == organizationId)
             .OrderBy(p => p.ProductId);
 
         var totalCount = await query.CountAsync(cancellationToken);

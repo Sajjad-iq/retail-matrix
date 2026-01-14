@@ -32,13 +32,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.Id)
             .ValueGeneratedNever(); // Generated in domain
 
-        builder.Property(p => p.Name)
-            .IsRequired()
-            .HasMaxLength(200);
-
-        builder.Property(p => p.Description)
-            .HasMaxLength(1000);
-
         builder.Property(p => p.Status)
             .IsRequired()
             .HasConversion<string>()
@@ -46,12 +39,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.OrganizationId)
             .IsRequired();
-
-        builder.Property(p => p.ImageUrls)
-            .HasConversion(
-                v => string.Join(",", v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList())
-            .HasMaxLength(2000);
 
         builder.Property(p => p.IsDeleted)
             .IsRequired()

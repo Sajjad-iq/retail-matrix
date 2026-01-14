@@ -34,7 +34,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
         var query = _dbSet
             .AsNoTracking()
             .Where(p => p.OrganizationId == organizationId)
-            .OrderBy(p => p.Name);
+            .OrderBy(p => p.Id);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -55,7 +55,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
         var query = _dbSet
             .AsNoTracking()
             .Where(p => p.Status == status && p.OrganizationId == organizationId)
-            .OrderBy(p => p.Name);
+            .OrderBy(p => p.Id);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
