@@ -1,4 +1,5 @@
 using Domains.Products.Entities;
+using Domains.Products.Enums;
 using Domains.Products.Repositories;
 using Domains.Shared.Base;
 using Infrastructure.Data;
@@ -76,7 +77,7 @@ public class ProductPackagingRepository : Repository<ProductPackaging>, IProduct
     {
         var query = _dbSet
             .AsNoTracking()
-            .Where(p => p.ProductId == productId && p.IsActive)
+            .Where(p => p.ProductId == productId && p.Status == ProductStatus.Active)
             .OrderBy(p => p.ProductId);
 
         var totalCount = await query.CountAsync(cancellationToken);

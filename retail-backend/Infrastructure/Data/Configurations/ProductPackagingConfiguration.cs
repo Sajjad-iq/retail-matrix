@@ -70,9 +70,13 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
             .IsRequired()
             .HasDefaultValue(false);
 
-        builder.Property(p => p.IsActive)
+        builder.Property(p => p.Status)
             .IsRequired()
-            .HasDefaultValue(true);
+            .HasConversion<string>()
+            .HasDefaultValue(ProductStatus.Active);
+
+        builder.Property(p => p.Description)
+            .HasMaxLength(500);
 
         builder.Property(p => p.ImageUrls)
             .HasConversion(

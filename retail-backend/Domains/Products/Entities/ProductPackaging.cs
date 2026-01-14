@@ -24,6 +24,7 @@ public class ProductPackaging : BaseEntity
         UnitOfMeasure unitOfMeasure,
         Guid organizationId,
         string? barcode = null,
+        string? description = null,
         int unitsPerPackage = 1,
         int reorderLevel = 10,
         bool isDefault = false,
@@ -35,29 +36,31 @@ public class ProductPackaging : BaseEntity
         Id = Guid.NewGuid();
         ProductId = productId;
         Barcode = barcode;
+        Description = description;
         UnitsPerPackage = unitsPerPackage;
         UnitOfMeasure = unitOfMeasure;
         SellingPrice = sellingPrice;
         ReorderLevel = reorderLevel;
         IsDefault = isDefault;
-        IsActive = true;
         ImageUrls = imageUrls ?? new List<string>();
         Dimensions = dimensions;
         Weight = weight;
         Color = color;
         OrganizationId = organizationId;
         InsertDate = DateTime.UtcNow;
+        Status = ProductStatus.Active;  // Default to Active
     }
 
     // Properties
     public Guid ProductId { get; private set; }
     public string? Barcode { get; private set; }
+    public string? Description { get; private set; }
     public int UnitsPerPackage { get; private set; }
     public UnitOfMeasure UnitOfMeasure { get; private set; }
     public Price SellingPrice { get; private set; }
     public int ReorderLevel { get; private set; }
     public bool IsDefault { get; private set; }
-    public bool IsActive { get; private set; }
+    public ProductStatus Status { get; private set; }
     public List<string> ImageUrls { get; private set; }
     public string? Dimensions { get; private set; } // Dimensions as string (e.g., "10x20x30 cm", "5x8x12 in")
     public Weight? Weight { get; private set; } // Weight of the package
@@ -76,6 +79,7 @@ public class ProductPackaging : BaseEntity
         UnitOfMeasure unitOfMeasure,
         Guid organizationId,
         string? barcode = null,
+        string? description = null,
         int unitsPerPackage = 1,
         int reorderLevel = 10,
         bool isDefault = false,
@@ -108,6 +112,7 @@ public class ProductPackaging : BaseEntity
             unitOfMeasure: unitOfMeasure,
             organizationId: organizationId,
             barcode: barcode,
+            description: description,
             unitsPerPackage: unitsPerPackage,
             reorderLevel: reorderLevel,
             isDefault: isDefault,
@@ -159,17 +164,27 @@ public class ProductPackaging : BaseEntity
 
     public void Activate()
     {
-        IsActive = true;
+        Status = ProductStatus.Active;
     }
 
     public void Deactivate()
     {
-        IsActive = false;
+        Status = ProductStatus.Inactive;
+    }
+
+    public void Discontinue()
+    {
+        Status = ProductStatus.Discontinued;
     }
 
     public void UpdateImages(List<string>? imageUrls)
     {
         ImageUrls = imageUrls ?? new List<string>();
+    }
+
+    public void UpdateDescription(string? description)
+    {
+        Description = description;
     }
 
     public void UpdateDimensions(string? dimensions)
