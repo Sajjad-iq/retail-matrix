@@ -1,7 +1,7 @@
-using Domains.Products.Entities;
+using Domains.Stock.Entities;
 using Domains.Shared.Base;
 
-namespace Domains.Products.Repositories;
+namespace Domains.Stock.Repositories;
 
 /// <summary>
 /// Repository interface for ProductStock entity

@@ -115,7 +115,6 @@ public class Product : BaseEntity
     }
 
     public ProductPackaging AddPackaging(
-        Price costPrice,
         Price sellingPrice,
         UnitOfMeasure unitOfMeasure,
         string? barcode = null,
@@ -129,7 +128,6 @@ public class Product : BaseEntity
     {
         var packaging = ProductPackaging.Create(
             productId: Id,
-            costPrice: costPrice,
             sellingPrice: sellingPrice,
             unitOfMeasure: unitOfMeasure,
             organizationId: OrganizationId,

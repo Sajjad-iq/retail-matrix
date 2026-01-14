@@ -1,4 +1,5 @@
 using Domains.Sales.Repositories;
+using Domains.Stock.Repositories;
 using Domains.Products.Repositories;
 using Domains.Organizations.Repositories;
 using Domains.Users.Repositories;
@@ -37,6 +38,8 @@ public static class Extensions
         services.AddScoped<IProductPackagingRepository, ProductPackagingRepository>();
         services.AddScoped<IProductStockRepository, ProductStockRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+        services.AddScoped<IStockBatchRepository, StockBatchRepository>();
         services.AddScoped<ICurrencyRepository, CurrencyRepository>();
 
         // Add more repositories here as you create them:

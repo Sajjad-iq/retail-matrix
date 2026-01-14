@@ -13,14 +13,12 @@ public class ProductPackaging : BaseEntity
     // Parameterless constructor for EF Core
     private ProductPackaging()
     {
-        CostPrice = null!;      // Will be set by EF Core
         SellingPrice = null!;   // Will be set by EF Core
     }
 
     // Private constructor to enforce factory methods
     private ProductPackaging(
         Guid productId,
-        Price costPrice,
         Price sellingPrice,
         UnitOfMeasure unitOfMeasure,
         Guid organizationId,
@@ -38,7 +36,6 @@ public class ProductPackaging : BaseEntity
         Barcode = barcode;
         UnitsPerPackage = unitsPerPackage;
         UnitOfMeasure = unitOfMeasure;
-        CostPrice = costPrice;
         SellingPrice = sellingPrice;
         ReorderLevel = reorderLevel;
         IsDefault = isDefault;
@@ -56,7 +53,6 @@ public class ProductPackaging : BaseEntity
     public string? Barcode { get; private set; }
     public int UnitsPerPackage { get; private set; }
     public UnitOfMeasure UnitOfMeasure { get; private set; }
-    public Price CostPrice { get; private set; }
     public Price SellingPrice { get; private set; }
     public int ReorderLevel { get; private set; }
     public bool IsDefault { get; private set; }
@@ -75,7 +71,6 @@ public class ProductPackaging : BaseEntity
     /// </summary>
     public static ProductPackaging Create(
         Guid productId,
-        Price costPrice,
         Price sellingPrice,
         UnitOfMeasure unitOfMeasure,
         Guid organizationId,
@@ -88,10 +83,6 @@ public class ProductPackaging : BaseEntity
         Weight? weight = null,
         string? color = null)
     {
-
-        if (sellingPrice.Amount < costPrice.Amount)
-            throw new ArgumentException("سعر البيع يجب أن يكون أكبر من أو يساوي سعر التكلفة", nameof(sellingPrice));
-
         // Validate Barcode if provided
         if (barcode != null)
         {
@@ -112,7 +103,6 @@ public class ProductPackaging : BaseEntity
 
         return new ProductPackaging(
             productId: productId,
-            costPrice: costPrice,
             sellingPrice: sellingPrice,
             unitOfMeasure: unitOfMeasure,
             organizationId: organizationId,
@@ -128,12 +118,8 @@ public class ProductPackaging : BaseEntity
     }
 
     // Domain Methods
-    public void UpdatePricing(Price costPrice, Price sellingPrice)
+    public void UpdatePricing(Price sellingPrice)
     {
-        if (sellingPrice.Amount < costPrice.Amount)
-            throw new ArgumentException("سعر البيع يجب أن يكون أكبر من أو يساوي سعر التكلفة", nameof(sellingPrice));
-
-        CostPrice = costPrice;
         SellingPrice = sellingPrice;
     }
 
@@ -200,7 +186,4 @@ public class ProductPackaging : BaseEntity
         Color = color;
     }
 
-    public decimal GetProfitMargin() => SellingPrice.Subtract(CostPrice).Amount;
-
-    public decimal GetProfitMarginPercentage() => CostPrice.Amount > 0 ? ((SellingPrice.Amount - CostPrice.Amount) / CostPrice.Amount) * 100 : 0;
 }

@@ -5,6 +5,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -12,9 +13,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace retail_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260113165434_AddStockMovementTracking")]
+    partial class AddStockMovementTracking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -340,6 +343,22 @@ namespace retail_backend.Migrations
 
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("datetime(6)");
+
+                    b.ComplexProperty<Dictionary<string, object>>("CostPrice", "Domains.Products.Entities.ProductPackaging.CostPrice#Price", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("CostPrice");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("varchar(3)")
+                                .HasColumnName("CostCurrency");
+                        });
 
                     b.ComplexProperty<Dictionary<string, object>>("SellingPrice", "Domains.Products.Entities.ProductPackaging.SellingPrice#Price", b1 =>
                         {

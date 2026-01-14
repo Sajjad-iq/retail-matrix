@@ -48,20 +48,7 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
             .IsRequired()
             .HasConversion<string>();
 
-        // Configure Price value objects using ComplexProperty
-        builder.ComplexProperty(p => p.CostPrice, priceBuilder =>
-        {
-            priceBuilder.Property(price => price.Amount)
-                .HasColumnName("CostPrice")
-                .IsRequired()
-                .HasPrecision(18, 2);
-
-            priceBuilder.Property(price => price.Currency)
-                .HasColumnName("CostCurrency")
-                .IsRequired()
-                .HasMaxLength(3);
-        });
-
+        // Configure Price value object using ComplexProperty
         builder.ComplexProperty(p => p.SellingPrice, priceBuilder =>
         {
             priceBuilder.Property(price => price.Amount)

@@ -1,5 +1,6 @@
+using Domains.Stock.Entities;
 using Domains.Products.Entities;
-using Domains.Products.Repositories;
+using Domains.Stock.Repositories;
 using Domains.Shared.Base;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -73,9 +74,9 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
         var query = _dbSet
             .AsNoTracking()
             .Where(s => s.OrganizationId == organizationId
-                     && s.CurrentStock - s.ReservedStock > 0
-                     && s.CurrentStock - s.ReservedStock <= 10) // Low stock threshold
-            .OrderBy(s => s.CurrentStock - s.ReservedStock)
+                     && s.GoodStock - s.ReservedStock > 0
+                     && s.GoodStock - s.ReservedStock <= 10) // Low stock threshold
+            .OrderBy(s => s.GoodStock - s.ReservedStock)
             .ThenBy(s => s.ProductPackagingId);
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -95,7 +96,7 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     {
         var query = _dbSet
             .AsNoTracking()
-            .Where(s => s.OrganizationId == organizationId && s.CurrentStock - s.ReservedStock == 0)
+            .Where(s => s.OrganizationId == organizationId && s.GoodStock - s.ReservedStock == 0)
             .OrderBy(s => s.ProductPackagingId);
 
         var totalCount = await query.CountAsync(cancellationToken);

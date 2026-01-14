@@ -1,3 +1,4 @@
+using Domains.Stock.Entities;
 using Domains.Products.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -27,14 +28,19 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         builder.HasIndex(s => s.OrganizationId)
             .HasDatabaseName("IX_ProductStocks_Organization");
 
-        builder.HasIndex(s => s.ExpirationDate)
-            .HasDatabaseName("IX_ProductStocks_Expiration");
-
         // Properties configuration
         builder.Property(s => s.Id)
             .ValueGeneratedNever(); // Generated in domain
 
-        builder.Property(s => s.CurrentStock)
+        builder.Property(s => s.GoodStock)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(s => s.DamagedStock)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(s => s.ExpiredStock)
             .IsRequired()
             .HasDefaultValue(0);
 
@@ -42,10 +48,10 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.Property(s => s.ExpirationDate)
+        builder.Property(s => s.LastRestockDate)
             .IsRequired(false);
 
-        builder.Property(s => s.LastRestockDate)
+        builder.Property(s => s.LastStocktakeDate)
             .IsRequired(false);
 
         builder.Property(s => s.OrganizationId)
@@ -65,7 +71,8 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         builder.Property(s => s.DeletedAt)
             .IsRequired(false);
 
-        // Computed property (not persisted)
+        // Computed properties (not persisted)
+        builder.Ignore(s => s.TotalStock);
         builder.Ignore(s => s.AvailableStock);
 
         // Relationships
@@ -73,5 +80,10 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
             .WithMany()
             .HasForeignKey(s => s.ProductPackagingId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(s => s.Batches)
+            .WithOne(b => b.ProductStock)
+            .HasForeignKey(b => b.ProductStockId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -1,4 +1,5 @@
 using Domains.Sales.Entities;
+using Domains.Stock.Entities;
 using Domains.Products.Entities;
 using Domains.Organizations.Entities;
 using Domains.Users.Entities;
@@ -26,6 +27,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProductPackaging> ProductPackagings => Set<ProductPackaging>();
     public DbSet<ProductStock> ProductStocks => Set<ProductStock>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<StockBatch> StockBatches => Set<StockBatch>();
     public DbSet<Sale> Sales => Set<Sale>();
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
     public DbSet<Currency> Currencies => Set<Currency>();
@@ -41,6 +44,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ProductPackagingConfiguration());
         modelBuilder.ApplyConfiguration(new ProductStockConfiguration());
         modelBuilder.ApplyConfiguration(new CategoryConfiguration());
+        modelBuilder.ApplyConfiguration(new StockMovementConfiguration());
+        modelBuilder.ApplyConfiguration(new StockBatchConfiguration());
         modelBuilder.ApplyConfiguration(new SaleConfiguration());
         modelBuilder.ApplyConfiguration(new SaleItemConfiguration());
         modelBuilder.ApplyConfiguration(new CurrencyConfiguration());
@@ -52,6 +57,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ProductPackaging>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<ProductStock>().HasQueryFilter(s => !s.IsDeleted);
         modelBuilder.Entity<Category>().HasQueryFilter(c => !c.IsDeleted);
+        modelBuilder.Entity<StockMovement>().HasQueryFilter(m => !m.IsDeleted);
+        modelBuilder.Entity<StockBatch>().HasQueryFilter(b => !b.IsDeleted);
         modelBuilder.Entity<Sale>().HasQueryFilter(s => !s.IsDeleted);
     }
 
