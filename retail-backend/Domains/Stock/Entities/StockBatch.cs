@@ -1,5 +1,6 @@
 using Domains.Stock.Enums;
 using Domains.Shared.Base;
+using Domains.Shared.ValueObjects;
 
 namespace Domains.Stock.Entities;
 
@@ -12,6 +13,7 @@ public class StockBatch : BaseEntity
     private StockBatch()
     {
         BatchNumber = string.Empty;
+        PurchasePrice = null!;  // Will be set by EF Core
     }
 
     // Private constructor to enforce factory methods
@@ -21,7 +23,7 @@ public class StockBatch : BaseEntity
         int quantity,
         StockCondition condition,
         DateTime receivedDate,
-        decimal costPrice,
+        Price purchasePrice,
         DateTime? expirationDate = null)
     {
         Id = Guid.NewGuid();
@@ -32,7 +34,7 @@ public class StockBatch : BaseEntity
         Condition = condition;
         ReceivedDate = receivedDate;
         ExpirationDate = expirationDate;
-        CostPrice = costPrice;
+        PurchasePrice = purchasePrice;
         InsertDate = DateTime.UtcNow;
     }
 
@@ -44,7 +46,7 @@ public class StockBatch : BaseEntity
     public StockCondition Condition { get; private set; }
     public DateTime ReceivedDate { get; private set; }
     public DateTime? ExpirationDate { get; private set; }
-    public decimal CostPrice { get; private set; }
+    public Price PurchasePrice { get; private set; }
 
     // Navigation properties
     public ProductStock? ProductStock { get; private set; }
@@ -56,7 +58,7 @@ public class StockBatch : BaseEntity
         Guid productStockId,
         string batchNumber,
         int quantity,
-        decimal costPrice,
+        Price purchasePrice,
         DateTime? expirationDate = null,
         StockCondition condition = StockCondition.Good)
     {
@@ -69,8 +71,8 @@ public class StockBatch : BaseEntity
         if (quantity <= 0)
             throw new ArgumentException("الكمية يجب أن تكون أكبر من صفر", nameof(quantity));
 
-        if (costPrice < 0)
-            throw new ArgumentException("سعر التكلفة لا يمكن أن يكون سالب", nameof(costPrice));
+        if (purchasePrice == null)
+            throw new ArgumentException("سعر الشراء مطلوب", nameof(purchasePrice));
 
         if (expirationDate.HasValue && expirationDate.Value <= DateTime.UtcNow)
             throw new ArgumentException("تاريخ الانتهاء يجب أن يكون في المستقبل", nameof(expirationDate));
@@ -81,7 +83,7 @@ public class StockBatch : BaseEntity
             quantity,
             condition,
             DateTime.UtcNow,
-            costPrice,
+            purchasePrice,
             expirationDate
         );
     }

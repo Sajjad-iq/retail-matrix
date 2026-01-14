@@ -1,6 +1,7 @@
 using Domains.Products.Entities;
 using Domains.Stock.Enums;
 using Domains.Shared.Base;
+using Domains.Shared.ValueObjects;
 
 namespace Domains.Stock.Entities;
 
@@ -152,7 +153,7 @@ public class ProductStock : BaseEntity
     public StockBatch AddBatch(
         string batchNumber,
         int quantity,
-        decimal costPrice,
+        Price purchasePrice,
         DateTime? expirationDate = null,
         StockCondition condition = StockCondition.Good)
     {
@@ -160,7 +161,7 @@ public class ProductStock : BaseEntity
             productStockId: Id,
             batchNumber: batchNumber,
             quantity: quantity,
-            costPrice: costPrice,
+            purchasePrice: purchasePrice,
             expirationDate: expirationDate,
             condition: condition
         );

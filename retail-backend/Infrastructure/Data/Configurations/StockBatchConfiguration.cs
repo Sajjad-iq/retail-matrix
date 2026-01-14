@@ -1,6 +1,7 @@
 using Domains.Stock.Entities;
 using Domains.Products.Entities;
 using Domains.Stock.Enums;
+using Domains.Shared.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -59,9 +60,19 @@ public class StockBatchConfiguration : IEntityTypeConfiguration<StockBatch>
         builder.Property(b => b.ExpirationDate)
             .IsRequired(false);
 
-        builder.Property(b => b.CostPrice)
-            .IsRequired()
-            .HasPrecision(18, 2);
+        // Configure Price value object using ComplexProperty
+        builder.ComplexProperty(b => b.PurchasePrice, priceBuilder =>
+        {
+            priceBuilder.Property(price => price.Amount)
+                .HasColumnName("PurchasePrice")
+                .IsRequired()
+                .HasPrecision(18, 2);
+
+            priceBuilder.Property(price => price.Currency)
+                .HasColumnName("PurchaseCurrency")
+                .IsRequired()
+                .HasMaxLength(3);
+        });
 
         // Relationships
         builder.HasOne(b => b.ProductStock)
