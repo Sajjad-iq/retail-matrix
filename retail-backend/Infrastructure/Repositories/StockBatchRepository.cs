@@ -20,7 +20,7 @@ public class StockBatchRepository : Repository<StockBatch>, IStockBatchRepositor
         return await _dbSet
             .AsNoTracking()
             .Where(b => b.ProductStockId == stockId)
-            .OrderBy(b => b.ReceivedDate)
+            .OrderBy(b => b.InsertDate)
             .ToListAsync(cancellationToken);
     }
 
@@ -67,7 +67,7 @@ public class StockBatchRepository : Repository<StockBatch>, IStockBatchRepositor
             .AsNoTracking()
             .Include(b => b.ProductStock)
             .Where(b => b.ProductStock!.OrganizationId == organizationId && b.Condition == condition)
-            .OrderBy(b => b.ReceivedDate)
+            .OrderBy(b => b.InsertDate)
             .ToListAsync(cancellationToken);
     }
 }

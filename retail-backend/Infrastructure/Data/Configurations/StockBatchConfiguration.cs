@@ -54,9 +54,6 @@ public class StockBatchConfiguration : IEntityTypeConfiguration<StockBatch>
             .IsRequired()
             .HasConversion<string>();
 
-        builder.Property(b => b.ReceivedDate)
-            .IsRequired();
-
         builder.Property(b => b.ExpirationDate)
             .IsRequired(false);
 

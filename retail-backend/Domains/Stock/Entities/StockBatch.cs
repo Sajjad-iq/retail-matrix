@@ -22,7 +22,6 @@ public class StockBatch : BaseEntity
         string batchNumber,
         int quantity,
         StockCondition condition,
-        DateTime receivedDate,
         Price purchasePrice,
         DateTime? expirationDate = null)
     {
@@ -32,7 +31,6 @@ public class StockBatch : BaseEntity
         Quantity = quantity;
         RemainingQuantity = quantity;
         Condition = condition;
-        ReceivedDate = receivedDate;
         ExpirationDate = expirationDate;
         PurchasePrice = purchasePrice;
         InsertDate = DateTime.UtcNow;
@@ -44,7 +42,6 @@ public class StockBatch : BaseEntity
     public int Quantity { get; private set; }              // Original quantity
     public int RemainingQuantity { get; private set; }     // Current quantity
     public StockCondition Condition { get; private set; }
-    public DateTime ReceivedDate { get; private set; }
     public DateTime? ExpirationDate { get; private set; }
     public Price PurchasePrice { get; private set; }
 
@@ -82,7 +79,6 @@ public class StockBatch : BaseEntity
             batchNumber,
             quantity,
             condition,
-            DateTime.UtcNow,
             purchasePrice,
             expirationDate
         );
