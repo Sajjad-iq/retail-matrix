@@ -4,7 +4,7 @@ using Domains.Shared.Base;
 namespace Domains.Stock.Entities;
 
 /// <summary>
-/// Represents inventory stock for a product packaging at a specific location
+/// Represents inventory stock for a product packaging within an organization
 /// </summary>
 public class ProductStock : BaseEntity
 {
@@ -16,12 +16,10 @@ public class ProductStock : BaseEntity
     // Private constructor to enforce factory methods
     private ProductStock(
         Guid productPackagingId,
-        Guid organizationId,
-        Guid? locationId = null)
+        Guid organizationId)
     {
         Id = Guid.NewGuid();
         ProductPackagingId = productPackagingId;
-        LocationId = locationId;
         OrganizationId = organizationId;
         Quantity = 0;
         ReservedQuantity = 0;
@@ -30,7 +28,6 @@ public class ProductStock : BaseEntity
 
     // Properties
     public Guid ProductPackagingId { get; private set; }
-    public Guid? LocationId { get; private set; }
     public Guid OrganizationId { get; private set; }
     public int Quantity { get; private set; }
     public int ReservedQuantity { get; private set; }
@@ -47,8 +44,7 @@ public class ProductStock : BaseEntity
     /// </summary>
     public static ProductStock Create(
         Guid productPackagingId,
-        Guid organizationId,
-        Guid? locationId = null)
+        Guid organizationId)
     {
         if (productPackagingId == Guid.Empty)
             throw new ArgumentException("معرف العبوة مطلوب", nameof(productPackagingId));
@@ -58,8 +54,7 @@ public class ProductStock : BaseEntity
 
         return new ProductStock(
             productPackagingId: productPackagingId,
-            organizationId: organizationId,
-            locationId: locationId
+            organizationId: organizationId
         );
     }
 

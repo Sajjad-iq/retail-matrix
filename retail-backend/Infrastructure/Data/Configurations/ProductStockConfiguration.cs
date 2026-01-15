@@ -22,11 +22,13 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         builder.HasIndex(s => s.ProductPackagingId)
             .HasDatabaseName("IX_ProductStocks_Packaging");
 
-        builder.HasIndex(s => s.LocationId)
-            .HasDatabaseName("IX_ProductStocks_Location");
-
         builder.HasIndex(s => s.OrganizationId)
             .HasDatabaseName("IX_ProductStocks_Organization");
+
+        // Unique constraint: one stock record per packaging per organization
+        builder.HasIndex(s => new { s.ProductPackagingId, s.OrganizationId })
+            .IsUnique()
+            .HasDatabaseName("IX_ProductStocks_Packaging_Organization");
 
         // Properties configuration
         builder.Property(s => s.Id)

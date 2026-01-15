@@ -9,19 +9,14 @@ namespace Domains.Stock.Repositories;
 public interface IProductStockRepository : IRepository<ProductStock>
 {
     // Single item queries
-    Task<ProductStock?> GetByPackagingAndLocationAsync(
+    Task<ProductStock?> GetByPackagingAsync(
         Guid packagingId,
-        Guid? locationId,
+        Guid organizationId,
         CancellationToken cancellationToken = default);
 
     // Paginated queries
-    Task<PagedResult<ProductStock>> GetByProductPackagingIdAsync(
-        Guid packagingId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default);
-
-    Task<PagedResult<ProductStock>> GetByLocationAsync(
-        Guid locationId,
+    Task<PagedResult<ProductStock>> GetByOrganizationAsync(
+        Guid organizationId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
@@ -37,6 +32,7 @@ public interface IProductStockRepository : IRepository<ProductStock>
 
     // Batch operations
     Task<List<ProductStock>> GetByPackagingIdsAsync(
+        Guid organizationId,
         List<Guid> packagingIds,
         CancellationToken cancellationToken = default);
 }
