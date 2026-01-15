@@ -19,7 +19,7 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     public async Task<ProductStock?> GetByPackagingAsync(
         Guid packagingId,
         Guid organizationId,
-        Guid? inventoryId = null,
+        Guid inventoryId,
         CancellationToken cancellationToken = default)
     {
         return await _dbSet

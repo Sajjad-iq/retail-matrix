@@ -12,7 +12,7 @@ public interface IProductStockRepository : IRepository<ProductStock>
     Task<ProductStock?> GetByPackagingAsync(
         Guid packagingId,
         Guid organizationId,
-        Guid? inventoryId = null,
+        Guid inventoryId,
         CancellationToken cancellationToken = default);
 
     // Paginated queries

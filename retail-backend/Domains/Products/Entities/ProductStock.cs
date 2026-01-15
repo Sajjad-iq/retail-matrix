@@ -17,7 +17,7 @@ public class ProductStock : BaseEntity
     private ProductStock(
         Guid productPackagingId,
         Guid organizationId,
-        Guid? inventoryId = null)
+        Guid inventoryId)
     {
         Id = Guid.NewGuid();
         ProductPackagingId = productPackagingId;
@@ -31,7 +31,7 @@ public class ProductStock : BaseEntity
     // Properties
     public Guid ProductPackagingId { get; private set; }
     public Guid OrganizationId { get; private set; }
-    public Guid? InventoryId { get; private set; }
+    public Guid InventoryId { get; private set; }
     public int Quantity { get; private set; }
     public int ReservedQuantity { get; private set; }
     public DateTime? LastStocktakeDate { get; private set; }
@@ -49,13 +49,16 @@ public class ProductStock : BaseEntity
     public static ProductStock Create(
         Guid productPackagingId,
         Guid organizationId,
-        Guid? inventoryId = null)
+        Guid inventoryId)
     {
         if (productPackagingId == Guid.Empty)
             throw new ArgumentException("معرف العبوة مطلوب", nameof(productPackagingId));
 
         if (organizationId == Guid.Empty)
             throw new ArgumentException("معرف المؤسسة مطلوب", nameof(organizationId));
+
+        if (inventoryId == Guid.Empty)
+            throw new ArgumentException("معرف المخزن مطلوب", nameof(inventoryId));
 
         return new ProductStock(
             productPackagingId: productPackagingId,
@@ -65,8 +68,11 @@ public class ProductStock : BaseEntity
     }
 
     // Inventory Management
-    public void SetInventory(Guid? inventoryId)
+    public void SetInventory(Guid inventoryId)
     {
+        if (inventoryId == Guid.Empty)
+            throw new ArgumentException("معرف المخزن مطلوب", nameof(inventoryId));
+
         InventoryId = inventoryId;
     }
 

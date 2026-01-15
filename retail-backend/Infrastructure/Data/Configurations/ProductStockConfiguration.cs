@@ -44,7 +44,7 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
             .IsRequired();
 
         builder.Property(s => s.InventoryId)
-            .IsRequired(false)
+            .IsRequired()
             .HasColumnName("LocationId"); // Keep column name for migration compatibility
 
         builder.Property(s => s.Quantity)
