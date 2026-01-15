@@ -1,9 +1,9 @@
-namespace Domains.Stock.Enums;
+namespace Domains.Inventory.Enums;
 
 /// <summary>
-/// Types of stock movements for inventory tracking
+/// Types of inventory movements for tracking
 /// </summary>
-public enum StockMovementType
+public enum InventoryMovementType
 {
     // Inbound (increase stock)
     Purchase,           // Stock received from supplier

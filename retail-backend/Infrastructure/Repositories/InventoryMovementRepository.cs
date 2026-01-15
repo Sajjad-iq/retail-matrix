@@ -1,21 +1,20 @@
-using Domains.Stock.Entities;
+using Domains.Inventory.Entities;
 using Domains.Products.Entities;
-using Domains.Stock.Enums;
-using Domains.Products.Enums;
-using Domains.Stock.Repositories;
+using Domains.Inventory.Enums;
+using Domains.Inventory.Repositories;
 using Domains.Shared.Base;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-public class StockMovementRepository : Repository<StockMovement>, IStockMovementRepository
+public class InventoryMovementRepository : Repository<InventoryMovement>, IInventoryMovementRepository
 {
-    public StockMovementRepository(ApplicationDbContext context) : base(context)
+    public InventoryMovementRepository(ApplicationDbContext context) : base(context)
     {
     }
 
-    public async Task<IEnumerable<StockMovement>> GetByPackagingAsync(Guid packagingId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<InventoryMovement>> GetByPackagingAsync(Guid packagingId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .AsNoTracking()
@@ -24,7 +23,7 @@ public class StockMovementRepository : Repository<StockMovement>, IStockMovement
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<StockMovement>> GetByDateRangeAsync(Guid organizationId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<InventoryMovement>> GetByDateRangeAsync(Guid organizationId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .AsNoTracking()
@@ -35,7 +34,7 @@ public class StockMovementRepository : Repository<StockMovement>, IStockMovement
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<StockMovement>> GetByTypeAsync(Guid organizationId, StockMovementType type, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<InventoryMovement>> GetByTypeAsync(Guid organizationId, InventoryMovementType type, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .AsNoTracking()
@@ -44,7 +43,7 @@ public class StockMovementRepository : Repository<StockMovement>, IStockMovement
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<StockMovement>> GetByReferenceNumberAsync(string referenceNumber, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<InventoryMovement>> GetByReferenceNumberAsync(string referenceNumber, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .AsNoTracking()

@@ -1,82 +1,82 @@
-using Domains.Stock.Entities;
-using Domains.Stock.Enums;
+using Domains.Inventory.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
 namespace Infrastructure.Data.Configurations;
 
 /// <summary>
-/// Entity Framework configuration for Location entity (storage spots)
+/// Entity Framework configuration for Inventory entity (storage locations)
 /// </summary>
-public class LocationConfiguration : IEntityTypeConfiguration<Location>
+public class InventoryConfiguration : IEntityTypeConfiguration<InventoryEntity>
 {
-    public void Configure(EntityTypeBuilder<Location> builder)
+    public void Configure(EntityTypeBuilder<InventoryEntity> builder)
     {
-        // Table name
+        // Table name - keep same table for migration compatibility
         builder.ToTable("Locations");
 
         // Primary key
-        builder.HasKey(l => l.Id);
+        builder.HasKey(i => i.Id);
 
         // Indexes
-        builder.HasIndex(l => l.OrganizationId)
+        builder.HasIndex(i => i.OrganizationId)
             .HasDatabaseName("IX_Locations_Organization");
 
-        builder.HasIndex(l => new { l.Code, l.OrganizationId })
+        builder.HasIndex(i => new { i.Code, i.OrganizationId })
             .IsUnique()
             .HasDatabaseName("IX_Locations_Code_Organization");
 
-        builder.HasIndex(l => l.Type)
+        builder.HasIndex(i => i.Type)
             .HasDatabaseName("IX_Locations_Type");
 
-        builder.HasIndex(l => l.ParentId)
+        builder.HasIndex(i => i.ParentId)
             .HasDatabaseName("IX_Locations_Parent");
 
         // Properties
-        builder.Property(l => l.Id)
+        builder.Property(i => i.Id)
             .ValueGeneratedNever();
 
-        builder.Property(l => l.Name)
+        builder.Property(i => i.Name)
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.Property(l => l.Code)
+        builder.Property(i => i.Code)
             .IsRequired()
             .HasMaxLength(50);
 
-        builder.Property(l => l.Type)
+        builder.Property(i => i.Type)
             .IsRequired()
             .HasConversion<string>();
 
-        builder.Property(l => l.OrganizationId)
+        builder.Property(i => i.OrganizationId)
             .IsRequired();
 
-        builder.Property(l => l.ParentId)
+        builder.Property(i => i.ParentId)
             .IsRequired(false);
 
-        builder.Property(l => l.IsActive)
+        builder.Property(i => i.IsActive)
             .IsRequired()
             .HasDefaultValue(true);
 
         // Self-referencing relationship (hierarchical)
-        builder.HasOne(l => l.Parent)
-            .WithMany(l => l.Children)
-            .HasForeignKey(l => l.ParentId)
+        builder.HasOne(i => i.Parent)
+            .WithMany(i => i.Children)
+            .HasForeignKey(i => i.ParentId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Soft delete
-        builder.Property(l => l.IsDeleted)
+        builder.Property(i => i.IsDeleted)
             .IsRequired()
             .HasDefaultValue(false);
 
         // Audit fields
-        builder.Property(l => l.InsertDate)
+        builder.Property(i => i.InsertDate)
             .IsRequired();
 
-        builder.Property(l => l.UpdateDate)
+        builder.Property(i => i.UpdateDate)
             .IsRequired();
 
-        builder.Property(l => l.DeletedAt)
+        builder.Property(i => i.DeletedAt)
             .IsRequired(false);
     }
 }

@@ -1,9 +1,9 @@
-namespace Domains.Stock.Enums;
+namespace Domains.Inventory.Enums;
 
 /// <summary>
-/// Types of locations - from building level to storage spots
+/// Types of inventory locations - from building level to storage spots
 /// </summary>
-public enum LocationType
+public enum InventoryType
 {
     // Building level (المباني)
     Warehouse,      // مستودع

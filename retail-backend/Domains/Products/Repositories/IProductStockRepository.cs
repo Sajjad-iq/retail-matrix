@@ -1,7 +1,7 @@
-using Domains.Stock.Entities;
+using Domains.Products.Entities;
 using Domains.Shared.Base;
 
-namespace Domains.Stock.Repositories;
+namespace Domains.Products.Repositories;
 
 /// <summary>
 /// Repository interface for ProductStock entity
@@ -12,7 +12,7 @@ public interface IProductStockRepository : IRepository<ProductStock>
     Task<ProductStock?> GetByPackagingAsync(
         Guid packagingId,
         Guid organizationId,
-        Guid? locationId = null,
+        Guid? inventoryId = null,
         CancellationToken cancellationToken = default);
 
     // Paginated queries
@@ -21,8 +21,8 @@ public interface IProductStockRepository : IRepository<ProductStock>
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
-    Task<PagedResult<ProductStock>> GetByLocationAsync(
-        Guid locationId,
+    Task<PagedResult<ProductStock>> GetByInventoryAsync(
+        Guid inventoryId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 

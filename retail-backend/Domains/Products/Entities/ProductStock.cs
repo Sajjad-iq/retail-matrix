@@ -1,7 +1,7 @@
-using Domains.Products.Entities;
 using Domains.Shared.Base;
+using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
-namespace Domains.Stock.Entities;
+namespace Domains.Products.Entities;
 
 /// <summary>
 /// Represents inventory stock for a product packaging at a specific location
@@ -17,12 +17,12 @@ public class ProductStock : BaseEntity
     private ProductStock(
         Guid productPackagingId,
         Guid organizationId,
-        Guid? locationId = null)
+        Guid? inventoryId = null)
     {
         Id = Guid.NewGuid();
         ProductPackagingId = productPackagingId;
         OrganizationId = organizationId;
-        LocationId = locationId;
+        InventoryId = inventoryId;
         Quantity = 0;
         ReservedQuantity = 0;
         InsertDate = DateTime.UtcNow;
@@ -31,7 +31,7 @@ public class ProductStock : BaseEntity
     // Properties
     public Guid ProductPackagingId { get; private set; }
     public Guid OrganizationId { get; private set; }
-    public Guid? LocationId { get; private set; }
+    public Guid? InventoryId { get; private set; }
     public int Quantity { get; private set; }
     public int ReservedQuantity { get; private set; }
     public DateTime? LastStocktakeDate { get; private set; }
@@ -41,7 +41,7 @@ public class ProductStock : BaseEntity
 
     // Navigation properties
     public ProductPackaging? Packaging { get; private set; }
-    public Location? Location { get; private set; }
+    public InventoryEntity? Inventory { get; private set; }
 
     /// <summary>
     /// Factory method to create a new product stock
@@ -49,7 +49,7 @@ public class ProductStock : BaseEntity
     public static ProductStock Create(
         Guid productPackagingId,
         Guid organizationId,
-        Guid? locationId = null)
+        Guid? inventoryId = null)
     {
         if (productPackagingId == Guid.Empty)
             throw new ArgumentException("معرف العبوة مطلوب", nameof(productPackagingId));
@@ -60,14 +60,14 @@ public class ProductStock : BaseEntity
         return new ProductStock(
             productPackagingId: productPackagingId,
             organizationId: organizationId,
-            locationId: locationId
+            inventoryId: inventoryId
         );
     }
 
-    // Location Management
-    public void SetLocation(Guid? locationId)
+    // Inventory Management
+    public void SetInventory(Guid? inventoryId)
     {
-        LocationId = locationId;
+        InventoryId = inventoryId;
     }
 
     // Stock Management Methods

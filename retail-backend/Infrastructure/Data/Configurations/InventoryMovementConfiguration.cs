@@ -1,19 +1,20 @@
-using Domains.Stock.Entities;
+using Domains.Inventory.Entities;
 using Domains.Products.Entities;
-using Domains.Stock.Enums;
+using Domains.Inventory.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
 namespace Infrastructure.Data.Configurations;
 
 /// <summary>
-/// Entity Framework configuration for StockMovement entity
+/// Entity Framework configuration for InventoryMovement entity
 /// </summary>
-public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement>
+public class InventoryMovementConfiguration : IEntityTypeConfiguration<InventoryMovement>
 {
-    public void Configure(EntityTypeBuilder<StockMovement> builder)
+    public void Configure(EntityTypeBuilder<InventoryMovement> builder)
     {
-        // Table name
+        // Table name - keep same table for migration compatibility
         builder.ToTable("StockMovements");
 
         // Primary key
@@ -35,7 +36,7 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.HasIndex(m => m.OrganizationId)
             .HasDatabaseName("IX_StockMovements_Organization");
 
-        builder.HasIndex(m => m.LocationId)
+        builder.HasIndex(m => m.InventoryId)
             .HasDatabaseName("IX_StockMovements_Location");
 
         // Properties
@@ -70,7 +71,11 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.Property(m => m.OrganizationId)
             .IsRequired();
 
-        builder.Property(m => m.LocationId)
+        builder.Property(m => m.InventoryId)
+            .IsRequired(false)
+            .HasColumnName("LocationId"); // Keep column name for migration compatibility
+
+        builder.Property(m => m.InventoryOperationItemId)
             .IsRequired(false);
 
         // Relationships
@@ -79,10 +84,15 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
             .HasForeignKey(m => m.ProductPackagingId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(m => m.Location)
+        builder.HasOne(m => m.Inventory)
             .WithMany()
-            .HasForeignKey(m => m.LocationId)
+            .HasForeignKey(m => m.InventoryId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(m => m.OperationItem)
+            .WithMany()
+            .HasForeignKey(m => m.InventoryOperationItemId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Soft delete
         builder.Property(m => m.IsDeleted)

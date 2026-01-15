@@ -1,25 +1,25 @@
-using Domains.Stock.Enums;
+using Domains.Inventory.Enums;
 using Domains.Shared.Base;
 
-namespace Domains.Stock.Entities;
+namespace Domains.Inventory.Entities;
 
 /// <summary>
 /// Represents a storage location (bin, shelf, drawer) within a warehouse
 /// </summary>
-public class Location : BaseEntity
+public class Inventory : BaseEntity
 {
     // Parameterless constructor for EF Core
-    private Location()
+    private Inventory()
     {
         Name = string.Empty;
         Code = string.Empty;
     }
 
     // Private constructor to enforce factory methods
-    private Location(
+    private Inventory(
         string name,
         string code,
-        LocationType type,
+        InventoryType type,
         Guid organizationId,
         Guid? parentId = null)
     {
@@ -36,22 +36,22 @@ public class Location : BaseEntity
     // Properties
     public string Name { get; private set; }        // e.g., "Aisle A", "Shelf 3", "Bin 5"
     public string Code { get; private set; }        // e.g., "A-3-5" for scanning
-    public LocationType Type { get; private set; }
+    public InventoryType Type { get; private set; }
     public Guid OrganizationId { get; private set; }
     public Guid? ParentId { get; private set; }     // Hierarchical: Aisle > Rack > Shelf > Bin
     public bool IsActive { get; private set; }
 
     // Navigation properties
-    public Location? Parent { get; private set; }
-    public List<Location> Children { get; private set; } = new();
+    public Inventory? Parent { get; private set; }
+    public List<Inventory> Children { get; private set; } = new();
 
     /// <summary>
-    /// Factory method to create a new storage location
+    /// Factory method to create a new storage inventory
     /// </summary>
-    public static Location Create(
+    public static Inventory Create(
         string name,
         string code,
-        LocationType type,
+        InventoryType type,
         Guid organizationId,
         Guid? parentId = null)
     {
@@ -64,7 +64,7 @@ public class Location : BaseEntity
         if (organizationId == Guid.Empty)
             throw new ArgumentException("معرف المؤسسة مطلوب", nameof(organizationId));
 
-        return new Location(name, code, type, organizationId, parentId);
+        return new Inventory(name, code, type, organizationId, parentId);
     }
 
     // Update methods
@@ -84,7 +84,7 @@ public class Location : BaseEntity
         Code = code;
     }
 
-    public void UpdateType(LocationType type)
+    public void UpdateType(InventoryType type)
     {
         Type = type;
     }

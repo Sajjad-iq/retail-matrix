@@ -1,7 +1,7 @@
-using Domains.Stock.Entities;
 using Domains.Products.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
 namespace Infrastructure.Data.Configurations;
 
@@ -25,11 +25,11 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         builder.HasIndex(s => s.OrganizationId)
             .HasDatabaseName("IX_ProductStocks_Organization");
 
-        builder.HasIndex(s => s.LocationId)
+        builder.HasIndex(s => s.InventoryId)
             .HasDatabaseName("IX_ProductStocks_Location");
 
-        // Unique constraint: one stock record per packaging per organization per location
-        builder.HasIndex(s => new { s.ProductPackagingId, s.OrganizationId, s.LocationId })
+        // Unique constraint: one stock record per packaging per organization per inventory
+        builder.HasIndex(s => new { s.ProductPackagingId, s.OrganizationId, s.InventoryId })
             .IsUnique()
             .HasDatabaseName("IX_ProductStocks_Packaging_Organization_Location");
 
@@ -43,8 +43,9 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         builder.Property(s => s.OrganizationId)
             .IsRequired();
 
-        builder.Property(s => s.LocationId)
-            .IsRequired(false);
+        builder.Property(s => s.InventoryId)
+            .IsRequired(false)
+            .HasColumnName("LocationId"); // Keep column name for migration compatibility
 
         builder.Property(s => s.Quantity)
             .IsRequired()
@@ -80,9 +81,9 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
             .HasForeignKey(s => s.ProductPackagingId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(s => s.Location)
+        builder.HasOne(s => s.Inventory)
             .WithMany()
-            .HasForeignKey(s => s.LocationId)
+            .HasForeignKey(s => s.InventoryId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

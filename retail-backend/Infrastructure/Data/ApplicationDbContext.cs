@@ -1,5 +1,5 @@
 using Domains.Sales.Entities;
-using Domains.Stock.Entities;
+using Domains.Inventory.Entities;
 using Domains.Products.Entities;
 using Domains.Organizations.Entities;
 using Domains.Users.Entities;
@@ -7,6 +7,7 @@ using Domains.Common.Currency.Entities;
 using Domains.Shared.Base;
 using Infrastructure.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
+using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
 namespace Infrastructure.Data;
 
@@ -27,8 +28,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProductPackaging> ProductPackagings => Set<ProductPackaging>();
     public DbSet<ProductStock> ProductStocks => Set<ProductStock>();
     public DbSet<Category> Categories => Set<Category>();
-    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
-    public DbSet<Location> Locations => Set<Location>();
+    public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
+    public DbSet<InventoryEntity> Inventories => Set<InventoryEntity>();
+    public DbSet<InventoryOperation> InventoryOperations => Set<InventoryOperation>();
+    public DbSet<InventoryOperationItem> InventoryOperationItems => Set<InventoryOperationItem>();
     public DbSet<Sale> Sales => Set<Sale>();
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
     public DbSet<Currency> Currencies => Set<Currency>();
@@ -44,8 +47,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ProductPackagingConfiguration());
         modelBuilder.ApplyConfiguration(new ProductStockConfiguration());
         modelBuilder.ApplyConfiguration(new CategoryConfiguration());
-        modelBuilder.ApplyConfiguration(new StockMovementConfiguration());
-        modelBuilder.ApplyConfiguration(new LocationConfiguration());
+        modelBuilder.ApplyConfiguration(new InventoryMovementConfiguration());
+        modelBuilder.ApplyConfiguration(new InventoryConfiguration());
+        modelBuilder.ApplyConfiguration(new InventoryOperationConfiguration());
+        modelBuilder.ApplyConfiguration(new InventoryOperationItemConfiguration());
         modelBuilder.ApplyConfiguration(new SaleConfiguration());
         modelBuilder.ApplyConfiguration(new SaleItemConfiguration());
         modelBuilder.ApplyConfiguration(new CurrencyConfiguration());
@@ -57,8 +62,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ProductPackaging>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<ProductStock>().HasQueryFilter(s => !s.IsDeleted);
         modelBuilder.Entity<Category>().HasQueryFilter(c => !c.IsDeleted);
-        modelBuilder.Entity<StockMovement>().HasQueryFilter(m => !m.IsDeleted);
-        modelBuilder.Entity<Location>().HasQueryFilter(l => !l.IsDeleted);
+        modelBuilder.Entity<InventoryMovement>().HasQueryFilter(m => !m.IsDeleted);
+        modelBuilder.Entity<InventoryEntity>().HasQueryFilter(i => !i.IsDeleted);
+        modelBuilder.Entity<InventoryOperation>().HasQueryFilter(o => !o.IsDeleted);
+        modelBuilder.Entity<InventoryOperationItem>().HasQueryFilter(i => !i.IsDeleted);
         modelBuilder.Entity<Sale>().HasQueryFilter(s => !s.IsDeleted);
     }
 
