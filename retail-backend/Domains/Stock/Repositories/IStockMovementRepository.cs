@@ -13,5 +13,4 @@ public interface IStockMovementRepository : IRepository<StockMovement>
     Task<IEnumerable<StockMovement>> GetByDateRangeAsync(Guid organizationId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default);
     Task<IEnumerable<StockMovement>> GetByTypeAsync(Guid organizationId, StockMovementType type, CancellationToken cancellationToken = default);
     Task<IEnumerable<StockMovement>> GetByReferenceNumberAsync(string referenceNumber, CancellationToken cancellationToken = default);
-    Task<IEnumerable<StockMovement>> GetByBatchNumberAsync(string batchNumber, CancellationToken cancellationToken = default);
 }

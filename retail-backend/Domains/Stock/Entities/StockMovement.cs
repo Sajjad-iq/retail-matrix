@@ -25,9 +25,7 @@ public class StockMovement : BaseEntity
         Guid organizationId,
         Guid? locationId = null,
         string? reason = null,
-        string? referenceNumber = null,
-        string? batchNumber = null,
-        DateTime? expirationDate = null)
+        string? referenceNumber = null)
     {
         Id = Guid.NewGuid();
         ProductPackagingId = productPackagingId;
@@ -39,8 +37,6 @@ public class StockMovement : BaseEntity
         LocationId = locationId;
         Reason = reason ?? string.Empty;
         ReferenceNumber = referenceNumber;
-        BatchNumber = batchNumber;
-        ExpirationDate = expirationDate;
         MovementDate = DateTime.UtcNow;
         InsertDate = DateTime.UtcNow;
     }
@@ -57,10 +53,6 @@ public class StockMovement : BaseEntity
     public Guid? LocationId { get; private set; }
     public Guid OrganizationId { get; private set; }
 
-    // Optional: Batch/Lot tracking
-    public string? BatchNumber { get; private set; }
-    public DateTime? ExpirationDate { get; private set; }
-
     // Navigation properties
     public ProductPackaging? Packaging { get; private set; }
 
@@ -76,9 +68,7 @@ public class StockMovement : BaseEntity
         Guid organizationId,
         Guid? locationId = null,
         string? reason = null,
-        string? referenceNumber = null,
-        string? batchNumber = null,
-        DateTime? expirationDate = null)
+        string? referenceNumber = null)
     {
         if (productPackagingId == Guid.Empty)
             throw new ArgumentException("معرف العبوة مطلوب", nameof(productPackagingId));
@@ -104,9 +94,7 @@ public class StockMovement : BaseEntity
             organizationId,
             locationId,
             reason,
-            referenceNumber,
-            batchNumber,
-            expirationDate
+            referenceNumber
         );
     }
 }

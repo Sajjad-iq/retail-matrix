@@ -32,9 +32,6 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.HasIndex(m => m.ReferenceNumber)
             .HasDatabaseName("IX_StockMovements_Reference");
 
-        builder.HasIndex(m => m.BatchNumber)
-            .HasDatabaseName("IX_StockMovements_Batch");
-
         builder.HasIndex(m => m.OrganizationId)
             .HasDatabaseName("IX_StockMovements_Organization");
 
@@ -69,12 +66,6 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
 
         builder.Property(m => m.OrganizationId)
             .IsRequired();
-
-        builder.Property(m => m.BatchNumber)
-            .HasMaxLength(50);
-
-        builder.Property(m => m.ExpirationDate)
-            .IsRequired(false);
 
         // Relationships
         builder.HasOne(m => m.Packaging)

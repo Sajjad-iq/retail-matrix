@@ -32,11 +32,22 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         builder.Property(s => s.Id)
             .ValueGeneratedNever(); // Generated in domain
 
-        builder.Property(s => s.LastStocktakeDate)
-            .IsRequired(false);
+        builder.Property(s => s.ProductPackagingId)
+            .IsRequired();
 
         builder.Property(s => s.OrganizationId)
             .IsRequired();
+
+        builder.Property(s => s.Quantity)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(s => s.ReservedQuantity)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(s => s.LastStocktakeDate)
+            .IsRequired(false);
 
         builder.Property(s => s.IsDeleted)
             .IsRequired()
@@ -52,24 +63,13 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         builder.Property(s => s.DeletedAt)
             .IsRequired(false);
 
-        // Computed properties (not persisted - calculated from batches)
-        builder.Ignore(s => s.GoodStock);
-        builder.Ignore(s => s.DamagedStock);
-        builder.Ignore(s => s.ExpiredStock);
-        builder.Ignore(s => s.ReservedStock);
-        builder.Ignore(s => s.TotalStock);
-        builder.Ignore(s => s.AvailableStock);
-        builder.Ignore(s => s.LastRestockDate);
+        // Computed property (not persisted)
+        builder.Ignore(s => s.AvailableQuantity);
 
         // Relationships
         builder.HasOne(s => s.Packaging)
             .WithMany()
             .HasForeignKey(s => s.ProductPackagingId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasMany(s => s.Batches)
-            .WithOne(b => b.ProductStock)
-            .HasForeignKey(b => b.ProductStockId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

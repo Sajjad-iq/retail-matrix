@@ -52,13 +52,4 @@ public class StockMovementRepository : Repository<StockMovement>, IStockMovement
             .OrderByDescending(m => m.MovementDate)
             .ToListAsync(cancellationToken);
     }
-
-    public async Task<IEnumerable<StockMovement>> GetByBatchNumberAsync(string batchNumber, CancellationToken cancellationToken = default)
-    {
-        return await _dbSet
-            .AsNoTracking()
-            .Where(m => m.BatchNumber == batchNumber)
-            .OrderByDescending(m => m.MovementDate)
-            .ToListAsync(cancellationToken);
-    }
 }

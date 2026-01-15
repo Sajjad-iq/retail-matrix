@@ -23,7 +23,6 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     {
         return await _dbSet
             .AsNoTracking()
-            .Include(s => s.Batches)  // Eager load batches for computed properties
             .FirstOrDefaultAsync(s => s.ProductPackagingId == packagingId && s.LocationId == locationId, cancellationToken);
     }
 
@@ -34,7 +33,6 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     {
         var query = _dbSet
             .AsNoTracking()
-            .Include(s => s.Batches)  // Eager load batches for computed properties
             .Where(s => s.ProductPackagingId == packagingId)
             .OrderBy(s => s.LocationId);
 
@@ -55,7 +53,6 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     {
         var query = _dbSet
             .AsNoTracking()
-            .Include(s => s.Batches)  // Eager load batches for computed properties
             .Where(s => s.LocationId == locationId)
             .OrderBy(s => s.ProductPackagingId);
 
@@ -74,25 +71,20 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
-        // Load all stocks with batches, then filter in memory since GoodStock is computed
-        var allStocks = await _dbSet
+        // Query for low stock items (available > 0 and <= 10)
+        var query = _dbSet
             .AsNoTracking()
-            .Include(s => s.Batches)
             .Where(s => s.OrganizationId == organizationId)
-            .ToListAsync(cancellationToken);
+            .Where(s => (s.Quantity - s.ReservedQuantity) > 0 && (s.Quantity - s.ReservedQuantity) <= 10)
+            .OrderBy(s => s.Quantity - s.ReservedQuantity)
+            .ThenBy(s => s.ProductPackagingId);
 
-        // Filter and sort in memory based on computed properties
-        var lowStockItems = allStocks
-            .Where(s => s.AvailableStock > 0 && s.AvailableStock <= 10)
-            .OrderBy(s => s.AvailableStock)
-            .ThenBy(s => s.ProductPackagingId)
-            .ToList();
+        var totalCount = await query.CountAsync(cancellationToken);
 
-        var totalCount = lowStockItems.Count;
-        var items = lowStockItems
+        var items = await query
             .Skip(pagingParams.Skip)
             .Take(pagingParams.Take)
-            .ToList();
+            .ToListAsync(cancellationToken);
 
         return new PagedResult<ProductStock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
@@ -102,24 +94,19 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
-        // Load all stocks with batches, then filter in memory since AvailableStock is computed
-        var allStocks = await _dbSet
+        // Query for out of stock items (available == 0)
+        var query = _dbSet
             .AsNoTracking()
-            .Include(s => s.Batches)
             .Where(s => s.OrganizationId == organizationId)
-            .ToListAsync(cancellationToken);
+            .Where(s => (s.Quantity - s.ReservedQuantity) == 0)
+            .OrderBy(s => s.ProductPackagingId);
 
-        // Filter in memory based on computed property
-        var outOfStockItems = allStocks
-            .Where(s => s.AvailableStock == 0)
-            .OrderBy(s => s.ProductPackagingId)
-            .ToList();
+        var totalCount = await query.CountAsync(cancellationToken);
 
-        var totalCount = outOfStockItems.Count;
-        var items = outOfStockItems
+        var items = await query
             .Skip(pagingParams.Skip)
             .Take(pagingParams.Take)
-            .ToList();
+            .ToListAsync(cancellationToken);
 
         return new PagedResult<ProductStock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
@@ -130,7 +117,6 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     {
         return await _dbSet
             .AsNoTracking()
-            .Include(s => s.Batches)  // Eager load batches for computed properties
             .Where(s => packagingIds.Contains(s.ProductPackagingId))
             .ToListAsync(cancellationToken);
     }
