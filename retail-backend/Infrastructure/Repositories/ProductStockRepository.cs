@@ -19,11 +19,17 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     public async Task<ProductStock?> GetByPackagingAsync(
         Guid packagingId,
         Guid organizationId,
+        Guid? locationId = null,
         CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.ProductPackagingId == packagingId && s.OrganizationId == organizationId, cancellationToken);
+            .Include(s => s.Location)
+            .FirstOrDefaultAsync(s =>
+                s.ProductPackagingId == packagingId &&
+                s.OrganizationId == organizationId &&
+                s.LocationId == locationId,
+                cancellationToken);
     }
 
     public async Task<PagedResult<ProductStock>> GetByOrganizationAsync(
@@ -33,7 +39,29 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     {
         var query = _dbSet
             .AsNoTracking()
+            .Include(s => s.Location)
             .Where(s => s.OrganizationId == organizationId)
+            .OrderBy(s => s.ProductPackagingId);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip(pagingParams.Skip)
+            .Take(pagingParams.Take)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<ProductStock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+    }
+
+    public async Task<PagedResult<ProductStock>> GetByLocationAsync(
+        Guid locationId,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbSet
+            .AsNoTracking()
+            .Include(s => s.Location)
+            .Where(s => s.LocationId == locationId)
             .OrderBy(s => s.ProductPackagingId);
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -54,6 +82,7 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
         // Query for low stock items (available > 0 and <= 10)
         var query = _dbSet
             .AsNoTracking()
+            .Include(s => s.Location)
             .Where(s => s.OrganizationId == organizationId)
             .Where(s => (s.Quantity - s.ReservedQuantity) > 0 && (s.Quantity - s.ReservedQuantity) <= 10)
             .OrderBy(s => s.Quantity - s.ReservedQuantity)
@@ -77,6 +106,7 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
         // Query for out of stock items (available == 0)
         var query = _dbSet
             .AsNoTracking()
+            .Include(s => s.Location)
             .Where(s => s.OrganizationId == organizationId)
             .Where(s => (s.Quantity - s.ReservedQuantity) == 0)
             .OrderBy(s => s.ProductPackagingId);
@@ -98,6 +128,7 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     {
         return await _dbSet
             .AsNoTracking()
+            .Include(s => s.Location)
             .Where(s => s.OrganizationId == organizationId && packagingIds.Contains(s.ProductPackagingId))
             .ToListAsync(cancellationToken);
     }

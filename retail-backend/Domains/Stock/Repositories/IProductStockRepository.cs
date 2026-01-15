@@ -12,11 +12,17 @@ public interface IProductStockRepository : IRepository<ProductStock>
     Task<ProductStock?> GetByPackagingAsync(
         Guid packagingId,
         Guid organizationId,
+        Guid? locationId = null,
         CancellationToken cancellationToken = default);
 
     // Paginated queries
     Task<PagedResult<ProductStock>> GetByOrganizationAsync(
         Guid organizationId,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default);
+
+    Task<PagedResult<ProductStock>> GetByLocationAsync(
+        Guid locationId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 

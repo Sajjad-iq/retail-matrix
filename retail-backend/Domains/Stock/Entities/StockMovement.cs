@@ -55,6 +55,7 @@ public class StockMovement : BaseEntity
 
     // Navigation properties
     public ProductPackaging? Packaging { get; private set; }
+    public Location? Location { get; private set; }
 
     /// <summary>
     /// Factory method to create a stock movement record

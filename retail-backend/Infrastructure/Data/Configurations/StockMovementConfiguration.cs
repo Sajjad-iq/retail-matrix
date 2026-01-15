@@ -35,6 +35,9 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.HasIndex(m => m.OrganizationId)
             .HasDatabaseName("IX_StockMovements_Organization");
 
+        builder.HasIndex(m => m.LocationId)
+            .HasDatabaseName("IX_StockMovements_Location");
+
         // Properties
         builder.Property(m => m.Id)
             .ValueGeneratedNever();
@@ -67,10 +70,18 @@ public class StockMovementConfiguration : IEntityTypeConfiguration<StockMovement
         builder.Property(m => m.OrganizationId)
             .IsRequired();
 
+        builder.Property(m => m.LocationId)
+            .IsRequired(false);
+
         // Relationships
         builder.HasOne(m => m.Packaging)
             .WithMany()
             .HasForeignKey(m => m.ProductPackagingId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(m => m.Location)
+            .WithMany()
+            .HasForeignKey(m => m.LocationId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Soft delete

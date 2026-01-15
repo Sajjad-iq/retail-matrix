@@ -4,7 +4,7 @@ using Domains.Shared.Base;
 namespace Domains.Stock.Entities;
 
 /// <summary>
-/// Represents inventory stock for a product packaging within an organization
+/// Represents inventory stock for a product packaging at a specific location
 /// </summary>
 public class ProductStock : BaseEntity
 {
@@ -16,11 +16,13 @@ public class ProductStock : BaseEntity
     // Private constructor to enforce factory methods
     private ProductStock(
         Guid productPackagingId,
-        Guid organizationId)
+        Guid organizationId,
+        Guid? locationId = null)
     {
         Id = Guid.NewGuid();
         ProductPackagingId = productPackagingId;
         OrganizationId = organizationId;
+        LocationId = locationId;
         Quantity = 0;
         ReservedQuantity = 0;
         InsertDate = DateTime.UtcNow;
@@ -29,6 +31,7 @@ public class ProductStock : BaseEntity
     // Properties
     public Guid ProductPackagingId { get; private set; }
     public Guid OrganizationId { get; private set; }
+    public Guid? LocationId { get; private set; }
     public int Quantity { get; private set; }
     public int ReservedQuantity { get; private set; }
     public DateTime? LastStocktakeDate { get; private set; }
@@ -38,13 +41,15 @@ public class ProductStock : BaseEntity
 
     // Navigation properties
     public ProductPackaging? Packaging { get; private set; }
+    public Location? Location { get; private set; }
 
     /// <summary>
     /// Factory method to create a new product stock
     /// </summary>
     public static ProductStock Create(
         Guid productPackagingId,
-        Guid organizationId)
+        Guid organizationId,
+        Guid? locationId = null)
     {
         if (productPackagingId == Guid.Empty)
             throw new ArgumentException("معرف العبوة مطلوب", nameof(productPackagingId));
@@ -54,8 +59,15 @@ public class ProductStock : BaseEntity
 
         return new ProductStock(
             productPackagingId: productPackagingId,
-            organizationId: organizationId
+            organizationId: organizationId,
+            locationId: locationId
         );
+    }
+
+    // Location Management
+    public void SetLocation(Guid? locationId)
+    {
+        LocationId = locationId;
     }
 
     // Stock Management Methods

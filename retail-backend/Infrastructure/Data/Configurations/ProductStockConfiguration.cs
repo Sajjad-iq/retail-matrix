@@ -25,10 +25,13 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         builder.HasIndex(s => s.OrganizationId)
             .HasDatabaseName("IX_ProductStocks_Organization");
 
-        // Unique constraint: one stock record per packaging per organization
-        builder.HasIndex(s => new { s.ProductPackagingId, s.OrganizationId })
+        builder.HasIndex(s => s.LocationId)
+            .HasDatabaseName("IX_ProductStocks_Location");
+
+        // Unique constraint: one stock record per packaging per organization per location
+        builder.HasIndex(s => new { s.ProductPackagingId, s.OrganizationId, s.LocationId })
             .IsUnique()
-            .HasDatabaseName("IX_ProductStocks_Packaging_Organization");
+            .HasDatabaseName("IX_ProductStocks_Packaging_Organization_Location");
 
         // Properties configuration
         builder.Property(s => s.Id)
@@ -39,6 +42,9 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
 
         builder.Property(s => s.OrganizationId)
             .IsRequired();
+
+        builder.Property(s => s.LocationId)
+            .IsRequired(false);
 
         builder.Property(s => s.Quantity)
             .IsRequired()
@@ -72,6 +78,11 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         builder.HasOne(s => s.Packaging)
             .WithMany()
             .HasForeignKey(s => s.ProductPackagingId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(s => s.Location)
+            .WithMany()
+            .HasForeignKey(s => s.LocationId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
