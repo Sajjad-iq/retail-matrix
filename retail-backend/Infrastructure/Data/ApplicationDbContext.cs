@@ -28,7 +28,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProductPackaging> ProductPackagings => Set<ProductPackaging>();
     public DbSet<ProductStock> ProductStocks => Set<ProductStock>();
     public DbSet<Category> Categories => Set<Category>();
-    public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
     public DbSet<InventoryEntity> Inventories => Set<InventoryEntity>();
     public DbSet<InventoryOperation> InventoryOperations => Set<InventoryOperation>();
     public DbSet<InventoryOperationItem> InventoryOperationItems => Set<InventoryOperationItem>();
@@ -47,7 +46,6 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ProductPackagingConfiguration());
         modelBuilder.ApplyConfiguration(new ProductStockConfiguration());
         modelBuilder.ApplyConfiguration(new CategoryConfiguration());
-        modelBuilder.ApplyConfiguration(new InventoryMovementConfiguration());
         modelBuilder.ApplyConfiguration(new InventoryConfiguration());
         modelBuilder.ApplyConfiguration(new InventoryOperationConfiguration());
         modelBuilder.ApplyConfiguration(new InventoryOperationItemConfiguration());
@@ -62,7 +60,6 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ProductPackaging>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<ProductStock>().HasQueryFilter(s => !s.IsDeleted);
         modelBuilder.Entity<Category>().HasQueryFilter(c => !c.IsDeleted);
-        modelBuilder.Entity<InventoryMovement>().HasQueryFilter(m => !m.IsDeleted);
         modelBuilder.Entity<InventoryEntity>().HasQueryFilter(i => !i.IsDeleted);
         modelBuilder.Entity<InventoryOperation>().HasQueryFilter(o => !o.IsDeleted);
         modelBuilder.Entity<InventoryOperationItem>().HasQueryFilter(i => !i.IsDeleted);

@@ -23,6 +23,7 @@ public class InventoryOperationItem : BaseEntity
         string productName,
         string? barcode,
         int quantity,
+        int balanceAfter,
         Price unitPrice,
         string? notes = null)
     {
@@ -32,6 +33,7 @@ public class InventoryOperationItem : BaseEntity
         ProductName = productName;
         Barcode = barcode;
         Quantity = quantity;
+        BalanceAfter = balanceAfter;
         UnitPrice = unitPrice;
         Notes = notes;
         InsertDate = DateTime.UtcNow;
@@ -43,6 +45,7 @@ public class InventoryOperationItem : BaseEntity
     public string ProductName { get; private set; }
     public string? Barcode { get; private set; }
     public int Quantity { get; private set; }
+    public int BalanceAfter { get; private set; }           // Stock balance after this movement
     public Price UnitPrice { get; private set; }
     public string? Notes { get; private set; }
 
@@ -59,6 +62,7 @@ public class InventoryOperationItem : BaseEntity
         string productName,
         string? barcode,
         int quantity,
+        int balanceAfter,
         Price unitPrice,
         string? notes = null)
     {
@@ -74,12 +78,16 @@ public class InventoryOperationItem : BaseEntity
         if (quantity == 0)
             throw new ArgumentException("الكمية لا يمكن أن تكون صفر", nameof(quantity));
 
+        if (balanceAfter < 0)
+            throw new ArgumentException("الرصيد لا يمكن أن يكون سالب", nameof(balanceAfter));
+
         return new InventoryOperationItem(
             inventoryOperationId,
             productPackagingId,
             productName,
             barcode,
             quantity,
+            balanceAfter,
             unitPrice,
             notes
         );
