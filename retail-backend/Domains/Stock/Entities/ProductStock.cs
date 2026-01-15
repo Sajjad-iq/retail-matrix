@@ -25,29 +25,39 @@ public class ProductStock : BaseEntity
         Id = Guid.NewGuid();
         ProductPackagingId = productPackagingId;
         LocationId = locationId;
-        GoodStock = 0;
-        DamagedStock = 0;
-        ExpiredStock = 0;
-        ReservedStock = 0;
         OrganizationId = organizationId;
         Batches = new List<StockBatch>();
         InsertDate = DateTime.UtcNow;
     }
 
-    // Properties - Stock by condition
+    // Properties
     public Guid ProductPackagingId { get; private set; }
     public Guid? LocationId { get; private set; }
-    public int GoodStock { get; private set; }
-    public int DamagedStock { get; private set; }
-    public int ExpiredStock { get; private set; }
-    public int ReservedStock { get; private set; }
-    public DateTime? LastRestockDate { get; private set; }
     public DateTime? LastStocktakeDate { get; private set; }
     public Guid OrganizationId { get; private set; }
 
-    // Computed properties
+    // Computed properties - calculated from batches
+    public int GoodStock => Batches
+        .Where(b => b.Condition == StockCondition.Good)
+        .Sum(b => b.RemainingQuantity);
+
+    public int DamagedStock => Batches
+        .Where(b => b.Condition == StockCondition.Damaged || b.Condition == StockCondition.Defective)
+        .Sum(b => b.RemainingQuantity);
+
+    public int ExpiredStock => Batches
+        .Where(b => b.Condition == StockCondition.Expired)
+        .Sum(b => b.RemainingQuantity);
+
+    public int ReservedStock => Batches.Sum(b => b.ReservedQuantity);
+
     public int TotalStock => GoodStock + DamagedStock + ExpiredStock;
     public int AvailableStock => GoodStock - ReservedStock;
+
+    public DateTime? LastRestockDate => Batches
+        .OrderByDescending(b => b.InsertDate)
+        .Select(b => (DateTime?)b.InsertDate)
+        .FirstOrDefault();
 
     // Navigation properties
     public ProductPackaging? Packaging { get; private set; }
@@ -74,66 +84,37 @@ public class ProductStock : BaseEntity
         );
     }
 
-    // Domain Methods - Stock Adjustment
-    public void AdjustGoodStock(int quantity)
-    {
-        var newStock = GoodStock + quantity;
+    // Stock counts are now computed from batches
+    // To adjust stock, use AddBatch() or modify batch quantities directly
 
-        if (newStock < 0)
-            throw new InvalidOperationException("لا يمكن أن يكون المخزون سالب");
-
-        if (newStock < ReservedStock)
-            throw new InvalidOperationException("لا يمكن أن يكون المخزون أقل من المخزون المحجوز");
-
-        GoodStock = newStock;
-
-        if (quantity > 0)
-            LastRestockDate = DateTime.UtcNow;
-    }
-
-    public void AdjustDamagedStock(int quantity)
-    {
-        var newStock = DamagedStock + quantity;
-
-        if (newStock < 0)
-            throw new InvalidOperationException("لا يمكن أن يكون المخزون التالف سالب");
-
-        DamagedStock = newStock;
-    }
-
-    public void AdjustExpiredStock(int quantity)
-    {
-        var newStock = ExpiredStock + quantity;
-
-        if (newStock < 0)
-            throw new InvalidOperationException("لا يمكن أن يكون المخزون المنتهي سالب");
-
-        ExpiredStock = newStock;
-    }
-
-    public void SetGoodStock(int quantity)
-    {
-        if (quantity < 0)
-            throw new ArgumentException("الكمية لا يمكن أن تكون سالبة", nameof(quantity));
-
-        if (quantity < ReservedStock)
-            throw new InvalidOperationException("لا يمكن أن يكون المخزون أقل من المخزون المحجوز");
-
-        GoodStock = quantity;
-    }
-
-    // Reservation Methods
+    // Reservation Methods - FIFO/FEFO based
     public void ReserveStock(int quantity)
     {
         if (quantity <= 0)
             throw new ArgumentException("الكمية المحجوزة يجب أن تكون أكبر من صفر", nameof(quantity));
 
-        var newReservedStock = ReservedStock + quantity;
-
-        if (newReservedStock > GoodStock)
+        if (quantity > AvailableStock)
             throw new InvalidOperationException("لا يمكن حجز أكثر من المخزون المتاح");
 
-        ReservedStock = newReservedStock;
+        var remainingToReserve = quantity;
+
+        // Reserve from batches using FIFO (oldest first)
+        var availableBatches = Batches
+            .Where(b => b.Condition == StockCondition.Good && b.AvailableQuantity > 0)
+            .OrderBy(b => b.InsertDate)  // FIFO: oldest first
+            .ToList();
+
+        foreach (var batch in availableBatches)
+        {
+            if (remainingToReserve == 0) break;
+
+            var quantityToReserve = Math.Min(remainingToReserve, batch.AvailableQuantity);
+            batch.ReserveQuantity(quantityToReserve);
+            remainingToReserve -= quantityToReserve;
+        }
+
+        if (remainingToReserve > 0)
+            throw new InvalidOperationException("فشل حجز الكمية المطلوبة");
     }
 
     public void ReleaseReservedStock(int quantity)
@@ -141,12 +122,28 @@ public class ProductStock : BaseEntity
         if (quantity <= 0)
             throw new ArgumentException("الكمية المراد إلغاء حجزها يجب أن تكون أكبر من صفر", nameof(quantity));
 
-        var newReservedStock = ReservedStock - quantity;
-
-        if (newReservedStock < 0)
+        if (quantity > ReservedStock)
             throw new InvalidOperationException("لا يمكن إلغاء حجز أكثر من المخزون المحجوز");
 
-        ReservedStock = newReservedStock;
+        var remainingToRelease = quantity;
+
+        // Release from batches using FIFO (oldest first)
+        var reservedBatches = Batches
+            .Where(b => b.ReservedQuantity > 0)
+            .OrderBy(b => b.InsertDate)  // FIFO: oldest first
+            .ToList();
+
+        foreach (var batch in reservedBatches)
+        {
+            if (remainingToRelease == 0) break;
+
+            var quantityToRelease = Math.Min(remainingToRelease, batch.ReservedQuantity);
+            batch.ReleaseReservation(quantityToRelease);
+            remainingToRelease -= quantityToRelease;
+        }
+
+        if (remainingToRelease > 0)
+            throw new InvalidOperationException("فشل إلغاء حجز الكمية المطلوبة");
     }
 
     // Batch Management
@@ -168,22 +165,7 @@ public class ProductStock : BaseEntity
 
         Batches.Add(batch);
 
-        // Update stock based on condition
-        switch (condition)
-        {
-            case StockCondition.Good:
-                GoodStock += quantity;
-                break;
-            case StockCondition.Damaged:
-            case StockCondition.Defective:
-                DamagedStock += quantity;
-                break;
-            case StockCondition.Expired:
-                ExpiredStock += quantity;
-                break;
-        }
-
-        LastRestockDate = DateTime.UtcNow;
+        // All stock counts are automatically computed from batches
         return batch;
     }
 
@@ -193,40 +175,9 @@ public class ProductStock : BaseEntity
         if (batch == null)
             throw new InvalidOperationException("الدفعة غير موجودة");
 
-        var oldCondition = batch.Condition;
-        var quantity = batch.RemainingQuantity;
-
-        // Remove from old condition
-        switch (oldCondition)
-        {
-            case StockCondition.Good:
-                GoodStock -= quantity;
-                break;
-            case StockCondition.Damaged:
-            case StockCondition.Defective:
-                DamagedStock -= quantity;
-                break;
-            case StockCondition.Expired:
-                ExpiredStock -= quantity;
-                break;
-        }
-
-        // Add to new condition
-        switch (newCondition)
-        {
-            case StockCondition.Good:
-                GoodStock += quantity;
-                break;
-            case StockCondition.Damaged:
-            case StockCondition.Defective:
-                DamagedStock += quantity;
-                break;
-            case StockCondition.Expired:
-                ExpiredStock += quantity;
-                break;
-        }
-
         batch.UpdateCondition(newCondition);
+
+        // Stock counts (GoodStock, DamagedStock, ExpiredStock) are automatically recomputed
     }
 
     // Stocktake

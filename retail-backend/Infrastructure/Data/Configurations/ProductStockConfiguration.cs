@@ -32,25 +32,6 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         builder.Property(s => s.Id)
             .ValueGeneratedNever(); // Generated in domain
 
-        builder.Property(s => s.GoodStock)
-            .IsRequired()
-            .HasDefaultValue(0);
-
-        builder.Property(s => s.DamagedStock)
-            .IsRequired()
-            .HasDefaultValue(0);
-
-        builder.Property(s => s.ExpiredStock)
-            .IsRequired()
-            .HasDefaultValue(0);
-
-        builder.Property(s => s.ReservedStock)
-            .IsRequired()
-            .HasDefaultValue(0);
-
-        builder.Property(s => s.LastRestockDate)
-            .IsRequired(false);
-
         builder.Property(s => s.LastStocktakeDate)
             .IsRequired(false);
 
@@ -71,9 +52,14 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         builder.Property(s => s.DeletedAt)
             .IsRequired(false);
 
-        // Computed properties (not persisted)
+        // Computed properties (not persisted - calculated from batches)
+        builder.Ignore(s => s.GoodStock);
+        builder.Ignore(s => s.DamagedStock);
+        builder.Ignore(s => s.ExpiredStock);
+        builder.Ignore(s => s.ReservedStock);
         builder.Ignore(s => s.TotalStock);
         builder.Ignore(s => s.AvailableStock);
+        builder.Ignore(s => s.LastRestockDate);
 
         // Relationships
         builder.HasOne(s => s.Packaging)

@@ -50,9 +50,16 @@ public class StockBatchConfiguration : IEntityTypeConfiguration<StockBatch>
         builder.Property(b => b.RemainingQuantity)
             .IsRequired();
 
+        builder.Property(b => b.ReservedQuantity)
+            .IsRequired()
+            .HasDefaultValue(0);
+
         builder.Property(b => b.Condition)
             .IsRequired()
             .HasConversion<string>();
+        
+        // Computed property (not persisted)
+        builder.Ignore(b => b.AvailableQuantity);
 
         builder.Property(b => b.ExpirationDate)
             .IsRequired(false);

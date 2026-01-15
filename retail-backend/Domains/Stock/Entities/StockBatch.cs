@@ -30,6 +30,7 @@ public class StockBatch : BaseEntity
         BatchNumber = batchNumber;
         Quantity = quantity;
         RemainingQuantity = quantity;
+        ReservedQuantity = 0;
         Condition = condition;
         ExpirationDate = expirationDate;
         PurchasePrice = purchasePrice;
@@ -40,10 +41,14 @@ public class StockBatch : BaseEntity
     public Guid ProductStockId { get; private set; }
     public string BatchNumber { get; private set; }
     public int Quantity { get; private set; }              // Original quantity
-    public int RemainingQuantity { get; private set; }     // Current quantity
+    public int RemainingQuantity { get; private set; }     // Current physical quantity
+    public int ReservedQuantity { get; private set; }      // Quantity reserved for orders
     public StockCondition Condition { get; private set; }
     public DateTime? ExpirationDate { get; private set; }
     public Price PurchasePrice { get; private set; }
+
+    // Computed property
+    public int AvailableQuantity => RemainingQuantity - ReservedQuantity;
 
     // Navigation properties
     public ProductStock? ProductStock { get; private set; }
@@ -94,6 +99,32 @@ public class StockBatch : BaseEntity
             throw new InvalidOperationException("الكمية المطلوبة أكبر من المتاح في الدفعة");
 
         RemainingQuantity -= quantity;
+    }
+
+    public void ReserveQuantity(int quantity)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("الكمية المحجوزة يجب أن تكون أكبر من صفر", nameof(quantity));
+
+        var newReservedQuantity = ReservedQuantity + quantity;
+
+        if (newReservedQuantity > RemainingQuantity)
+            throw new InvalidOperationException("لا يمكن حجز أكثر من المخزون المتاح في الدفعة");
+
+        ReservedQuantity = newReservedQuantity;
+    }
+
+    public void ReleaseReservation(int quantity)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("الكمية المراد إلغاء حجزها يجب أن تكون أكبر من صفر", nameof(quantity));
+
+        var newReservedQuantity = ReservedQuantity - quantity;
+
+        if (newReservedQuantity < 0)
+            throw new InvalidOperationException("لا يمكن إلغاء حجز أكثر من المخزون المحجوز");
+
+        ReservedQuantity = newReservedQuantity;
     }
 
     public void UpdateCondition(StockCondition newCondition)

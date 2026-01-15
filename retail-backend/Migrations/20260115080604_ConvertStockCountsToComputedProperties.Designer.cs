@@ -5,6 +5,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -12,9 +13,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace retail_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260115080604_ConvertStockCountsToComputedProperties")]
+    partial class ConvertStockCountsToComputedProperties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -597,6 +600,9 @@ namespace retail_backend.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasDefaultValue(false);
 
+                    b.Property<DateTime?>("LastRestockDate")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime?>("LastStocktakeDate")
                         .HasColumnType("datetime(6)");
 
@@ -608,6 +614,11 @@ namespace retail_backend.Migrations
 
                     b.Property<Guid>("ProductPackagingId")
                         .HasColumnType("char(36)");
+
+                    b.Property<int>("ReservedStock")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("datetime(6)");
@@ -662,11 +673,6 @@ namespace retail_backend.Migrations
 
                     b.Property<int>("RemainingQuantity")
                         .HasColumnType("int");
-
-                    b.Property<int>("ReservedQuantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
 
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("datetime(6)");
