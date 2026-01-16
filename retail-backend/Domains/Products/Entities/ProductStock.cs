@@ -41,7 +41,6 @@ public class ProductStock : BaseEntity
 
     // Navigation properties
     public ProductPackaging? Packaging { get; private set; }
-    public InventoryEntity? Inventory { get; private set; }
 
     /// <summary>
     /// Factory method to create a new product stock

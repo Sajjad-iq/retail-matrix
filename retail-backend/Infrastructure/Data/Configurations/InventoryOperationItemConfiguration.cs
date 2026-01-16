@@ -86,9 +86,8 @@ public class InventoryOperationItemConfiguration : IEntityTypeConfiguration<Inve
             .HasForeignKey(i => i.InventoryOperationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(i => i.Packaging)
-            .WithMany()
-            .HasForeignKey(i => i.ProductPackagingId)
-            .OnDelete(DeleteBehavior.Restrict);
+        // Foreign key to ProductPackaging (no navigation property - cross-domain reference)
+        builder.Property(i => i.ProductPackagingId)
+            .IsRequired();
     }
 }

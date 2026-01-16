@@ -81,9 +81,9 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
             .HasForeignKey(s => s.ProductPackagingId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(s => s.Inventory)
-            .WithMany()
-            .HasForeignKey(s => s.InventoryId)
-            .OnDelete(DeleteBehavior.Restrict);
+        // Foreign key to Inventory (no navigation property - cross-domain reference)
+        builder.Property(s => s.InventoryId)
+            .IsRequired()
+            .HasColumnName("LocationId");
     }
 }

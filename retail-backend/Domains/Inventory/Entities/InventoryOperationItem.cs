@@ -51,7 +51,6 @@ public class InventoryOperationItem : BaseEntity
 
     // Navigation properties
     public InventoryOperation? Operation { get; private set; }
-    public ProductPackaging? Packaging { get; private set; }
 
     /// <summary>
     /// Factory method to create a new inventory operation item

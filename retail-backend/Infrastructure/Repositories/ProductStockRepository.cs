@@ -24,7 +24,6 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     {
         return await _dbSet
             .AsNoTracking()
-            .Include(s => s.Inventory)
             .FirstOrDefaultAsync(s =>
                 s.ProductPackagingId == packagingId &&
                 s.OrganizationId == organizationId &&
@@ -39,7 +38,6 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     {
         var query = _dbSet
             .AsNoTracking()
-            .Include(s => s.Inventory)
             .Where(s => s.OrganizationId == organizationId)
             .OrderBy(s => s.ProductPackagingId);
 
@@ -60,7 +58,6 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     {
         var query = _dbSet
             .AsNoTracking()
-            .Include(s => s.Inventory)
             .Where(s => s.InventoryId == inventoryId)
             .OrderBy(s => s.ProductPackagingId);
 
@@ -82,7 +79,6 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
         // Query for low stock items (available > 0 and <= 10)
         var query = _dbSet
             .AsNoTracking()
-            .Include(s => s.Inventory)
             .Where(s => s.OrganizationId == organizationId)
             .Where(s => (s.Quantity - s.ReservedQuantity) > 0 && (s.Quantity - s.ReservedQuantity) <= 10)
             .OrderBy(s => s.Quantity - s.ReservedQuantity)
@@ -106,7 +102,6 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
         // Query for out of stock items (available == 0)
         var query = _dbSet
             .AsNoTracking()
-            .Include(s => s.Inventory)
             .Where(s => s.OrganizationId == organizationId)
             .Where(s => (s.Quantity - s.ReservedQuantity) == 0)
             .OrderBy(s => s.ProductPackagingId);
@@ -128,7 +123,6 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
     {
         return await _dbSet
             .AsNoTracking()
-            .Include(s => s.Inventory)
             .Where(s => s.OrganizationId == organizationId && packagingIds.Contains(s.ProductPackagingId))
             .ToListAsync(cancellationToken);
     }
