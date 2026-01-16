@@ -81,6 +81,7 @@ public class Inventory : BaseEntity
         if (string.IsNullOrWhiteSpace(code))
             throw new ArgumentException("رمز الموقع مطلوب", nameof(code));
 
+        // Note: Code uniqueness per organization should be validated at the application/repository level
         Code = code;
     }
 
