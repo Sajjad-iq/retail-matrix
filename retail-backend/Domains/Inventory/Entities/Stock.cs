@@ -1,3 +1,4 @@
+using Domains.Inventory.Enums;
 using Domains.Shared.Base;
 
 namespace Domains.Inventory.Entities;
@@ -16,7 +17,9 @@ public class Stock : BaseEntity
     private Stock(
         Guid productPackagingId,
         Guid organizationId,
-        Guid inventoryId)
+        Guid inventoryId,
+        DateTime? expiryDate = null,
+        StockCondition condition = StockCondition.New)
     {
         Id = Guid.NewGuid();
         ProductPackagingId = productPackagingId;
@@ -24,6 +27,8 @@ public class Stock : BaseEntity
         InventoryId = inventoryId;
         Quantity = 0;
         ReservedQuantity = 0;
+        ExpiryDate = expiryDate;
+        Condition = condition;
         InsertDate = DateTime.UtcNow;
     }
 
@@ -34,6 +39,8 @@ public class Stock : BaseEntity
     public int Quantity { get; private set; }
     public int ReservedQuantity { get; private set; }
     public DateTime? LastStocktakeDate { get; private set; }
+    public DateTime? ExpiryDate { get; private set; }
+    public StockCondition Condition { get; private set; }
 
     // Computed property
     public int AvailableQuantity => Quantity - ReservedQuantity;
@@ -47,7 +54,9 @@ public class Stock : BaseEntity
     public static Stock Create(
         Guid productPackagingId,
         Guid organizationId,
-        Guid inventoryId)
+        Guid inventoryId,
+        DateTime? expiryDate = null,
+        StockCondition condition = StockCondition.New)
     {
         if (productPackagingId == Guid.Empty)
             throw new ArgumentException("معرف العبوة مطلوب", nameof(productPackagingId));
@@ -61,7 +70,9 @@ public class Stock : BaseEntity
         return new Stock(
             productPackagingId: productPackagingId,
             organizationId: organizationId,
-            inventoryId: inventoryId
+            inventoryId: inventoryId,
+            expiryDate: expiryDate,
+            condition: condition
         );
     }
 
@@ -129,8 +140,26 @@ public class Stock : BaseEntity
     }
 
 
+    // Expiry and Condition Methods
+    public void SetExpiryDate(DateTime? expiryDate)
+    {
+        ExpiryDate = expiryDate;
+    }
+
+    public void SetCondition(StockCondition condition)
+    {
+        Condition = condition;
+    }
+
     // Query Methods
     public bool IsOutOfStock() => AvailableQuantity == 0;
 
     public bool IsLowStock(int reorderLevel) => AvailableQuantity > 0 && AvailableQuantity <= reorderLevel;
+
+    public bool IsExpired() => ExpiryDate.HasValue && ExpiryDate.Value < DateTime.UtcNow;
+
+    public bool IsNearExpiry(int daysThreshold) =>
+        ExpiryDate.HasValue &&
+        ExpiryDate.Value >= DateTime.UtcNow &&
+        ExpiryDate.Value <= DateTime.UtcNow.AddDays(daysThreshold);
 }

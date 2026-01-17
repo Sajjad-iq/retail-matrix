@@ -1,4 +1,5 @@
 using Domains.Inventory.Entities;
+using Domains.Inventory.Enums;
 using Domains.Inventory.Repositories;
 using Domains.Shared.Base;
 using Infrastructure.Data;
@@ -124,5 +125,75 @@ public class StockRepository : Repository<Stock>, IStockRepository
             .AsNoTracking()
             .Where(s => s.OrganizationId == organizationId && packagingIds.Contains(s.ProductPackagingId))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PagedResult<Stock>> GetExpiredItemsAsync(
+        Guid organizationId,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        var query = _dbSet
+            .AsNoTracking()
+            .Where(s => s.OrganizationId == organizationId)
+            .Where(s => s.ExpiryDate.HasValue && s.ExpiryDate.Value < now)
+            .OrderBy(s => s.ExpiryDate)
+            .ThenBy(s => s.ProductPackagingId);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip(pagingParams.Skip)
+            .Take(pagingParams.Take)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+    }
+
+    public async Task<PagedResult<Stock>> GetNearExpiryItemsAsync(
+        Guid organizationId,
+        int daysThreshold,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        var thresholdDate = now.AddDays(daysThreshold);
+        var query = _dbSet
+            .AsNoTracking()
+            .Where(s => s.OrganizationId == organizationId)
+            .Where(s => s.ExpiryDate.HasValue && s.ExpiryDate.Value >= now && s.ExpiryDate.Value <= thresholdDate)
+            .OrderBy(s => s.ExpiryDate)
+            .ThenBy(s => s.ProductPackagingId);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip(pagingParams.Skip)
+            .Take(pagingParams.Take)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+    }
+
+    public async Task<PagedResult<Stock>> GetByConditionAsync(
+        Guid organizationId,
+        StockCondition condition,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbSet
+            .AsNoTracking()
+            .Where(s => s.OrganizationId == organizationId)
+            .Where(s => s.Condition == condition)
+            .OrderBy(s => s.ProductPackagingId);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip(pagingParams.Skip)
+            .Take(pagingParams.Take)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 }

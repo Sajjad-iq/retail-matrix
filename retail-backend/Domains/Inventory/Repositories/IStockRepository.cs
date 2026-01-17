@@ -1,4 +1,5 @@
 using Domains.Inventory.Entities;
+using Domains.Inventory.Enums;
 using Domains.Shared.Base;
 
 namespace Domains.Inventory.Repositories;
@@ -40,5 +41,24 @@ public interface IStockRepository : IRepository<Stock>
     Task<List<Stock>> GetByPackagingIdsAsync(
         Guid organizationId,
         List<Guid> packagingIds,
+        CancellationToken cancellationToken = default);
+
+    // Expiry queries
+    Task<PagedResult<Stock>> GetExpiredItemsAsync(
+        Guid organizationId,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default);
+
+    Task<PagedResult<Stock>> GetNearExpiryItemsAsync(
+        Guid organizationId,
+        int daysThreshold,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default);
+
+    // Condition queries
+    Task<PagedResult<Stock>> GetByConditionAsync(
+        Guid organizationId,
+        StockCondition condition,
+        PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 }

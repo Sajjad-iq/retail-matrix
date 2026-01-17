@@ -57,6 +57,15 @@ public class StockConfiguration : IEntityTypeConfiguration<Stock>
         builder.Property(s => s.LastStocktakeDate)
             .IsRequired(false);
 
+        builder.Property(s => s.ExpiryDate)
+            .IsRequired(false);
+
+        builder.Property(s => s.Condition)
+            .IsRequired()
+            .HasDefaultValue(Domains.Inventory.Enums.StockCondition.New)
+            .HasConversion<string>() // Store as string for readability
+            .HasMaxLength(20);
+
         builder.Property(s => s.IsDeleted)
             .IsRequired()
             .HasDefaultValue(false);
