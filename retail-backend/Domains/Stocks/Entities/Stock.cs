@@ -1,13 +1,15 @@
-using Domains.Stocks.Enums;
 using Domains.Shared.Base;
 
 namespace Domains.Stocks.Entities;
 
 /// <summary>
 /// Represents inventory stock for a product packaging at a specific location
+/// This is the aggregate root that contains multiple batches
 /// </summary>
 public class Stock : BaseEntity
 {
+    private readonly List<StockBatch> _batches = new();
+
     // Parameterless constructor for EF Core
     private Stock()
     {
@@ -17,18 +19,12 @@ public class Stock : BaseEntity
     private Stock(
         Guid productPackagingId,
         Guid organizationId,
-        Guid inventoryId,
-        DateTime? expiryDate = null,
-        StockCondition condition = StockCondition.New)
+        Guid inventoryId)
     {
         Id = Guid.NewGuid();
         ProductPackagingId = productPackagingId;
         OrganizationId = organizationId;
         InventoryId = inventoryId;
-        Quantity = 0;
-        ReservedQuantity = 0;
-        ExpiryDate = expiryDate;
-        Condition = condition;
         InsertDate = DateTime.UtcNow;
     }
 
@@ -36,14 +32,15 @@ public class Stock : BaseEntity
     public Guid ProductPackagingId { get; private set; }
     public Guid OrganizationId { get; private set; }
     public Guid InventoryId { get; private set; }
-    public int Quantity { get; private set; }
-    public int ReservedQuantity { get; private set; }
     public DateTime? LastStocktakeDate { get; private set; }
-    public DateTime? ExpiryDate { get; private set; }
-    public StockCondition Condition { get; private set; }
 
-    // Computed property
-    public int AvailableQuantity => Quantity - ReservedQuantity;
+    // Navigation - Batches collection
+    public IReadOnlyCollection<StockBatch> Batches => _batches.AsReadOnly();
+
+    // Computed properties (aggregated from batches)
+    public int TotalQuantity => _batches.Sum(b => b.Quantity);
+    public int TotalReservedQuantity => _batches.Sum(b => b.ReservedQuantity);
+    public int TotalAvailableQuantity => _batches.Sum(b => b.AvailableQuantity);
 
     /// <summary>
     /// Factory method to create a new stock record
@@ -51,9 +48,7 @@ public class Stock : BaseEntity
     public static Stock Create(
         Guid productPackagingId,
         Guid organizationId,
-        Guid inventoryId,
-        DateTime? expiryDate = null,
-        StockCondition condition = StockCondition.New)
+        Guid inventoryId)
     {
         if (productPackagingId == Guid.Empty)
             throw new ArgumentException("معرف العبوة مطلوب", nameof(productPackagingId));
@@ -67,9 +62,7 @@ public class Stock : BaseEntity
         return new Stock(
             productPackagingId: productPackagingId,
             organizationId: organizationId,
-            inventoryId: inventoryId,
-            expiryDate: expiryDate,
-            condition: condition
+            inventoryId: inventoryId
         );
     }
 
@@ -82,81 +75,69 @@ public class Stock : BaseEntity
         InventoryId = inventoryId;
     }
 
-    // Stock Management Methods
-    public void AddStock(int quantity)
+    public void SetLastStocktakeDate(DateTime date)
     {
-        if (quantity <= 0)
-            throw new ArgumentException("الكمية يجب أن تكون أكبر من صفر", nameof(quantity));
-
-        Quantity += quantity;
+        LastStocktakeDate = date;
     }
 
-    public void RemoveStock(int quantity)
+    // Batch Management
+    public StockBatch AddBatch(
+        string batchNumber,
+        int quantity,
+        DateTime? expiryDate = null,
+        Enums.StockCondition condition = Enums.StockCondition.New,
+        decimal? costPrice = null)
     {
-        if (quantity <= 0)
-            throw new ArgumentException("الكمية يجب أن تكون أكبر من صفر", nameof(quantity));
+        var batch = StockBatch.Create(
+            stockId: Id,
+            batchNumber: batchNumber,
+            quantity: quantity,
+            expiryDate: expiryDate,
+            condition: condition,
+            costPrice: costPrice
+        );
 
-        if (quantity > AvailableQuantity)
-            throw new InvalidOperationException("الكمية المطلوبة أكبر من المخزون المتاح");
-
-        Quantity -= quantity;
+        _batches.Add(batch);
+        return batch;
     }
 
-    public void SetStock(int quantity)
+    public void RemoveBatch(Guid batchId)
     {
-        if (quantity < 0)
-            throw new ArgumentException("الكمية لا يمكن أن تكون سالبة", nameof(quantity));
+        var batch = _batches.FirstOrDefault(b => b.Id == batchId);
+        if (batch == null)
+            throw new InvalidOperationException("الدفعة غير موجودة");
 
-        if (quantity < ReservedQuantity)
-            throw new InvalidOperationException("لا يمكن تعيين الكمية أقل من المحجوز");
+        if (batch.ReservedQuantity > 0)
+            throw new InvalidOperationException("لا يمكن حذف دفعة تحتوي على كميات محجوزة");
 
-        Quantity = quantity;
+        _batches.Remove(batch);
     }
 
-    // Reservation Methods
-    public void Reserve(int quantity)
+    public StockBatch? GetBatch(Guid batchId)
     {
-        if (quantity <= 0)
-            throw new ArgumentException("الكمية المحجوزة يجب أن تكون أكبر من صفر", nameof(quantity));
-
-        if (quantity > AvailableQuantity)
-            throw new InvalidOperationException("لا يمكن حجز أكثر من المخزون المتاح");
-
-        ReservedQuantity += quantity;
+        return _batches.FirstOrDefault(b => b.Id == batchId);
     }
 
-    public void ReleaseReservation(int quantity)
+    public StockBatch? GetBatchByNumber(string batchNumber)
     {
-        if (quantity <= 0)
-            throw new ArgumentException("الكمية المراد إلغاء حجزها يجب أن تكون أكبر من صفر", nameof(quantity));
-
-        if (quantity > ReservedQuantity)
-            throw new InvalidOperationException("لا يمكن إلغاء حجز أكثر من المحجوز");
-
-        ReservedQuantity -= quantity;
-    }
-
-
-    // Expiry and Condition Methods
-    public void SetExpiryDate(DateTime? expiryDate)
-    {
-        ExpiryDate = expiryDate;
-    }
-
-    public void SetCondition(StockCondition condition)
-    {
-        Condition = condition;
+        return _batches.FirstOrDefault(b => b.BatchNumber == batchNumber);
     }
 
     // Query Methods
-    public bool IsOutOfStock() => AvailableQuantity == 0;
+    public bool IsOutOfStock() => TotalAvailableQuantity == 0;
 
-    public bool IsLowStock(int reorderLevel) => AvailableQuantity > 0 && AvailableQuantity <= reorderLevel;
+    public bool IsLowStock(int reorderLevel) => TotalAvailableQuantity > 0 && TotalAvailableQuantity <= reorderLevel;
 
-    public bool IsExpired() => ExpiryDate.HasValue && ExpiryDate.Value < DateTime.UtcNow;
+    public bool HasExpiredBatches() => _batches.Any(b => b.IsExpired());
 
-    public bool IsNearExpiry(int daysThreshold) =>
-        ExpiryDate.HasValue &&
-        ExpiryDate.Value >= DateTime.UtcNow &&
-        ExpiryDate.Value <= DateTime.UtcNow.AddDays(daysThreshold);
+    public bool HasNearExpiryBatches(int daysThreshold) => _batches.Any(b => b.IsNearExpiry(daysThreshold));
+
+    public IEnumerable<StockBatch> GetExpiredBatches() => _batches.Where(b => b.IsExpired());
+
+    public IEnumerable<StockBatch> GetNearExpiryBatches(int daysThreshold) =>
+        _batches.Where(b => b.IsNearExpiry(daysThreshold));
+
+    public IEnumerable<StockBatch> GetAvailableBatches() =>
+        _batches.Where(b => b.AvailableQuantity > 0 && !b.IsExpired())
+                .OrderBy(b => b.ExpiryDate ?? DateTime.MaxValue); // FEFO: First Expired, First Out
 }

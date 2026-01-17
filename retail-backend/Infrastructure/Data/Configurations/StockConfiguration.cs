@@ -1,5 +1,4 @@
 using Domains.Stocks.Entities;
-using Domains.Stocks.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -47,25 +46,8 @@ public class StockConfiguration : IEntityTypeConfiguration<Stock>
             .IsRequired()
             .HasColumnName("LocationId"); // Keep column name for migration compatibility
 
-        builder.Property(s => s.Quantity)
-            .IsRequired()
-            .HasDefaultValue(0);
-
-        builder.Property(s => s.ReservedQuantity)
-            .IsRequired()
-            .HasDefaultValue(0);
-
         builder.Property(s => s.LastStocktakeDate)
             .IsRequired(false);
-
-        builder.Property(s => s.ExpiryDate)
-            .IsRequired(false);
-
-        builder.Property(s => s.Condition)
-            .IsRequired()
-            .HasDefaultValue(StockCondition.New)
-            .HasConversion<string>() // Store as string for readability
-            .HasMaxLength(20);
 
         builder.Property(s => s.IsDeleted)
             .IsRequired()
@@ -81,15 +63,14 @@ public class StockConfiguration : IEntityTypeConfiguration<Stock>
         builder.Property(s => s.DeletedAt)
             .IsRequired(false);
 
-        // Computed property (not persisted)
-        builder.Ignore(s => s.AvailableQuantity);
+        // Computed properties (not persisted - calculated from batches)
+        builder.Ignore(s => s.TotalQuantity);
+        builder.Ignore(s => s.TotalReservedQuantity);
+        builder.Ignore(s => s.TotalAvailableQuantity);
 
-        // Foreign key to ProductPackaging (no navigation property - cross-domain reference)
-        builder.Property(s => s.ProductPackagingId)
-            .IsRequired();
-
-        // Foreign key to Inventory (no navigation property - cross-domain reference)
-        builder.Property(s => s.InventoryId)
-            .IsRequired();
+        // Batches navigation - configured in StockBatchConfiguration
+        builder.HasMany(s => s.Batches)
+            .WithOne(b => b.Stock)
+            .HasForeignKey(b => b.StockId);
     }
 }

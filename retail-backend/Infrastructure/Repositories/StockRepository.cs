@@ -23,12 +23,21 @@ public class StockRepository : Repository<Stock>, IStockRepository
         CancellationToken cancellationToken = default)
     {
         return await _dbSet
-            .AsNoTracking()
+            .Include(s => s.Batches)
             .FirstOrDefaultAsync(s =>
                 s.ProductPackagingId == packagingId &&
                 s.OrganizationId == organizationId &&
                 s.InventoryId == inventoryId,
                 cancellationToken);
+    }
+
+    public async Task<Stock?> GetWithBatchesAsync(
+        Guid stockId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(s => s.Batches)
+            .FirstOrDefaultAsync(s => s.Id == stockId, cancellationToken);
     }
 
     public async Task<PagedResult<Stock>> GetByOrganizationAsync(
@@ -37,7 +46,7 @@ public class StockRepository : Repository<Stock>, IStockRepository
         CancellationToken cancellationToken = default)
     {
         var query = _dbSet
-            .AsNoTracking()
+            .Include(s => s.Batches)
             .Where(s => s.OrganizationId == organizationId)
             .OrderBy(s => s.ProductPackagingId);
 
@@ -57,7 +66,7 @@ public class StockRepository : Repository<Stock>, IStockRepository
         CancellationToken cancellationToken = default)
     {
         var query = _dbSet
-            .AsNoTracking()
+            .Include(s => s.Batches)
             .Where(s => s.InventoryId == inventoryId)
             .OrderBy(s => s.ProductPackagingId);
 
@@ -73,15 +82,16 @@ public class StockRepository : Repository<Stock>, IStockRepository
 
     public async Task<PagedResult<Stock>> GetLowStockItemsAsync(
         Guid organizationId,
+        int reorderLevel,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
-        // Query for low stock items (available > 0 and <= 10)
         var query = _dbSet
-            .AsNoTracking()
+            .Include(s => s.Batches)
             .Where(s => s.OrganizationId == organizationId)
-            .Where(s => (s.Quantity - s.ReservedQuantity) > 0 && (s.Quantity - s.ReservedQuantity) <= 10)
-            .OrderBy(s => s.Quantity - s.ReservedQuantity)
+            .Where(s => s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) > 0 &&
+                        s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) <= reorderLevel)
+            .OrderBy(s => s.Batches.Sum(b => b.Quantity - b.ReservedQuantity))
             .ThenBy(s => s.ProductPackagingId);
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -99,11 +109,10 @@ public class StockRepository : Repository<Stock>, IStockRepository
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
-        // Query for out of stock items (available == 0)
         var query = _dbSet
-            .AsNoTracking()
+            .Include(s => s.Batches)
             .Where(s => s.OrganizationId == organizationId)
-            .Where(s => (s.Quantity - s.ReservedQuantity) == 0)
+            .Where(s => !s.Batches.Any() || s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) == 0)
             .OrderBy(s => s.ProductPackagingId);
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -122,23 +131,23 @@ public class StockRepository : Repository<Stock>, IStockRepository
         CancellationToken cancellationToken = default)
     {
         return await _dbSet
-            .AsNoTracking()
+            .Include(s => s.Batches)
             .Where(s => s.OrganizationId == organizationId && packagingIds.Contains(s.ProductPackagingId))
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<PagedResult<Stock>> GetExpiredItemsAsync(
+    public async Task<PagedResult<StockBatch>> GetExpiredBatchesAsync(
         Guid organizationId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;
-        var query = _dbSet
-            .AsNoTracking()
-            .Where(s => s.OrganizationId == organizationId)
-            .Where(s => s.ExpiryDate.HasValue && s.ExpiryDate.Value < now)
-            .OrderBy(s => s.ExpiryDate)
-            .ThenBy(s => s.ProductPackagingId);
+        var query = _context.Set<StockBatch>()
+            .Include(b => b.Stock)
+            .Where(b => b.Stock!.OrganizationId == organizationId)
+            .Where(b => b.ExpiryDate.HasValue && b.ExpiryDate.Value < now)
+            .OrderBy(b => b.ExpiryDate)
+            .ThenBy(b => b.BatchNumber);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -147,10 +156,10 @@ public class StockRepository : Repository<Stock>, IStockRepository
             .Take(pagingParams.Take)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+        return new PagedResult<StockBatch>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 
-    public async Task<PagedResult<Stock>> GetNearExpiryItemsAsync(
+    public async Task<PagedResult<StockBatch>> GetNearExpiryBatchesAsync(
         Guid organizationId,
         int daysThreshold,
         PagingParams pagingParams,
@@ -158,12 +167,12 @@ public class StockRepository : Repository<Stock>, IStockRepository
     {
         var now = DateTime.UtcNow;
         var thresholdDate = now.AddDays(daysThreshold);
-        var query = _dbSet
-            .AsNoTracking()
-            .Where(s => s.OrganizationId == organizationId)
-            .Where(s => s.ExpiryDate.HasValue && s.ExpiryDate.Value >= now && s.ExpiryDate.Value <= thresholdDate)
-            .OrderBy(s => s.ExpiryDate)
-            .ThenBy(s => s.ProductPackagingId);
+        var query = _context.Set<StockBatch>()
+            .Include(b => b.Stock)
+            .Where(b => b.Stock!.OrganizationId == organizationId)
+            .Where(b => b.ExpiryDate.HasValue && b.ExpiryDate.Value >= now && b.ExpiryDate.Value <= thresholdDate)
+            .OrderBy(b => b.ExpiryDate)
+            .ThenBy(b => b.BatchNumber);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -172,20 +181,20 @@ public class StockRepository : Repository<Stock>, IStockRepository
             .Take(pagingParams.Take)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+        return new PagedResult<StockBatch>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 
-    public async Task<PagedResult<Stock>> GetByConditionAsync(
+    public async Task<PagedResult<StockBatch>> GetBatchesByConditionAsync(
         Guid organizationId,
         StockCondition condition,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
-        var query = _dbSet
-            .AsNoTracking()
-            .Where(s => s.OrganizationId == organizationId)
-            .Where(s => s.Condition == condition)
-            .OrderBy(s => s.ProductPackagingId);
+        var query = _context.Set<StockBatch>()
+            .Include(b => b.Stock)
+            .Where(b => b.Stock!.OrganizationId == organizationId)
+            .Where(b => b.Condition == condition)
+            .OrderBy(b => b.BatchNumber);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -194,6 +203,15 @@ public class StockRepository : Repository<Stock>, IStockRepository
             .Take(pagingParams.Take)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+        return new PagedResult<StockBatch>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+    }
+
+    public async Task<StockBatch?> GetBatchByNumberAsync(
+        Guid stockId,
+        string batchNumber,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Set<StockBatch>()
+            .FirstOrDefaultAsync(b => b.StockId == stockId && b.BatchNumber == batchNumber, cancellationToken);
     }
 }

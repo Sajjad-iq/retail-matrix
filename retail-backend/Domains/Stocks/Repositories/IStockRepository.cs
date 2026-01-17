@@ -16,6 +16,10 @@ public interface IStockRepository : IRepository<Stock>
         Guid inventoryId,
         CancellationToken cancellationToken = default);
 
+    Task<Stock?> GetWithBatchesAsync(
+        Guid stockId,
+        CancellationToken cancellationToken = default);
+
     // Paginated queries
     Task<PagedResult<Stock>> GetByOrganizationAsync(
         Guid organizationId,
@@ -29,6 +33,7 @@ public interface IStockRepository : IRepository<Stock>
 
     Task<PagedResult<Stock>> GetLowStockItemsAsync(
         Guid organizationId,
+        int reorderLevel,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
@@ -37,28 +42,32 @@ public interface IStockRepository : IRepository<Stock>
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
-    // Batch operations
+    // Bulk operations
     Task<List<Stock>> GetByPackagingIdsAsync(
         Guid organizationId,
         List<Guid> packagingIds,
         CancellationToken cancellationToken = default);
 
-    // Expiry queries
-    Task<PagedResult<Stock>> GetExpiredItemsAsync(
+    // Batch-specific queries
+    Task<PagedResult<StockBatch>> GetExpiredBatchesAsync(
         Guid organizationId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
-    Task<PagedResult<Stock>> GetNearExpiryItemsAsync(
+    Task<PagedResult<StockBatch>> GetNearExpiryBatchesAsync(
         Guid organizationId,
         int daysThreshold,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
-    // Condition queries
-    Task<PagedResult<Stock>> GetByConditionAsync(
+    Task<PagedResult<StockBatch>> GetBatchesByConditionAsync(
         Guid organizationId,
         StockCondition condition,
         PagingParams pagingParams,
+        CancellationToken cancellationToken = default);
+
+    Task<StockBatch?> GetBatchByNumberAsync(
+        Guid stockId,
+        string batchNumber,
         CancellationToken cancellationToken = default);
 }
