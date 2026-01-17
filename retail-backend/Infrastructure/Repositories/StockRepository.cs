@@ -1,22 +1,21 @@
-using Domains.Products.Entities;
-using Domains.Products.Repositories;
+using Domains.Inventory.Entities;
+using Domains.Inventory.Repositories;
 using Domains.Shared.Base;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
 namespace Infrastructure.Repositories;
 
 /// <summary>
-/// Entity Framework Core implementation of IProductStockRepository
+/// Entity Framework Core implementation of IStockRepository
 /// </summary>
-public class ProductStockRepository : Repository<ProductStock>, IProductStockRepository
+public class StockRepository : Repository<Stock>, IStockRepository
 {
-    public ProductStockRepository(ApplicationDbContext context) : base(context)
+    public StockRepository(ApplicationDbContext context) : base(context)
     {
     }
 
-    public async Task<ProductStock?> GetByPackagingAsync(
+    public async Task<Stock?> GetByPackagingAsync(
         Guid packagingId,
         Guid organizationId,
         Guid inventoryId,
@@ -31,7 +30,7 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
                 cancellationToken);
     }
 
-    public async Task<PagedResult<ProductStock>> GetByOrganizationAsync(
+    public async Task<PagedResult<Stock>> GetByOrganizationAsync(
         Guid organizationId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
@@ -48,10 +47,10 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
             .Take(pagingParams.Take)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<ProductStock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 
-    public async Task<PagedResult<ProductStock>> GetByInventoryAsync(
+    public async Task<PagedResult<Stock>> GetByInventoryAsync(
         Guid inventoryId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
@@ -68,10 +67,10 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
             .Take(pagingParams.Take)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<ProductStock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 
-    public async Task<PagedResult<ProductStock>> GetLowStockItemsAsync(
+    public async Task<PagedResult<Stock>> GetLowStockItemsAsync(
         Guid organizationId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
@@ -91,10 +90,10 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
             .Take(pagingParams.Take)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<ProductStock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 
-    public async Task<PagedResult<ProductStock>> GetOutOfStockItemsAsync(
+    public async Task<PagedResult<Stock>> GetOutOfStockItemsAsync(
         Guid organizationId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
@@ -113,10 +112,10 @@ public class ProductStockRepository : Repository<ProductStock>, IProductStockRep
             .Take(pagingParams.Take)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<ProductStock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 
-    public async Task<List<ProductStock>> GetByPackagingIdsAsync(
+    public async Task<List<Stock>> GetByPackagingIdsAsync(
         Guid organizationId,
         List<Guid> packagingIds,
         CancellationToken cancellationToken = default)

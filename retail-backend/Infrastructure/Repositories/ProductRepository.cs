@@ -20,12 +20,6 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
     }
 
-    public async Task<Product?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
-    {
-        // Barcode is now in ProductPackaging, not Product
-        throw new NotSupportedException("Use IProductPackagingRepository.GetByBarcodeAsync instead");
-    }
-
     public async Task<PagedResult<Product>> GetByOrganizationAsync(
         Guid organizationId,
         PagingParams pagingParams,
@@ -65,29 +59,5 @@ public class ProductRepository : Repository<Product>, IProductRepository
             .ToListAsync(cancellationToken);
 
         return new PagedResult<Product>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
-    }
-
-    public async Task<PagedResult<Product>> GetLowStockProductsAsync(
-        Guid organizationId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        // Stock is now in ProductStock, not Product
-        throw new NotSupportedException("Use IProductStockRepository.GetLowStockItemsAsync instead");
-    }
-
-    public async Task<PagedResult<Product>> GetOutOfStockProductsAsync(
-        Guid organizationId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        // Stock is now in ProductStock, not Product
-        throw new NotSupportedException("Use IProductStockRepository.GetOutOfStockItemsAsync instead");
-    }
-
-    public async Task<bool> ExistsByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
-    {
-        // Barcode is now in ProductPackaging, not Product
-        throw new NotSupportedException("Use IProductPackagingRepository.ExistsByBarcodeAsync instead");
     }
 }

@@ -1,43 +1,43 @@
-using Domains.Products.Entities;
+using Domains.Inventory.Entities;
 using Domains.Shared.Base;
 
-namespace Domains.Products.Repositories;
+namespace Domains.Inventory.Repositories;
 
 /// <summary>
-/// Repository interface for ProductStock entity
+/// Repository interface for Stock entity
 /// </summary>
-public interface IProductStockRepository : IRepository<ProductStock>
+public interface IStockRepository : IRepository<Stock>
 {
     // Single item queries
-    Task<ProductStock?> GetByPackagingAsync(
+    Task<Stock?> GetByPackagingAsync(
         Guid packagingId,
         Guid organizationId,
         Guid inventoryId,
         CancellationToken cancellationToken = default);
 
     // Paginated queries
-    Task<PagedResult<ProductStock>> GetByOrganizationAsync(
+    Task<PagedResult<Stock>> GetByOrganizationAsync(
         Guid organizationId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
-    Task<PagedResult<ProductStock>> GetByInventoryAsync(
+    Task<PagedResult<Stock>> GetByInventoryAsync(
         Guid inventoryId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
-    Task<PagedResult<ProductStock>> GetLowStockItemsAsync(
+    Task<PagedResult<Stock>> GetLowStockItemsAsync(
         Guid organizationId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
-    Task<PagedResult<ProductStock>> GetOutOfStockItemsAsync(
+    Task<PagedResult<Stock>> GetOutOfStockItemsAsync(
         Guid organizationId,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
     // Batch operations
-    Task<List<ProductStock>> GetByPackagingIdsAsync(
+    Task<List<Stock>> GetByPackagingIdsAsync(
         Guid organizationId,
         List<Guid> packagingIds,
         CancellationToken cancellationToken = default);

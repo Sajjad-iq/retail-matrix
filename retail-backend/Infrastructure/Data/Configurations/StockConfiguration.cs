@@ -1,18 +1,17 @@
-using Domains.Products.Entities;
+using Domains.Inventory.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
 namespace Infrastructure.Data.Configurations;
 
 /// <summary>
-/// Entity Framework configuration for ProductStock entity
+/// Entity Framework configuration for Stock entity
 /// </summary>
-public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
+public class StockConfiguration : IEntityTypeConfiguration<Stock>
 {
-    public void Configure(EntityTypeBuilder<ProductStock> builder)
+    public void Configure(EntityTypeBuilder<Stock> builder)
     {
-        // Table name
+        // Table name - keep ProductStocks for migration compatibility
         builder.ToTable("ProductStocks");
 
         // Primary key
@@ -75,11 +74,9 @@ public class ProductStockConfiguration : IEntityTypeConfiguration<ProductStock>
         // Computed property (not persisted)
         builder.Ignore(s => s.AvailableQuantity);
 
-        // Relationships
-        builder.HasOne(s => s.Packaging)
-            .WithMany()
-            .HasForeignKey(s => s.ProductPackagingId)
-            .OnDelete(DeleteBehavior.Restrict);
+        // Foreign key to ProductPackaging (no navigation property - cross-domain reference)
+        builder.Property(s => s.ProductPackagingId)
+            .IsRequired();
 
         // Foreign key to Inventory (no navigation property - cross-domain reference)
         builder.Property(s => s.InventoryId)

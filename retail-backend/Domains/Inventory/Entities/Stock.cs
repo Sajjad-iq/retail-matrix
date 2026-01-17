@@ -1,20 +1,19 @@
 using Domains.Shared.Base;
-using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
-namespace Domains.Products.Entities;
+namespace Domains.Inventory.Entities;
 
 /// <summary>
 /// Represents inventory stock for a product packaging at a specific location
 /// </summary>
-public class ProductStock : BaseEntity
+public class Stock : BaseEntity
 {
     // Parameterless constructor for EF Core
-    private ProductStock()
+    private Stock()
     {
     }
 
     // Private constructor to enforce factory methods
-    private ProductStock(
+    private Stock(
         Guid productPackagingId,
         Guid organizationId,
         Guid inventoryId)
@@ -39,13 +38,10 @@ public class ProductStock : BaseEntity
     // Computed property
     public int AvailableQuantity => Quantity - ReservedQuantity;
 
-    // Navigation properties
-    public ProductPackaging? Packaging { get; private set; }
-
     /// <summary>
-    /// Factory method to create a new product stock
+    /// Factory method to create a new stock record
     /// </summary>
-    public static ProductStock Create(
+    public static Stock Create(
         Guid productPackagingId,
         Guid organizationId,
         Guid inventoryId)
@@ -59,7 +55,7 @@ public class ProductStock : BaseEntity
         if (inventoryId == Guid.Empty)
             throw new ArgumentException("معرف المخزن مطلوب", nameof(inventoryId));
 
-        return new ProductStock(
+        return new Stock(
             productPackagingId: productPackagingId,
             organizationId: organizationId,
             inventoryId: inventoryId
