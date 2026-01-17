@@ -45,9 +45,6 @@ public class InventoryOperationItemConfiguration : IEntityTypeConfiguration<Inve
         builder.Property(i => i.Quantity)
             .IsRequired();
 
-        builder.Property(i => i.BalanceAfter)
-            .IsRequired();
-
         // Price value object
         builder.OwnsOne(i => i.UnitPrice, price =>
         {
