@@ -38,8 +38,13 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
             .IsRequired()
             .HasMaxLength(200);
 
-        builder.Property(p => p.Barcode)
-            .HasMaxLength(13);
+        // Configure Barcode value object using OwnsOne
+        builder.OwnsOne(p => p.Barcode, barcodeBuilder =>
+        {
+            barcodeBuilder.Property(b => b.Value)
+                .HasColumnName("Barcode")
+                .HasMaxLength(13);
+        });
 
         builder.Property(p => p.UnitsPerPackage)
             .IsRequired()
@@ -62,10 +67,6 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
                 .IsRequired()
                 .HasMaxLength(3);
         });
-
-        builder.Property(p => p.ReorderLevel)
-            .IsRequired()
-            .HasDefaultValue(10);
 
         builder.Property(p => p.IsDefault)
             .IsRequired()
