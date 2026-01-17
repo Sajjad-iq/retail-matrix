@@ -78,9 +78,10 @@ public class StockConfiguration : IEntityTypeConfiguration<Stock>
         builder.Property(s => s.ProductPackagingId)
             .IsRequired();
 
-        // Foreign key to Inventory (no navigation property - cross-domain reference)
-        builder.Property(s => s.InventoryId)
-            .IsRequired()
-            .HasColumnName("LocationId");
+        // Relationship to Inventory (same domain - has navigation property)
+        builder.HasOne(s => s.Inventory)
+            .WithMany()
+            .HasForeignKey(s => s.InventoryId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
