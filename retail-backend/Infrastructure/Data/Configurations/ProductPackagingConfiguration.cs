@@ -68,6 +68,21 @@ public class ProductPackagingConfiguration : IEntityTypeConfiguration<ProductPac
                 .HasMaxLength(3);
         });
 
+        // Configure Discount value object using ComplexProperty
+        builder.ComplexProperty(p => p.Discount, discountBuilder =>
+        {
+            discountBuilder.IsRequired();
+
+            discountBuilder.Property(d => d.Value)
+                .HasColumnName("DiscountValue")
+                .HasPrecision(18, 2);
+
+            discountBuilder.Property(d => d.Type)
+                .HasColumnName("DiscountType")
+                .HasConversion<string>()
+                .HasMaxLength(20);
+        });
+
         builder.Property(p => p.IsDefault)
             .IsRequired()
             .HasDefaultValue(false);

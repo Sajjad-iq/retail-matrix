@@ -15,6 +15,7 @@ public class ProductPackaging : BaseEntity
     {
         Name = string.Empty;
         SellingPrice = null!;   // Will be set by EF Core
+        Discount = null!;       // Will be set by EF Core
         ImageUrls = new List<string>();  // Initialize empty list
     }
 
@@ -31,7 +32,8 @@ public class ProductPackaging : BaseEntity
         List<string>? imageUrls = null,
         string? dimensions = null,
         Weight? weight = null,
-        string? color = null)
+        string? color = null,
+        Discount? discount = null)
     {
         Id = Guid.NewGuid();
         ProductId = productId;
@@ -41,6 +43,7 @@ public class ProductPackaging : BaseEntity
         UnitsPerPackage = unitsPerPackage;
         UnitOfMeasure = unitOfMeasure;
         SellingPrice = sellingPrice;
+        Discount = discount ?? Discount.None();
         IsDefault = isDefault;
         ImageUrls = imageUrls ?? new List<string>();
         Dimensions = dimensions;
@@ -58,6 +61,7 @@ public class ProductPackaging : BaseEntity
     public int UnitsPerPackage { get; private set; }
     public UnitOfMeasure UnitOfMeasure { get; private set; }
     public Price SellingPrice { get; private set; }
+    public Discount Discount { get; private set; }
     public bool IsDefault { get; private set; }
     public ProductStatus Status { get; private set; }
     public List<string> ImageUrls { get; private set; }
@@ -83,7 +87,8 @@ public class ProductPackaging : BaseEntity
         List<string>? imageUrls = null,
         string? dimensions = null,
         Weight? weight = null,
-        string? color = null)
+        string? color = null,
+        Discount? discount = null)
     {
         // Validate and create Barcode value object if provided
         BarcodeVO? barcodeVO = barcode != null ? BarcodeVO.Create(barcode) : null;
@@ -106,7 +111,8 @@ public class ProductPackaging : BaseEntity
             imageUrls: imageUrls,
             dimensions: dimensions,
             weight: weight,
-            color: color
+            color: color,
+            discount: discount
         );
     }
 
@@ -114,6 +120,54 @@ public class ProductPackaging : BaseEntity
     public void UpdatePricing(Price sellingPrice)
     {
         SellingPrice = sellingPrice;
+    }
+
+    /// <summary>
+    /// Updates the discount applied to this packaging
+    /// </summary>
+    public void UpdateDiscount(Discount discount)
+    {
+        Discount = discount ?? Discount.None();
+    }
+
+    /// <summary>
+    /// Updates the discount with a percentage value
+    /// </summary>
+    public void SetPercentageDiscount(decimal percentage)
+    {
+        Discount = Discount.Percentage(percentage);
+    }
+
+    /// <summary>
+    /// Updates the discount with a fixed amount value
+    /// </summary>
+    public void SetFixedAmountDiscount(decimal amount)
+    {
+        Discount = Discount.FixedAmount(amount);
+    }
+
+    /// <summary>
+    /// Removes any discount applied to this packaging
+    /// </summary>
+    public void ClearDiscount()
+    {
+        Discount = Discount.None();
+    }
+
+    /// <summary>
+    /// Gets the final price after applying discount
+    /// </summary>
+    public Price GetDiscountedPrice()
+    {
+        return Discount.ApplyTo(SellingPrice);
+    }
+
+    /// <summary>
+    /// Gets the discount amount for the current selling price
+    /// </summary>
+    public decimal GetDiscountAmount()
+    {
+        return Discount.GetDiscountAmount(SellingPrice);
     }
 
     public void UpdateBarcode(string barcode)

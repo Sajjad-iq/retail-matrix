@@ -1,5 +1,4 @@
-using Domains.Shared.ValueObjects;  // For Price
-using Domains.Sales.ValueObjects;  // For Discount
+using Domains.Shared.ValueObjects;
 using Domains.Shared.Base;
 
 namespace Domains.Sales.Entities;
