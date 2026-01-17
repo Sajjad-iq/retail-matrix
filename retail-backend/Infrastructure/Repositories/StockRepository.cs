@@ -1,6 +1,6 @@
-using Domains.Inventory.Entities;
-using Domains.Inventory.Enums;
-using Domains.Inventory.Repositories;
+using Domains.Stocks.Entities;
+using Domains.Stocks.Enums;
+using Domains.Stocks.Repositories;
 using Domains.Shared.Base;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

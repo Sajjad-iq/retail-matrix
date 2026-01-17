@@ -1,4 +1,4 @@
-namespace Domains.Inventory.Enums;
+namespace Domains.Stocks.Enums;
 
 /// <summary>
 /// Represents the physical condition of stock items

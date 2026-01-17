@@ -1,4 +1,5 @@
 using Domains.Sales.Entities;
+using Domains.Stocks.Entities;
 using Domains.Inventory.Entities;
 using Domains.Products.Entities;
 using Domains.Organizations.Entities;

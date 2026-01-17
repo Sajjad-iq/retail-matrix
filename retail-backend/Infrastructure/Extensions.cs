@@ -1,4 +1,5 @@
 using Domains.Sales.Repositories;
+using Domains.Stocks.Repositories;
 using Domains.Inventory.Repositories;
 using Domains.Products.Repositories;
 using Domains.Organizations.Repositories;

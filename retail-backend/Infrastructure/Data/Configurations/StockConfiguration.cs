@@ -1,4 +1,5 @@
-using Domains.Inventory.Entities;
+using Domains.Stocks.Entities;
+using Domains.Stocks.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -62,7 +63,7 @@ public class StockConfiguration : IEntityTypeConfiguration<Stock>
 
         builder.Property(s => s.Condition)
             .IsRequired()
-            .HasDefaultValue(Domains.Inventory.Enums.StockCondition.New)
+            .HasDefaultValue(StockCondition.New)
             .HasConversion<string>() // Store as string for readability
             .HasMaxLength(20);
 
@@ -87,10 +88,8 @@ public class StockConfiguration : IEntityTypeConfiguration<Stock>
         builder.Property(s => s.ProductPackagingId)
             .IsRequired();
 
-        // Relationship to Inventory (same domain - has navigation property)
-        builder.HasOne(s => s.Inventory)
-            .WithMany()
-            .HasForeignKey(s => s.InventoryId)
-            .OnDelete(DeleteBehavior.Restrict);
+        // Foreign key to Inventory (no navigation property - cross-domain reference)
+        builder.Property(s => s.InventoryId)
+            .IsRequired();
     }
 }

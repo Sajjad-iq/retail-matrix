@@ -1,8 +1,8 @@
-using Domains.Inventory.Entities;
-using Domains.Inventory.Enums;
+using Domains.Stocks.Entities;
+using Domains.Stocks.Enums;
 using Domains.Shared.Base;
 
-namespace Domains.Inventory.Repositories;
+namespace Domains.Stocks.Repositories;
 
 /// <summary>
 /// Repository interface for Stock entity

@@ -1,7 +1,7 @@
-using Domains.Inventory.Enums;
+using Domains.Stocks.Enums;
 using Domains.Shared.Base;
 
-namespace Domains.Inventory.Entities;
+namespace Domains.Stocks.Entities;
 
 /// <summary>
 /// Represents inventory stock for a product packaging at a specific location
@@ -44,9 +44,6 @@ public class Stock : BaseEntity
 
     // Computed property
     public int AvailableQuantity => Quantity - ReservedQuantity;
-
-    // Navigation properties
-    public Inventory? Inventory { get; private set; }
 
     /// <summary>
     /// Factory method to create a new stock record
