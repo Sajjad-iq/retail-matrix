@@ -129,11 +129,6 @@ public class ProductStock : BaseEntity
         ReservedQuantity -= quantity;
     }
 
-    // Stocktake
-    public void RecordStocktake()
-    {
-        LastStocktakeDate = DateTime.UtcNow;
-    }
 
     // Query Methods
     public bool IsOutOfStock() => AvailableQuantity == 0;
