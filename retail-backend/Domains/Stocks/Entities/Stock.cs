@@ -86,7 +86,7 @@ public class Stock : BaseEntity
         int quantity,
         DateTime? expiryDate = null,
         Enums.StockCondition condition = Enums.StockCondition.New,
-        decimal? costPrice = null)
+        Shared.ValueObjects.Price? costPrice = null)
     {
         var batch = StockBatch.Create(
             stockId: Id,

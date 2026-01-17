@@ -1,5 +1,6 @@
 using Domains.Stocks.Enums;
 using Domains.Shared.Base;
+using Domains.Shared.ValueObjects;
 
 namespace Domains.Stocks.Entities;
 
@@ -19,7 +20,7 @@ public class StockBatch : BaseEntity
         int quantity,
         DateTime? expiryDate,
         StockCondition condition,
-        decimal? costPrice)
+        Price? costPrice)
     {
         Id = Guid.NewGuid();
         StockId = stockId;
@@ -39,7 +40,7 @@ public class StockBatch : BaseEntity
     public int ReservedQuantity { get; private set; }
     public DateTime? ExpiryDate { get; private set; }
     public StockCondition Condition { get; private set; }
-    public decimal? CostPrice { get; private set; }
+    public Price? CostPrice { get; private set; }
 
     // Computed property
     public int AvailableQuantity => Quantity - ReservedQuantity;
@@ -56,7 +57,7 @@ public class StockBatch : BaseEntity
         int quantity,
         DateTime? expiryDate = null,
         StockCondition condition = StockCondition.New,
-        decimal? costPrice = null)
+        Price? costPrice = null)
     {
         if (stockId == Guid.Empty)
             throw new ArgumentException("معرف المخزون مطلوب", nameof(stockId));
@@ -142,7 +143,7 @@ public class StockBatch : BaseEntity
         ExpiryDate = expiryDate;
     }
 
-    public void SetCostPrice(decimal? costPrice)
+    public void SetCostPrice(Price? costPrice)
     {
         CostPrice = costPrice;
     }

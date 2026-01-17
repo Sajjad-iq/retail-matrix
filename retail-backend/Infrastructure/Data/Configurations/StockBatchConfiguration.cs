@@ -59,9 +59,16 @@ public class StockBatchConfiguration : IEntityTypeConfiguration<StockBatch>
             .HasConversion<string>()
             .HasMaxLength(20);
 
-        builder.Property(b => b.CostPrice)
-            .IsRequired(false)
-            .HasPrecision(18, 4);
+        // CostPrice as owned value object
+        builder.OwnsOne(b => b.CostPrice, price =>
+        {
+            price.Property(p => p.Amount)
+                .HasColumnName("CostPriceAmount")
+                .HasPrecision(18, 4);
+            price.Property(p => p.Currency)
+                .HasColumnName("CostPriceCurrency")
+                .HasMaxLength(3);
+        });
 
         builder.Property(b => b.IsDeleted)
             .IsRequired()
