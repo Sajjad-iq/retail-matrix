@@ -15,10 +15,5 @@ public enum AccountType
     /// </summary>
     Employee,
 
-    /// <summary>
-    /// Customer - purchases from organizations
-    /// </summary>
-    Customer,
-
     Admin
 }

@@ -24,6 +24,7 @@ public class ApplicationDbContext : DbContext
 
     // DbSets
     public DbSet<User> Users => Set<User>();
+    public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductPackaging> ProductPackagings => Set<ProductPackaging>();
@@ -43,6 +44,7 @@ public class ApplicationDbContext : DbContext
 
         // Apply entity configurations
         modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new CustomerConfiguration());
         modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new ProductPackagingConfiguration());
@@ -58,6 +60,7 @@ public class ApplicationDbContext : DbContext
 
         // Global query filter for soft delete
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
+        modelBuilder.Entity<Customer>().HasQueryFilter(c => !c.IsDeleted);
         modelBuilder.Entity<Organization>().HasQueryFilter(o => !o.IsDeleted);
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<ProductPackaging>().HasQueryFilter(p => !p.IsDeleted);

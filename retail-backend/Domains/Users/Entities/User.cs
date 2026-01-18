@@ -138,32 +138,6 @@ public class User : BaseEntity
         );
     }
 
-    public static User CreateCustomer(
-        string name,
-        string email,
-        string password,
-        string phoneNumber,
-        IPasswordHasher passwordHasher,
-        string? address = null,
-        string? avatar = null)
-    {
-        // Validate using value objects
-        var userName = ValueObjects.Name.Create(name, minLength: 2, maxLength: 100);
-        var userEmail = ValueObjects.Email.Create(email);
-        var userPhone = Phone.Create(phoneNumber);
-        var validPassword = ValueObjects.Password.Create(password);
-
-        return new User(
-            name: userName,
-            email: userEmail,
-            passwordHash: passwordHasher.HashPassword(validPassword),
-            phoneNumber: userPhone,
-            accountType: AccountType.Customer,
-            roles: new HashSet<Roles> { Roles.User },
-            address: address,
-            avatar: avatar
-        );
-    }
 
     // Domain Methods
     public bool VerifyPassword(string password, IPasswordHasher passwordHasher)
