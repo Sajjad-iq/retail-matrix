@@ -97,8 +97,22 @@ public class InstallmentPayment : BaseEntity
         }
 
         ReceivedByUserId = receivedByUserId;
-        Reference = reference;
-        Notes = notes;
+
+        // Append reference instead of overwriting
+        if (!string.IsNullOrWhiteSpace(reference))
+        {
+            Reference = string.IsNullOrWhiteSpace(Reference)
+                ? reference
+                : $"{Reference}; {reference}";
+        }
+
+        // Append notes instead of overwriting
+        if (!string.IsNullOrWhiteSpace(notes))
+        {
+            Notes = string.IsNullOrWhiteSpace(Notes)
+                ? notes
+                : $"{Notes}; {notes}";
+        }
     }
 
     /// <summary>
@@ -117,6 +131,7 @@ public class InstallmentPayment : BaseEntity
         if (Status == InstallmentPaymentStatus.Paid)
             throw new InvalidOperationException("الدفعة مدفوعة بالفعل");
 
+        PaidAmount = DueAmount;
         Status = InstallmentPaymentStatus.Paid;
         PaymentDate = DateTime.UtcNow;
         ReceivedByUserId = receivedByUserId;

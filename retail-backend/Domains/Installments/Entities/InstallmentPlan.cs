@@ -77,8 +77,17 @@ public class InstallmentPlan : BaseEntity
         Price? downPayment = null,
         Price? interestAmount = null)
     {
+        if (organizationId == Guid.Empty)
+            throw new ArgumentException("معرف المنظمة مطلوب", nameof(organizationId));
+
+        if (saleId == Guid.Empty)
+            throw new ArgumentException("معرف البيع مطلوب", nameof(saleId));
+
         if (customerId == Guid.Empty)
             throw new ArgumentException("معرف العميل مطلوب", nameof(customerId));
+
+        if (createdByUserId == Guid.Empty)
+            throw new ArgumentException("معرف منشئ الخطة مطلوب", nameof(createdByUserId));
 
         if (originalAmount.Amount <= 0)
             throw new ArgumentException("المبلغ الإجمالي يجب أن يكون أكبر من صفر", nameof(originalAmount));
@@ -124,6 +133,12 @@ public class InstallmentPlan : BaseEntity
     {
         if (Status != InstallmentPlanStatus.Draft)
             throw new InvalidOperationException("يمكن تفعيل الخطط في حالة المسودة فقط");
+
+        if (!Payments.Any())
+            throw new InvalidOperationException("لا يمكن تفعيل خطة بدون جدول دفعات");
+
+        if (approvedByUserId == Guid.Empty)
+            throw new ArgumentException("معرف المعتمد مطلوب", nameof(approvedByUserId));
 
         ApprovedByUserId = approvedByUserId;
         ApprovedAt = DateTime.UtcNow;
@@ -230,13 +245,15 @@ public class InstallmentPlan : BaseEntity
             if (remainingPayment <= 0)
                 break;
 
-            var amountToPay = Math.Min(remainingPayment, installment.DueAmount.Amount);
+            // Calculate how much is still owed for this installment
+            var remainingForThisInstallment = installment.DueAmount.Amount - installment.PaidAmount.Amount;
+            var amountToPay = Math.Min(remainingPayment, remainingForThisInstallment);
 
-            if (amountToPay >= installment.DueAmount.Amount)
+            if (amountToPay >= remainingForThisInstallment)
             {
-                // Full payment of this installment
+                // Full payment of this installment (or completing a partial)
                 installment.MarkAsPaid(receivedByUserId, reference, notes);
-                remainingPayment -= installment.DueAmount.Amount;
+                remainingPayment -= remainingForThisInstallment;
             }
             else
             {
@@ -274,7 +291,7 @@ public class InstallmentPlan : BaseEntity
         if (Status == InstallmentPlanStatus.Completed)
             throw new InvalidOperationException("لا يمكن إلغاء خطة مكتملة");
 
-        if (Payments.Any())
+        if (Payments.Any(p => p.PaidAmount.Amount > 0))
             throw new InvalidOperationException("لا يمكن إلغاء خطة تم دفع أقساط منها");
 
         Status = InstallmentPlanStatus.Cancelled;
@@ -285,6 +302,12 @@ public class InstallmentPlan : BaseEntity
     /// </summary>
     public void AddNotes(string notes)
     {
+        if (string.IsNullOrWhiteSpace(notes))
+            throw new ArgumentException("الملاحظات لا يمكن أن تكون فارغة", nameof(notes));
+
+        if (notes.Length > 2000)
+            throw new ArgumentException("الملاحظات طويلة جداً (الحد الأقصى 2000 حرف)", nameof(notes));
+
         Notes = notes;
     }
 
@@ -344,7 +367,7 @@ public class InstallmentPlan : BaseEntity
     /// </summary>
     public int GetPaymentCount()
     {
-        return Payments.Count;
+        return Payments.Count(p => p.Status == Enums.InstallmentPaymentStatus.Paid);
     }
 
     /// <summary>
