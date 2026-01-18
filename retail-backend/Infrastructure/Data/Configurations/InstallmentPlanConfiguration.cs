@@ -52,6 +52,13 @@ public class InstallmentPlanConfiguration : IEntityTypeConfiguration<Installment
         builder.Property(p => p.CustomerId)
             .IsRequired();
 
+
+
+        builder.Property(p => p.PaymentFrequency)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
         builder.Property(p => p.Status)
             .IsRequired()
             .HasConversion<string>()
@@ -114,6 +121,8 @@ public class InstallmentPlanConfiguration : IEntityTypeConfiguration<Installment
                 .HasMaxLength(3)
                 .HasDefaultValue("IQD");
         });
+
+
 
         // Relationships
         builder.HasMany(p => p.Payments)

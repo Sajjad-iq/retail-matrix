@@ -28,6 +28,7 @@ public class InstallmentPlan : BaseEntity
         Price totalAmount,
         Price downPayment,
         Price interestAmount,
+        PaymentFrequency paymentFrequency,
         Guid createdByUserId)
     {
         Id = Guid.NewGuid();
@@ -38,6 +39,7 @@ public class InstallmentPlan : BaseEntity
         TotalAmount = totalAmount;
         DownPayment = downPayment;
         InterestAmount = interestAmount;
+        PaymentFrequency = paymentFrequency;
         CreatedByUserId = createdByUserId;
         Status = InstallmentPlanStatus.Draft;
         InsertDate = DateTime.UtcNow;
@@ -52,6 +54,7 @@ public class InstallmentPlan : BaseEntity
     public Price TotalAmount { get; private set; }
     public Price DownPayment { get; private set; }
     public Price InterestAmount { get; private set; }
+    public PaymentFrequency PaymentFrequency { get; private set; }
     public InstallmentPlanStatus Status { get; private set; }
     public Guid CreatedByUserId { get; private set; }
     public Guid? ApprovedByUserId { get; private set; }
@@ -69,8 +72,9 @@ public class InstallmentPlan : BaseEntity
         Guid saleId,
         Guid customerId,
         Price totalAmount,
-        Price downPayment,
+        PaymentFrequency paymentFrequency,
         Guid createdByUserId,
+        Price? downPayment = null,
         Price? interestAmount = null)
     {
         if (customerId == Guid.Empty)
@@ -79,13 +83,15 @@ public class InstallmentPlan : BaseEntity
         if (totalAmount.Amount <= 0)
             throw new ArgumentException("المبلغ الإجمالي يجب أن يكون أكبر من صفر", nameof(totalAmount));
 
-        if (downPayment.Amount < 0)
+        var down = downPayment ?? Price.Create(0, totalAmount.Currency);
+
+        if (down.Amount < 0)
             throw new ArgumentException("الدفعة المقدمة لا يمكن أن تكون سالبة", nameof(downPayment));
 
-        if (downPayment.Amount >= totalAmount.Amount)
+        if (down.Amount >= totalAmount.Amount)
             throw new ArgumentException("الدفعة المقدمة يجب أن تكون أقل من المبلغ الإجمالي", nameof(downPayment));
 
-        if (downPayment.Currency != totalAmount.Currency)
+        if (down.Currency != totalAmount.Currency)
             throw new ArgumentException("عملة الدفعة المقدمة يجب أن تتطابق مع عملة المبلغ الإجمالي", nameof(downPayment));
 
         var interest = interestAmount ?? Price.Create(0, totalAmount.Currency);
@@ -104,8 +110,9 @@ public class InstallmentPlan : BaseEntity
             saleId,
             customerId,
             totalAmount,
-            downPayment,
+            down,
             interest,
+            paymentFrequency,
             createdByUserId
         );
     }
@@ -123,10 +130,12 @@ public class InstallmentPlan : BaseEntity
         Status = InstallmentPlanStatus.Active;
     }
 
+
+
     /// <summary>
-    /// Records a payment of any amount
+    /// Records a payment of any amount and distributes it across pending installments
     /// </summary>
-    public InstallmentPayment RecordPayment(
+    public void RecordPayment(
         Price paymentAmount,
         Guid receivedByUserId,
         string? reference = null,
@@ -136,31 +145,51 @@ public class InstallmentPlan : BaseEntity
             throw new InvalidOperationException("لا يمكن تسجيل دفعات إلا للخطط النشطة");
 
         if (paymentAmount.Currency != TotalAmount.Currency)
-            throw new ArgumentException("عملة الدفعة يجب أن تتطابق مع عملة المبلغ الإجمالي", nameof(paymentAmount));
+            throw new ArgumentException("عملة الدفعة يجب أن تتطابق مع عملة الخطة", nameof(paymentAmount));
+
+        if (paymentAmount.Amount <= 0)
+            throw new ArgumentException("مبلغ الدفعة يجب أن يكون أكبر من صفر", nameof(paymentAmount));
 
         var remainingBalance = GetRemainingBalance();
-
         if (paymentAmount.Amount > remainingBalance.Amount)
             throw new ArgumentException($"مبلغ الدفعة ({paymentAmount.Amount}) يتجاوز المبلغ المتبقي ({remainingBalance.Amount})", nameof(paymentAmount));
 
-        var payment = InstallmentPayment.Create(
-            Id,
-            paymentAmount,
-            receivedByUserId,
-            reference,
-            notes
-        );
+        // Distribute payment across pending installments
+        var remainingPayment = paymentAmount.Amount;
+        var pendingPayments = Payments
+            .Where(p => p.Status == Enums.InstallmentPaymentStatus.Pending)
+            .OrderBy(p => p.DueDate)
+            .ToList();
 
-        Payments.Add(payment);
+        foreach (var installment in pendingPayments)
+        {
+            if (remainingPayment <= 0)
+                break;
+
+            var amountToPay = Math.Min(remainingPayment, installment.Amount.Amount);
+
+            if (amountToPay >= installment.Amount.Amount)
+            {
+                // Full payment of this installment
+                installment.MarkAsPaid(receivedByUserId, reference, notes);
+                remainingPayment -= installment.Amount.Amount;
+            }
+            else
+            {
+                // Partial payment of this installment
+                var partialAmount = Price.Create(amountToPay, TotalAmount.Currency);
+                installment.RecordPartialPayment(partialAmount, receivedByUserId, reference, notes);
+                remainingPayment = 0;
+            }
+        }
 
         // Check if fully paid
-        if (GetRemainingBalance().Amount <= 0)
+        if (Payments.All(p => p.Status == Enums.InstallmentPaymentStatus.Paid))
         {
             Status = InstallmentPlanStatus.Completed;
         }
-
-        return payment;
     }
+
 
     /// <summary>
     /// Marks the plan as defaulted

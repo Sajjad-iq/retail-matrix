@@ -1,4 +1,5 @@
 using Domains.Installments.Entities;
+using Domains.Installments.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -21,6 +22,12 @@ public class InstallmentPaymentConfiguration : IEntityTypeConfiguration<Installm
         builder.HasIndex(p => p.InstallmentPlanId)
             .HasDatabaseName("IX_InstallmentPayments_InstallmentPlan");
 
+        builder.HasIndex(p => p.DueDate)
+            .HasDatabaseName("IX_InstallmentPayments_DueDate");
+
+        builder.HasIndex(p => p.Status)
+            .HasDatabaseName("IX_InstallmentPayments_Status");
+
         builder.HasIndex(p => p.PaymentDate)
             .HasDatabaseName("IX_InstallmentPayments_PaymentDate");
 
@@ -34,8 +41,20 @@ public class InstallmentPaymentConfiguration : IEntityTypeConfiguration<Installm
         builder.Property(p => p.InstallmentPlanId)
             .IsRequired();
 
-        builder.Property(p => p.PaymentDate)
+        builder.Property(p => p.DueDate)
             .IsRequired();
+
+        builder.Property(p => p.InstallmentNumber)
+            .IsRequired();
+
+        builder.Property(p => p.Status)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(InstallmentPaymentStatus.Pending);
+
+        builder.Property(p => p.PaymentDate)
+            .IsRequired(false);
 
         builder.Property(p => p.Reference)
             .HasMaxLength(100);
@@ -44,7 +63,7 @@ public class InstallmentPaymentConfiguration : IEntityTypeConfiguration<Installm
             .HasMaxLength(500);
 
         builder.Property(p => p.ReceivedByUserId)
-            .IsRequired();
+            .IsRequired(false);
 
         // Complex properties (Value Objects)
         builder.ComplexProperty(p => p.Amount, priceBuilder =>
@@ -56,6 +75,21 @@ public class InstallmentPaymentConfiguration : IEntityTypeConfiguration<Installm
 
             priceBuilder.Property(pr => pr.Currency)
                 .HasColumnName("AmountCurrency")
+                .IsRequired()
+                .HasMaxLength(3)
+                .HasDefaultValue("IQD");
+        });
+
+        builder.ComplexProperty(p => p.PaidAmount, priceBuilder =>
+        {
+            priceBuilder.Property(pr => pr.Amount)
+                .HasColumnName("PaidAmount")
+                .IsRequired()
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0);
+
+            priceBuilder.Property(pr => pr.Currency)
+                .HasColumnName("PaidAmountCurrency")
                 .IsRequired()
                 .HasMaxLength(3)
                 .HasDefaultValue("IQD");
