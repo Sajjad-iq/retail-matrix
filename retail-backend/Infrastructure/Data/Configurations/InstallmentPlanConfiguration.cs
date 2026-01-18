@@ -78,15 +78,15 @@ public class InstallmentPlanConfiguration : IEntityTypeConfiguration<Installment
             .HasMaxLength(2000);
 
         // Complex properties (Value Objects)
-        builder.ComplexProperty(p => p.TotalAmount, priceBuilder =>
+        builder.ComplexProperty(p => p.OriginalAmount, priceBuilder =>
         {
             priceBuilder.Property(pr => pr.Amount)
-                .HasColumnName("TotalAmount")
+                .HasColumnName("OriginalAmount")
                 .IsRequired()
                 .HasPrecision(18, 2);
 
             priceBuilder.Property(pr => pr.Currency)
-                .HasColumnName("TotalAmountCurrency")
+                .HasColumnName("OriginalAmountCurrency")
                 .IsRequired()
                 .HasMaxLength(3)
                 .HasDefaultValue("IQD");
