@@ -12,7 +12,7 @@ public class InstallmentPayment : BaseEntity
     // Parameterless constructor for EF Core
     private InstallmentPayment()
     {
-        Amount = null!;
+        DueAmount = null!;
         PaidAmount = null!;
     }
 
@@ -29,7 +29,7 @@ public class InstallmentPayment : BaseEntity
     {
         Id = Guid.NewGuid();
         InstallmentPlanId = installmentPlanId;
-        Amount = amount;
+        DueAmount = amount;
         PaidAmount = Price.Create(0, amount.Currency);
         DueDate = dueDate;
         InstallmentNumber = installmentNumber;
@@ -43,7 +43,7 @@ public class InstallmentPayment : BaseEntity
 
     // Properties
     public Guid InstallmentPlanId { get; private set; }
-    public Price Amount { get; private set; }
+    public Price DueAmount { get; private set; }
     public Price PaidAmount { get; private set; }
     public DateTime DueDate { get; private set; }
     public int InstallmentNumber { get; private set; }
@@ -90,7 +90,7 @@ public class InstallmentPayment : BaseEntity
 
         PaidAmount = PaidAmount.Add(amount);
 
-        if (PaidAmount.Amount >= Amount.Amount)
+        if (PaidAmount.Amount >= DueAmount.Amount)
         {
             Status = InstallmentPaymentStatus.Paid;
             PaymentDate = DateTime.UtcNow;
@@ -106,7 +106,7 @@ public class InstallmentPayment : BaseEntity
     /// </summary>
     public Price GetRemainingAmount()
     {
-        return Amount.Subtract(PaidAmount);
+        return DueAmount.Subtract(PaidAmount);
     }
 
     /// <summary>

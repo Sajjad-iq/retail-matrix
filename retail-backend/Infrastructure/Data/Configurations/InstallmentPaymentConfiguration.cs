@@ -66,7 +66,7 @@ public class InstallmentPaymentConfiguration : IEntityTypeConfiguration<Installm
             .IsRequired(false);
 
         // Complex properties (Value Objects)
-        builder.ComplexProperty(p => p.Amount, priceBuilder =>
+        builder.ComplexProperty(p => p.DueAmount, priceBuilder =>
         {
             priceBuilder.Property(pr => pr.Amount)
                 .HasColumnName("Amount")
