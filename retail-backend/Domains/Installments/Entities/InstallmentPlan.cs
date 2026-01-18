@@ -302,7 +302,7 @@ public class InstallmentPlan : BaseEntity
     /// </summary>
     public Price GetTotalPaid()
     {
-        var paymentTotal = Payments.Sum(p => p.DueAmount.Amount);
+        var paymentTotal = Payments.Sum(p => p.PaidAmount.Amount);
         return Price.Create(DownPayment.Amount + paymentTotal, OriginalAmount.Currency);
     }
 
@@ -311,7 +311,7 @@ public class InstallmentPlan : BaseEntity
     /// </summary>
     public Price GetPaymentsTotal()
     {
-        var total = Payments.Sum(p => p.DueAmount.Amount);
+        var total = Payments.Sum(p => p.PaidAmount.Amount);
         return Price.Create(total, OriginalAmount.Currency);
     }
 
@@ -321,7 +321,7 @@ public class InstallmentPlan : BaseEntity
     public Price GetRemainingBalance()
     {
         var totalToPay = GetTotalToPay();
-        var paymentTotal = Payments.Sum(p => p.DueAmount.Amount);
+        var paymentTotal = Payments.Sum(p => p.PaidAmount.Amount);
         var remaining = totalToPay.Amount - paymentTotal;
         return Price.Create(Math.Max(0, remaining), OriginalAmount.Currency);
     }
@@ -335,7 +335,7 @@ public class InstallmentPlan : BaseEntity
         if (totalToPay.Amount == 0)
             return 100;
 
-        var paymentTotal = Payments.Sum(p => p.DueAmount.Amount);
+        var paymentTotal = Payments.Sum(p => p.PaidAmount.Amount);
         return Math.Round((paymentTotal / totalToPay.Amount) * 100, 2);
     }
 
