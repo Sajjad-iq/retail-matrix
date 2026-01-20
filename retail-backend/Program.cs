@@ -1,3 +1,5 @@
+using API.Configuration;
+using Application;
 using Infrastructure;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -11,8 +13,20 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
+// Application Layer (Commands, Queries, Validators, Mappings)
+builder.Services.AddApplication();
+
 // Infrastructure (Repositories, Domain Services, etc.)
 builder.Services.AddInfrastructure();
+
+// JWT Authentication & Authorization
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
+// Controllers with global exception filter
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<API.Filters.GlobalExceptionFilter>();
+});
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -26,5 +40,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
 
 app.Run();

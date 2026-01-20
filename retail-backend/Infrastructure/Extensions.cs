@@ -7,6 +7,7 @@ using Domains.Users.Repositories;
 using Domains.Common.Currency.Repositories;
 using Domains.Common.Currency.Services;
 using Domains.Users.Services;
+using Application.Common.Services;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Infrastructure.Security;
@@ -31,6 +32,7 @@ public static class Extensions
         // Domain Services
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<ICurrencyConversionService, CurrencyConversionService>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
@@ -42,6 +44,7 @@ public static class Extensions
         services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<IInventoryOperationRepository, InventoryOperationRepository>();
         services.AddScoped<ICurrencyRepository, CurrencyRepository>();
+        services.AddScoped<ISaleRepository, SaleRepository>();
 
         // Add more repositories here as you create them:
         // services.AddScoped<IOrderRepository, OrderRepository>();
