@@ -1,4 +1,4 @@
-namespace Application.Common.Models;
+namespace API.Models;
 
 /// <summary>
 /// Standard API response wrapper for successful responses

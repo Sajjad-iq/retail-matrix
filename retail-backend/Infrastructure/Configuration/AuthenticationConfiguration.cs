@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace API.Configuration;
+namespace Infrastructure.Configuration;
 
 public static class AuthenticationConfiguration
 {

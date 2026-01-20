@@ -1,9 +1,10 @@
+using API.Models;
 using Application.Common.Exceptions;
-using Application.Common.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Logging;
 
-namespace API.Filters;
+namespace Infrastructure.Filters;
 
 /// <summary>
 /// Global exception filter to handle all exceptions and return standardized error responses

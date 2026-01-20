@@ -1,7 +1,7 @@
 using Application.Auth.Commands.Login;
 using Application.Auth.Commands.Register;
 using Application.Auth.Queries.GetCurrentUser;
-using Application.Common.Models;
+using API.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -1,6 +1,6 @@
-using API.Configuration;
 using Application;
 using Infrastructure;
+using Infrastructure.Configuration;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,7 +25,7 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 // Controllers with global exception filter
 builder.Services.AddControllers(options =>
 {
-    options.Filters.Add<API.Filters.GlobalExceptionFilter>();
+    options.Filters.Add<Infrastructure.Filters.GlobalExceptionFilter>();
 });
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
