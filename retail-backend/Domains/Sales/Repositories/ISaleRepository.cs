@@ -12,6 +12,11 @@ public interface ISaleRepository : IRepository<Sale>
     // Single queries
     Task<Sale?> GetBySaleNumberAsync(string saleNumber, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Get sale by ID with tracking (for updates)
+    /// </summary>
+    Task<Sale?> GetByIdWithTrackingAsync(Guid id, CancellationToken cancellationToken = default);
+
     // Paginated queries
     Task<PagedResult<Sale>> GetByOrganizationAsync(
         Guid organizationId,

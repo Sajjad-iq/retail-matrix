@@ -27,6 +27,13 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
             .FirstOrDefaultAsync(s => s.SaleNumber == saleNumber, cancellationToken);
     }
 
+    public async Task<Sale?> GetByIdWithTrackingAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(s => s.Items)
+            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+    }
+
     public async Task<PagedResult<Sale>> GetByOrganizationAsync(
         Guid organizationId,
         PagingParams pagingParams,

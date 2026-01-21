@@ -1062,14 +1062,17 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
 
 ```csharp
 // Location: Application/{Domain}/DTOs/{Entity}Dto.cs
+using Domains.Shared.ValueObjects;
+
 namespace Application.{Domain}.DTOs;
 
 public record {Entity}Dto
 {
     public Guid Id { get; init; }
     public string {Property} { get; init; } = string.Empty;
-    public decimal {NumericProperty} { get; init; }
-    public string Status { get; init; } = string.Empty;  // Enums as strings
+    public Price {PriceProperty} { get; init; } = null!;      // Value objects directly
+    public Discount? {DiscountProperty} { get; init; }        // Nullable value objects
+    public {Status} Status { get; init; }                     // Enums directly
     public DateTime CreatedAt { get; init; }
     public List<{ChildEntity}Dto> Items { get; init; } = new();
 }
@@ -1078,10 +1081,32 @@ public record {ChildEntity}Dto
 {
     public Guid Id { get; init; }
     public string {Property} { get; init; } = string.Empty;
+    public Price {PriceProperty} { get; init; } = null!;
 }
 ```
 
-### 7.2 Real Example: UserDto
+### 7.2 Value Objects in DTOs
+
+**PREFERRED:** Use value objects directly in DTOs for type safety and rich domain semantics:
+
+```csharp
+// Good - Value objects preserve domain semantics
+public record SaleItemDto
+{
+    public Price UnitPrice { get; init; } = null!;
+    public Discount? Discount { get; init; }
+    public Price LineTotal { get; init; } = null!;
+}
+
+// Also acceptable for external APIs - primitives for simplicity
+public record ExternalApiDto
+{
+    public decimal UnitPriceAmount { get; init; }
+    public string UnitPriceCurrency { get; init; } = "IQD";
+}
+```
+
+### 7.3 Real Example: UserDto
 
 ```csharp
 // Location: Application/Auth/DTOs/UserDto.cs
@@ -1094,15 +1119,50 @@ public record UserDto
     public string Email { get; init; } = string.Empty;
     public string PhoneNumber { get; init; } = string.Empty;
     public string? Address { get; init; }
-    public string AccountType { get; init; } = string.Empty;  // Enum as string
-    public List<string> Roles { get; init; } = new();         // Enums as strings
+    public string AccountType { get; init; } = string.Empty;
+    public List<string> Roles { get; init; } = new();
     public bool IsActive { get; init; }
     public bool EmailVerified { get; init; }
     public bool PhoneVerified { get; init; }
 }
 ```
 
-### 7.3 Real Example: TokenDto
+### 7.4 Real Example: PosCartDto (with Value Objects)
+
+```csharp
+// Location: Application/POS/DTOs/PosCartDto.cs
+using Domains.Sales.Enums;
+using Domains.Shared.ValueObjects;
+
+namespace Application.POS.DTOs;
+
+public record PosCartDto
+{
+    public Guid SaleId { get; init; }
+    public string SaleNumber { get; init; } = string.Empty;
+    public DateTime SaleDate { get; init; }
+    public SaleStatus Status { get; init; }
+    public List<PosCartItemDto> Items { get; init; } = new();
+    public Price TotalDiscount { get; init; } = null!;
+    public Price GrandTotal { get; init; } = null!;
+    public Price AmountPaid { get; init; } = null!;
+    public decimal AmountDue => GrandTotal.Amount - AmountPaid.Amount;
+    public int TotalItems => Items.Sum(i => i.Quantity);
+}
+
+public record PosCartItemDto
+{
+    public Guid ItemId { get; init; }
+    public Guid ProductPackagingId { get; init; }
+    public string ProductName { get; init; } = string.Empty;
+    public int Quantity { get; init; }
+    public Price UnitPrice { get; init; } = null!;
+    public Discount? Discount { get; init; }
+    public Price LineTotal { get; init; } = null!;
+}
+```
+
+### 7.5 Real Example: TokenDto
 
 ```csharp
 // Location: Application/Auth/DTOs/TokenDto.cs
@@ -1436,8 +1496,10 @@ public class GlobalExceptionFilter : IExceptionFilter
 ```csharp
 // Location: Application/Common/Mappings/MappingProfile.cs
 using Application.Auth.DTOs;
+using Application.POS.DTOs;
 using AutoMapper;
 using Domains.Users.Entities;
+using Domains.Sales.Entities;
 
 namespace Application.Common.Mappings;
 
@@ -1450,18 +1512,49 @@ public class MappingProfile : Profile
             .ForMember(d => d.AccountType, opt => opt.MapFrom(s => s.AccountType.ToString()))
             .ForMember(d => d.Roles, opt => opt.MapFrom(s => s.UserRoles.Select(r => r.ToString()).ToList()));
 
+        // Sale mappings - Value objects map directly
+        CreateMap<Sale, PosCartDto>()
+            .ForMember(d => d.SaleId, opt => opt.MapFrom(s => s.Id));
+
+        CreateMap<SaleItem, PosCartItemDto>()
+            .ForMember(d => d.ItemId, opt => opt.MapFrom(s => s.Id));
+
         // Add more mappings as needed
-        // CreateMap<Entity, EntityDto>();
     }
 }
 ```
 
 ### 11.2 Mapping Rules
 
-1. **Enums** → Map to `string` using `.ToString()`
-2. **Value Objects** → Map to primitive types (Amount, Currency separately)
+1. **Enums** → Keep as enum type in DTOs (preferred) or map to `string` using `.ToString()`
+2. **Value Objects** → Keep as value object type in DTOs (preferred for type safety)
 3. **Collections** → Map to List of DTOs
 4. **Navigation Properties** → Exclude or map to nested DTOs
+
+### 11.3 Value Object Mapping
+
+Value objects like `Price` and `Discount` are **kept directly** in DTOs:
+
+```csharp
+// Entity
+public class SaleItem
+{
+    public Price UnitPrice { get; private set; }
+    public Discount? Discount { get; private set; }
+    public Price LineTotal { get; private set; }
+}
+
+// DTO - Value objects preserved
+public record SaleItemDto
+{
+    public Price UnitPrice { get; init; } = null!;
+    public Discount? Discount { get; init; }
+    public Price LineTotal { get; init; } = null!;
+}
+
+// AutoMapper handles this automatically - no special config needed
+CreateMap<SaleItem, SaleItemDto>();
+```
 
 ---
 
