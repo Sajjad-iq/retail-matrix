@@ -1,4 +1,5 @@
 using Domains.Products.Enums;
+using Domains.Shared.ValueObjects;
 using MediatR;
 
 namespace Application.Products.Commands.CreateProductPackaging;
@@ -23,7 +24,6 @@ public record CreateProductPackagingCommand : IRequest<Guid>
     public bool IsDefault { get; init; }
     public List<string>? ImageUrls { get; init; }
     public string? Dimensions { get; init; }
-    public decimal? WeightValue { get; init; }
-    public UnitOfMeasure? WeightUnit { get; init; }
+    public Weight? Weight { get; init; }  // Using Weight value object
     public string? Color { get; init; }
 }

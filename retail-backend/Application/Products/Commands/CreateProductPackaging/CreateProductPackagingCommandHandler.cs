@@ -73,13 +73,12 @@ public class CreateProductPackagingCommandHandler : IRequestHandler<CreateProduc
 
         // 4. Create value objects
         var sellingPrice = Price.Create(request.SellingPriceAmount, request.SellingPriceCurrency);
-        Weight? weight = null;
-        if (request.WeightValue.HasValue && request.WeightUnit.HasValue)
-        {
-            weight = Weight.Create(request.WeightValue.Value, request.WeightUnit.Value);
-        }
 
-        // 5. Add packaging to product using domain method
+        // 5. Determine if this should be the default packaging
+        // First packaging for a product is automatically set as default
+        bool isDefault = product.Packagings.Count == 0;
+
+        // 6. Add packaging to product using domain method
         var packaging = product.AddPackaging(
             name: request.Name,
             sellingPrice: sellingPrice,
@@ -87,14 +86,14 @@ public class CreateProductPackagingCommandHandler : IRequestHandler<CreateProduc
             barcode: request.Barcode,
             description: request.Description,
             unitsPerPackage: request.UnitsPerPackage,
-            isDefault: request.IsDefault,
+            isDefault: isDefault,
             imageUrls: request.ImageUrls,
             dimensions: request.Dimensions,
-            weight: weight,
+            weight: request.Weight,
             color: request.Color
         );
 
-        // 6. Persist changes
+        // 7. Persist changes
         await _productRepository.UpdateAsync(product, cancellationToken);
         await _productRepository.SaveChangesAsync(cancellationToken);
 
