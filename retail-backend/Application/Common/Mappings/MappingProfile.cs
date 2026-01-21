@@ -2,11 +2,13 @@ using Application.Auth.DTOs;
 using Application.Organizations.DTOs;
 using Application.Inventory.DTOs;
 using Application.Products.DTOs;
+using Application.Stocks.DTOs;
 using AutoMapper;
 using Domains.Users.Entities;
 using Domains.Organizations.Entities;
 using Domains.Inventory.Entities;
 using Domains.Products.Entities;
+using Domains.Stocks.Entities;
 using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
 namespace Application.Common.Mappings;
@@ -38,5 +40,13 @@ public class MappingProfile : Profile
 
         // Category mappings
         CreateMap<Category, CategoryDto>();
+
+        // Stock mappings
+        CreateMap<Stock, StockDto>()
+            .ForMember(d => d.Batches, opt => opt.MapFrom(s => s.Batches));
+        CreateMap<Stock, StockListDto>();
+
+        // StockBatch mappings
+        CreateMap<StockBatch, StockBatchDto>();
     }
 }

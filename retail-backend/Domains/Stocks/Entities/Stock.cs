@@ -128,16 +128,16 @@ public class Stock : BaseEntity
 
     public bool IsLowStock(int reorderLevel) => TotalAvailableQuantity > 0 && TotalAvailableQuantity <= reorderLevel;
 
-    public bool HasExpiredBatches() => _batches.Any(b => b.IsExpired());
+    public bool HasExpiredBatches() => _batches.Any(b => b.IsExpired);
 
     public bool HasNearExpiryBatches(int daysThreshold) => _batches.Any(b => b.IsNearExpiry(daysThreshold));
 
-    public IEnumerable<StockBatch> GetExpiredBatches() => _batches.Where(b => b.IsExpired());
+    public IEnumerable<StockBatch> GetExpiredBatches() => _batches.Where(b => b.IsExpired);
 
     public IEnumerable<StockBatch> GetNearExpiryBatches(int daysThreshold) =>
         _batches.Where(b => b.IsNearExpiry(daysThreshold));
 
     public IEnumerable<StockBatch> GetAvailableBatches() =>
-        _batches.Where(b => b.AvailableQuantity > 0 && !b.IsExpired())
+        _batches.Where(b => b.AvailableQuantity > 0 && !b.IsExpired)
                 .OrderBy(b => b.ExpiryDate ?? DateTime.MaxValue); // FEFO: First Expired, First Out
 }

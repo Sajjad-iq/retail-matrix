@@ -42,8 +42,10 @@ public class StockBatch : BaseEntity
     public StockCondition Condition { get; private set; }
     public Price? CostPrice { get; private set; }
 
-    // Computed property
+    // Computed properties
     public int AvailableQuantity => Quantity - ReservedQuantity;
+    public bool IsExpired => ExpiryDate.HasValue && ExpiryDate.Value < DateTime.UtcNow;
+    public int? DaysUntilExpiry => ExpiryDate.HasValue ? (int?)(ExpiryDate.Value - DateTime.UtcNow).Days : null;
 
     // Navigation
     public Stock? Stock { get; private set; }
@@ -150,8 +152,6 @@ public class StockBatch : BaseEntity
 
     // Query Methods
     public bool IsEmpty() => AvailableQuantity == 0;
-
-    public bool IsExpired() => ExpiryDate.HasValue && ExpiryDate.Value < DateTime.UtcNow;
 
     public bool IsNearExpiry(int daysThreshold) =>
         ExpiryDate.HasValue &&
