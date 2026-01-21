@@ -40,6 +40,16 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.OrganizationId)
             .IsRequired();
 
+        builder.Property(p => p.Name)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.Property(p => p.ImageUrls)
+            .HasConversion(
+                v => string.Join(',', v),
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList())
+            .HasColumnType("text");
+
         builder.Property(p => p.IsDeleted)
             .IsRequired()
             .HasDefaultValue(false);
