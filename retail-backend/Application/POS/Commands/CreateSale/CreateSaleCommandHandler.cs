@@ -1,10 +1,12 @@
 using Application.Common.Exceptions;
 using Domains.Common.Currency.Services;
+using Domains.Inventory.Repositories;
 using Domains.Products.Repositories;
 using Domains.Sales.Entities;
 using Domains.Sales.Repositories;
 using Domains.Shared.ValueObjects;
 using Domains.Stocks.Repositories;
+using Infrastructure.Data;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 
@@ -17,19 +19,25 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Guid>
     private readonly IStockRepository _stockRepository;
     private readonly ICurrencyConversionService _currencyService;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IInventoryRepository _inventoryRepository;
+    private readonly ApplicationDbContext _dbContext;
 
     public CreateSaleCommandHandler(
         ISaleRepository saleRepository,
         IProductPackagingRepository productPackagingRepository,
         IStockRepository stockRepository,
         ICurrencyConversionService currencyService,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IInventoryRepository inventoryRepository,
+        ApplicationDbContext dbContext)
     {
         _saleRepository = saleRepository;
         _productPackagingRepository = productPackagingRepository;
         _stockRepository = stockRepository;
         _currencyService = currencyService;
         _httpContextAccessor = httpContextAccessor;
+        _inventoryRepository = inventoryRepository;
+        _dbContext = dbContext;
     }
 
     public async Task<Guid> Handle(CreateSaleCommand request, CancellationToken cancellationToken)
@@ -48,29 +56,50 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Guid>
             throw new UnauthorizedException("معرف المستخدم مطلوب");
         }
 
-        // Create a new draft sale
-        var sale = Sale.Create(
-            organizationId: organizationId,
-            salesPersonId: userId
-        );
-
-        // Add notes if provided
-        if (!string.IsNullOrWhiteSpace(request.Notes))
+        // Validate inventory exists and belongs to organization
+        var inventory = await _inventoryRepository.GetByIdAsync(request.InventoryId, cancellationToken);
+        if (inventory == null || inventory.OrganizationId != organizationId)
         {
-            sale.AddNotes(request.Notes);
+            throw new NotFoundException("المخزن غير موجود");
         }
 
-        // Add items if provided
-        foreach (var itemInput in request.Items)
+        // Begin transaction to ensure atomicity
+        using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            await AddItemToSaleAsync(sale, itemInput, organizationId, request.InventoryId, cancellationToken);
+            // Create a new draft sale
+            var sale = Sale.Create(
+                organizationId: organizationId,
+                salesPersonId: userId
+            );
+
+            // Add notes if provided
+            if (!string.IsNullOrWhiteSpace(request.Notes))
+            {
+                sale.AddNotes(request.Notes);
+            }
+
+            // Add items if provided
+            foreach (var itemInput in request.Items)
+            {
+                await AddItemToSaleAsync(sale, itemInput, organizationId, request.InventoryId, cancellationToken);
+            }
+
+            // Persist the sale
+            await _saleRepository.AddAsync(sale, cancellationToken);
+            await _saleRepository.SaveChangesAsync(cancellationToken);
+
+            // Commit transaction
+            await transaction.CommitAsync(cancellationToken);
+
+            return sale.Id;
         }
-
-        // Persist the sale
-        await _saleRepository.AddAsync(sale, cancellationToken);
-        await _saleRepository.SaveChangesAsync(cancellationToken);
-
-        return sale.Id;
+        catch
+        {
+            // Transaction will be rolled back automatically on exception
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     private async Task AddItemToSaleAsync(
@@ -80,11 +109,11 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Guid>
         Guid inventoryId,
         CancellationToken cancellationToken)
     {
-        // Get product packaging by barcode or ID
+        // Get product packaging by barcode or ID with Product navigation property loaded
         var packaging = itemInput.ProductPackagingId.HasValue
-            ? await _productPackagingRepository.GetByIdAsync(itemInput.ProductPackagingId.Value, cancellationToken)
+            ? await _productPackagingRepository.GetByIdWithProductAsync(itemInput.ProductPackagingId.Value, cancellationToken)
             : !string.IsNullOrWhiteSpace(itemInput.Barcode)
-                ? await _productPackagingRepository.GetByBarcodeAsync(itemInput.Barcode, cancellationToken)
+                ? await _productPackagingRepository.GetByBarcodeWithProductAsync(itemInput.Barcode, cancellationToken)
                 : null;
 
         if (packaging == null)
@@ -93,8 +122,14 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Guid>
             throw new NotFoundException($"المنتج غير موجود: {identifier}");
         }
 
-        // Check stock availability
-        var stock = await _stockRepository.GetByPackagingAsync(
+        // Validate organization ownership
+        if (packaging.Product?.OrganizationId != organizationId)
+        {
+            throw new UnauthorizedException("المنتج لا ينتمي لمؤسستك");
+        }
+
+        // Get stock with batches loaded for reservation
+        var stock = await _stockRepository.GetByPackagingWithBatchesAsync(
             packaging.Id,
             organizationId,
             inventoryId,
@@ -104,6 +139,18 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Guid>
         {
             var available = stock?.TotalAvailableQuantity ?? 0;
             throw new ValidationException($"الكمية المتاحة في المخزون ({available}) أقل من المطلوبة ({itemInput.Quantity}) للمنتج: {packaging.Name}");
+        }
+
+        // Reserve stock using FEFO (First Expired, First Out) strategy
+        var remainingToReserve = itemInput.Quantity;
+        foreach (var batch in stock.GetAvailableBatches())
+        {
+            if (remainingToReserve <= 0)
+                break;
+
+            var quantityToReserve = Math.Min(remainingToReserve, batch.AvailableQuantity);
+            batch.Reserve(quantityToReserve);
+            remainingToReserve -= quantityToReserve;
         }
 
         // Get product name

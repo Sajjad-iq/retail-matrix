@@ -16,10 +16,25 @@ public class ProductPackagingRepository : Repository<ProductPackaging>, IProduct
     {
     }
 
+
+    public async Task<ProductPackaging?> GetByIdWithProductAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(p => p.Product)
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+    }
+
     public async Task<ProductPackaging?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Barcode == barcode, cancellationToken);
+    }
+
+    public async Task<ProductPackaging?> GetByBarcodeWithProductAsync(string barcode, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(p => p.Product)
             .FirstOrDefaultAsync(p => p.Barcode == barcode, cancellationToken);
     }
 

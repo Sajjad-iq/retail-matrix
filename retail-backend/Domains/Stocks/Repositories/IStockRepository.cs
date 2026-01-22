@@ -16,6 +16,12 @@ public interface IStockRepository : IRepository<Stock>
         Guid inventoryId,
         CancellationToken cancellationToken = default);
 
+    Task<Stock?> GetByPackagingWithBatchesAsync(
+        Guid packagingId,
+        Guid organizationId,
+        Guid inventoryId,
+        CancellationToken cancellationToken = default);
+
     Task<Stock?> GetWithBatchesAsync(
         Guid stockId,
         CancellationToken cancellationToken = default);

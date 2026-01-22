@@ -9,7 +9,9 @@ namespace Domains.Products.Repositories;
 public interface IProductPackagingRepository : IRepository<ProductPackaging>
 {
     // Single item queries
+    Task<ProductPackaging?> GetByIdWithProductAsync(Guid id, CancellationToken cancellationToken = default);
     Task<ProductPackaging?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default);
+    Task<ProductPackaging?> GetByBarcodeWithProductAsync(string barcode, CancellationToken cancellationToken = default);
     Task<ProductPackaging?> GetDefaultPackagingAsync(Guid productId, CancellationToken cancellationToken = default);
 
     // Paginated queries

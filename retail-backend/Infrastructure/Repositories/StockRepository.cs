@@ -31,6 +31,21 @@ public class StockRepository : Repository<Stock>, IStockRepository
                 cancellationToken);
     }
 
+    public async Task<Stock?> GetByPackagingWithBatchesAsync(
+        Guid packagingId,
+        Guid organizationId,
+        Guid inventoryId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(s => s.Batches)
+            .FirstOrDefaultAsync(s =>
+                s.ProductPackagingId == packagingId &&
+                s.OrganizationId == organizationId &&
+                s.InventoryId == inventoryId,
+                cancellationToken);
+    }
+
     public async Task<Stock?> GetWithBatchesAsync(
         Guid stockId,
         CancellationToken cancellationToken = default)
