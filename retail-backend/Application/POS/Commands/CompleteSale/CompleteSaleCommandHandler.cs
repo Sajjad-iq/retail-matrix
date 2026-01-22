@@ -5,15 +5,15 @@ using Domains.Stocks.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 
-namespace Application.POS.Commands.CompletePosSession;
+namespace Application.POS.Commands.CompleteSale;
 
-public class CompletePosSessionCommandHandler : IRequestHandler<CompletePosSessionCommand, CompletedSaleDto>
+public class CompleteSaleCommandHandler : IRequestHandler<CompleteSaleCommand, CompletedSaleDto>
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IStockRepository _stockRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public CompletePosSessionCommandHandler(
+    public CompleteSaleCommandHandler(
         ISaleRepository saleRepository,
         IStockRepository stockRepository,
         IHttpContextAccessor httpContextAccessor)
@@ -23,7 +23,7 @@ public class CompletePosSessionCommandHandler : IRequestHandler<CompletePosSessi
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<CompletedSaleDto> Handle(CompletePosSessionCommand request, CancellationToken cancellationToken)
+    public async Task<CompletedSaleDto> Handle(CompleteSaleCommand request, CancellationToken cancellationToken)
     {
         var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
         if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
@@ -34,12 +34,12 @@ public class CompletePosSessionCommandHandler : IRequestHandler<CompletePosSessi
         var sale = await _saleRepository.GetByIdWithTrackingAsync(request.SaleId, cancellationToken);
         if (sale == null)
         {
-            throw new NotFoundException("جلسة البيع غير موجودة");
+            throw new NotFoundException("البيع غير موجود");
         }
 
         if (sale.OrganizationId != organizationId)
         {
-            throw new UnauthorizedException("غير مصرح بالوصول إلى هذه الجلسة");
+            throw new UnauthorizedException("غير مصرح بالوصول إلى هذا البيع");
         }
 
         // Deduct stock for each item using FEFO
@@ -56,7 +56,7 @@ public class CompletePosSessionCommandHandler : IRequestHandler<CompletePosSessi
                 throw new ValidationException($"المخزون غير موجود للمنتج: {item.ProductName}");
             }
 
-            // Deduct from batches using FEFO (First Expired, First Out)
+            // Deduct from batches using FEFO
             var remainingQuantity = item.Quantity;
             var availableBatches = stock.GetAvailableBatches().ToList();
 
@@ -77,7 +77,14 @@ public class CompletePosSessionCommandHandler : IRequestHandler<CompletePosSessi
             await _stockRepository.UpdateAsync(stock, cancellationToken);
         }
 
-        // Complete the sale using domain method
+        // Record payment amount
+        var paymentAmount = Domains.Shared.ValueObjects.Price.Create(
+            request.AmountPaid,
+            sale.GrandTotal.Currency
+        );
+        sale.RecordPayment(paymentAmount);
+
+        // Complete the sale
         sale.CompleteSale();
 
         await _saleRepository.SaveChangesAsync(cancellationToken);

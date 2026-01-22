@@ -3,14 +3,14 @@ using Domains.Sales.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 
-namespace Application.POS.Commands.RecordPosPayment;
+namespace Application.POS.Commands.CancelSale;
 
-public class RecordPosPaymentCommandHandler : IRequestHandler<RecordPosPaymentCommand, bool>
+public class CancelSaleCommandHandler : IRequestHandler<CancelSaleCommand, bool>
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public RecordPosPaymentCommandHandler(
+    public CancelSaleCommandHandler(
         ISaleRepository saleRepository,
         IHttpContextAccessor httpContextAccessor)
     {
@@ -18,7 +18,7 @@ public class RecordPosPaymentCommandHandler : IRequestHandler<RecordPosPaymentCo
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<bool> Handle(RecordPosPaymentCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(CancelSaleCommand request, CancellationToken cancellationToken)
     {
         var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
         if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
@@ -37,8 +37,8 @@ public class RecordPosPaymentCommandHandler : IRequestHandler<RecordPosPaymentCo
             throw new UnauthorizedException("غير مصرح بالوصول إلى هذه الجلسة");
         }
 
-        // Record payment using domain method with Price value object
-        sale.RecordPayment(request.Amount);
+        // Cancel the sale using domain method
+        sale.CancelSale();
 
         await _saleRepository.SaveChangesAsync(cancellationToken);
         return true;

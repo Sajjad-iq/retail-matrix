@@ -1,15 +1,11 @@
 using API.Models;
-using Application.POS.Commands.AddCartItem;
-using Application.POS.Commands.ApplyCartItemDiscount;
-using Application.POS.Commands.CancelPosSession;
-using Application.POS.Commands.CompletePosSession;
-using Application.POS.Commands.CreatePosSession;
-using Application.POS.Commands.RecordPosPayment;
-using Application.POS.Commands.RemoveCartItem;
-using Application.POS.Commands.UpdateCartItemQuantity;
+using Application.POS.Commands.CancelSale;
+using Application.POS.Commands.CompleteSale;
+using Application.POS.Commands.CreateSale;
+using Application.POS.Commands.UpdateSale;
 using Application.POS.DTOs;
-using Application.POS.Queries.GetPosCart;
 using Application.POS.Queries.GetPosSalesHistory;
+using Application.POS.Queries.GetSale;
 using Application.POS.Queries.SearchProductByBarcode;
 using Domains.Sales.Enums;
 using Domains.Shared.Base;
@@ -32,118 +28,56 @@ public class PosController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new POS session (Draft Sale)
+    /// Create a draft sale with items
     /// </summary>
-    [HttpPost("session")]
+    [HttpPost("sales")]
     [ProducesResponseType(typeof(ApiResponse<Guid>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<Guid>>> CreateSession([FromBody] CreatePosSessionCommand command)
+    public async Task<ActionResult<ApiResponse<Guid>>> CreateSale([FromBody] CreateSaleCommand command)
     {
         var saleId = await _mediator.Send(command);
-        var response = ApiResponse<Guid>.SuccessResponse(saleId, "تم إنشاء جلسة البيع بنجاح");
-        return CreatedAtAction(nameof(GetCart), new { saleId }, response);
+        var response = ApiResponse<Guid>.SuccessResponse(saleId, "تم إنشاء البيع بنجاح");
+        return CreatedAtAction(nameof(GetSale), new { saleId }, response);
     }
 
     /// <summary>
-    /// Get current cart state
+    /// Get sale details
     /// </summary>
-    [HttpGet("session/{saleId}")]
-    [ProducesResponseType(typeof(ApiResponse<PosCartDto>), StatusCodes.Status200OK)]
+    [HttpGet("sales/{saleId}")]
+    [ProducesResponseType(typeof(ApiResponse<SaleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<PosCartDto>>> GetCart(Guid saleId)
+    public async Task<ActionResult<ApiResponse<SaleDto>>> GetSale(Guid saleId)
     {
-        var cart = await _mediator.Send(new GetPosCartQuery { SaleId = saleId });
-        var response = ApiResponse<PosCartDto>.SuccessResponse(cart, "تم جلب بيانات السلة بنجاح");
+        var sale = await _mediator.Send(new GetSaleQuery { SaleId = saleId });
+        var response = ApiResponse<SaleDto>.SuccessResponse(sale, "تم جلب بيانات البيع بنجاح");
         return Ok(response);
     }
 
     /// <summary>
-    /// Add item to cart
+    /// Update sale items
     /// </summary>
-    [HttpPost("session/{saleId}/items")]
-    [ProducesResponseType(typeof(ApiResponse<Guid>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<Guid>>> AddItem(Guid saleId, [FromBody] AddCartItemCommand command)
-    {
-        var commandWithId = command with { SaleId = saleId };
-        var itemId = await _mediator.Send(commandWithId);
-        var response = ApiResponse<Guid>.SuccessResponse(itemId, "تم إضافة العنصر بنجاح");
-        return CreatedAtAction(nameof(GetCart), new { saleId }, response);
-    }
-
-    /// <summary>
-    /// Update item quantity
-    /// </summary>
-    [HttpPut("session/{saleId}/items/{itemId}")]
+    [HttpPut("sales/{saleId}")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<bool>>> UpdateItemQuantity(
+    public async Task<ActionResult<ApiResponse<bool>>> UpdateSale(
         Guid saleId,
-        Guid itemId,
-        [FromBody] UpdateCartItemQuantityCommand command)
-    {
-        var commandWithIds = command with { SaleId = saleId, ItemId = itemId };
-        var result = await _mediator.Send(commandWithIds);
-        var response = ApiResponse<bool>.SuccessResponse(result, "تم تحديث الكمية بنجاح");
-        return Ok(response);
-    }
-
-    /// <summary>
-    /// Remove item from cart
-    /// </summary>
-    [HttpDelete("session/{saleId}/items/{itemId}")]
-    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<bool>>> RemoveItem(Guid saleId, Guid itemId)
-    {
-        var command = new RemoveCartItemCommand { SaleId = saleId, ItemId = itemId };
-        var result = await _mediator.Send(command);
-        var response = ApiResponse<bool>.SuccessResponse(result, "تم حذف العنصر بنجاح");
-        return Ok(response);
-    }
-
-    /// <summary>
-    /// Apply discount to item
-    /// </summary>
-    [HttpPut("session/{saleId}/items/{itemId}/discount")]
-    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<bool>>> ApplyDiscount(
-        Guid saleId,
-        Guid itemId,
-        [FromBody] ApplyCartItemDiscountCommand command)
-    {
-        var commandWithIds = command with { SaleId = saleId, ItemId = itemId };
-        var result = await _mediator.Send(commandWithIds);
-        var response = ApiResponse<bool>.SuccessResponse(result, "تم تطبيق الخصم بنجاح");
-        return Ok(response);
-    }
-
-    /// <summary>
-    /// Record payment
-    /// </summary>
-    [HttpPost("session/{saleId}/payment")]
-    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<bool>>> RecordPayment(
-        Guid saleId,
-        [FromBody] RecordPosPaymentCommand command)
+        [FromBody] UpdateSaleCommand command)
     {
         var commandWithId = command with { SaleId = saleId };
         var result = await _mediator.Send(commandWithId);
-        var response = ApiResponse<bool>.SuccessResponse(result, "تم تسجيل الدفع بنجاح");
+        var response = ApiResponse<bool>.SuccessResponse(result, "تم تحديث البيع بنجاح");
         return Ok(response);
     }
 
     /// <summary>
-    /// Complete sale (checkout)
+    /// Complete sale with payment
     /// </summary>
-    [HttpPost("session/{saleId}/complete")]
+    [HttpPost("sales/{saleId}/complete")]
     [ProducesResponseType(typeof(ApiResponse<CompletedSaleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<CompletedSaleDto>>> CompleteSale(
         Guid saleId,
-        [FromBody] CompletePosSessionCommand command)
+        [FromBody] CompleteSaleCommand command)
     {
         var commandWithId = command with { SaleId = saleId };
         var result = await _mediator.Send(commandWithId);
@@ -154,12 +88,12 @@ public class PosController : ControllerBase
     /// <summary>
     /// Cancel sale
     /// </summary>
-    [HttpPost("session/{saleId}/cancel")]
+    [HttpPost("sales/{saleId}/cancel")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<bool>>> CancelSale(Guid saleId)
     {
-        var command = new CancelPosSessionCommand { SaleId = saleId };
+        var command = new CancelSaleCommand { SaleId = saleId };
         var result = await _mediator.Send(command);
         var response = ApiResponse<bool>.SuccessResponse(result, "تم إلغاء البيع بنجاح");
         return Ok(response);

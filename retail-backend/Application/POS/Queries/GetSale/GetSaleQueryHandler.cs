@@ -4,14 +4,14 @@ using Domains.Sales.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 
-namespace Application.POS.Queries.GetPosCart;
+namespace Application.POS.Queries.GetSale;
 
-public class GetPosCartQueryHandler : IRequestHandler<GetPosCartQuery, PosCartDto>
+public class GetSaleQueryHandler : IRequestHandler<GetSaleQuery, SaleDto>
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public GetPosCartQueryHandler(
+    public GetSaleQueryHandler(
         ISaleRepository saleRepository,
         IHttpContextAccessor httpContextAccessor)
     {
@@ -19,31 +19,34 @@ public class GetPosCartQueryHandler : IRequestHandler<GetPosCartQuery, PosCartDt
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<PosCartDto> Handle(GetPosCartQuery request, CancellationToken cancellationToken)
+    public async Task<SaleDto> Handle(GetSaleQuery request, CancellationToken cancellationToken)
     {
+        // Extract organization ID from JWT claims
         var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
         if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
         {
             throw new UnauthorizedException("معرف المؤسسة مطلوب");
         }
 
+        // Get the sale
         var sale = await _saleRepository.GetByIdAsync(request.SaleId, cancellationToken);
         if (sale == null)
         {
-            throw new NotFoundException("جلسة البيع غير موجودة");
+            throw new NotFoundException("البيع غير موجود");
         }
 
         if (sale.OrganizationId != organizationId)
         {
-            throw new UnauthorizedException("غير مصرح بالوصول إلى هذه الجلسة");
+            throw new UnauthorizedException("غير مصرح بالوصول إلى هذا البيع");
         }
 
-        return new PosCartDto
+        // Map to DTO
+        return new SaleDto
         {
             SaleId = sale.Id,
             SaleNumber = sale.SaleNumber,
             SaleDate = sale.SaleDate,
-            Status = sale.Status,
+            Status = sale.Status.ToString(),
             Items = sale.Items.Select(i => new PosCartItemDto
             {
                 ItemId = i.Id,
