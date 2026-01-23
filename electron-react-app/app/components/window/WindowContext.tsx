@@ -26,15 +26,18 @@ export const WindowContextProvider = ({
   titlebar?: TitlebarProps
 }) => {
   const [initProps, setInitProps] = useState<WindowInitProps>()
-  const { windowInit } = useConveyor('window')
+  const windowApi = useConveyor('window')
 
   useEffect(() => {
-    windowInit().then(setInitProps)
+    // Only initialize window in Electron environment
+    if (windowApi?.windowInit) {
+      windowApi.windowInit().then(setInitProps)
+    }
 
     // Add class to parent element
     const parent = document.querySelector('.window-content')?.parentElement
     parent?.classList.add('window-frame')
-  }, [windowInit])
+  }, [windowApi])
 
   return (
     <WindowContext.Provider value={{ titlebar, window: initProps }}>
