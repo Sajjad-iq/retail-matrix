@@ -16,13 +16,9 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
 
         // Use a dummy connection string for design-time operations
         // The actual connection string will be used at runtime from appsettings.json
-        var connectionString = "Server=localhost;Port=3306;Database=retail_matrix;User=root;Password=password;";
+        var connectionString = "Data Source=retail_matrix.db";
 
-        optionsBuilder.UseMySql(
-            connectionString,
-            new MySqlServerVersion(new Version(8, 0, 21)),
-            mySqlOptions => mySqlOptions.EnableRetryOnFailure()
-        );
+        optionsBuilder.UseSqlite(connectionString);
 
         return new ApplicationDbContext(optionsBuilder.Options);
     }

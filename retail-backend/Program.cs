@@ -11,13 +11,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseSqlite(connectionString));
 
 // Application Layer (Commands, Queries, Validators, Mappings)
 builder.Services.AddApplication();
 
 // Infrastructure (Repositories, Domain Services, etc.)
 builder.Services.AddInfrastructure();
+
+// Add HttpContextAccessor for accessing user context in handlers
+builder.Services.AddHttpContextAccessor();
 
 // JWT Authentication & Authorization
 builder.Services.AddJwtAuthentication(builder.Configuration);
@@ -32,6 +35,13 @@ builder.Services.AddControllers(options =>
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Ensure database is created
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
