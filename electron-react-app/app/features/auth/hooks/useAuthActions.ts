@@ -1,8 +1,30 @@
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/app/stores/auth';
 import { authService } from '../services/authService';
 import type { LoginRequest, RegisterRequest } from '../lib/types';
+
+/**
+ * Hook to initialize auth state on app mount
+ * Calls /me to validate token and fetch fresh user data
+ */
+export function useAuthInit() {
+    const { accessToken, setUser, clearAuth } = useAuthStore();
+
+    useEffect(() => {
+        if (!accessToken) return;
+
+        authService.getCurrentUser().then((result) => {
+            if (result.success && result.data) {
+                setUser(result.data);
+            } else {
+                // Token is invalid or expired, clear auth
+                clearAuth();
+            }
+        });
+    }, []);
+}
 
 /**
  * Hook for login mutation

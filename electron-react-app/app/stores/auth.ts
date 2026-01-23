@@ -9,6 +9,7 @@ interface AuthState {
     expiresAt: string | null;
     isAuthenticated: boolean;
     setAuth: (tokenDto: TokenDto) => void;
+    setUser: (user: User) => void;
     clearAuth: () => void;
 }
 
@@ -36,6 +37,11 @@ export const useAuthStore = create<AuthState>()(
                     expiresAt: tokenDto.expiresAt,
                     isAuthenticated: true,
                 });
+            },
+
+            setUser: (user: User) => {
+                localStorage.setItem('user', JSON.stringify(user));
+                set({ user });
             },
 
             clearAuth: () => {
