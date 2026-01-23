@@ -392,3 +392,4 @@ out
 .DS_Store
 *.log*
 temp
+pnpm-lock.yaml
