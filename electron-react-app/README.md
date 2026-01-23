@@ -13,15 +13,6 @@ A modern Electron application template with React, Vite, TypeScript, and Tailwin
 
 <br />
 
-<p align="center">
-    <img src="app/assets/era-preview.png" target="_blank" />
-</p>
-
-<p align="center">
-    <a href="https://imgur.com/B5pGkDk">Watch Video Preview</a>
-</p>
-
-<br />
 
 ## Stack
 
@@ -46,24 +37,18 @@ A modern Electron application template with React, Vite, TypeScript, and Tailwin
 | **Import Path Aliases**     | Keep your imports organized and clean                                          |
 | **Theme Switcher**          | Built-in theme switching for dark and light mode                               |
 | **Error Boundary**          | Built-in React error boundary with detailed error reporting                    |
-| **Welcome Kit**             | Interactive showcase with Framer Motion animations                             |
 | **Code Formatting**         | Prettier and ESLint pre-configured for code quality                            |
 | **Hot Reload**              | Lightning-fast development with Vite's HMR                                     |
 | **VS Code Debugging**       | Pre-configured launch configurations for debugging main and renderer processes |
+
 
 <br />
 
 ## Installation
 
-Clone the repository:
+Install dependencies:
 
 ```bash
-# Clone the repository
-git clone https://github.com/guasam/electron-react-app
-
-# Change directory
-cd electron-react-app
-
 # Install dependencies (use any package manager: npm, yarn, pnpm, bun)
 npm install
 ```
