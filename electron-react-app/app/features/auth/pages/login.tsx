@@ -1,6 +1,6 @@
 import { FormBuilder } from '@/app/components/form';
 import { Button } from '@/app/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { AuthCard } from '../components/AuthCard';
 import { useLogin } from '../hooks/useAuthActions';
 import { loginFormSchema, type LoginFormValues } from '../lib/loginFormConfig';
@@ -36,7 +36,7 @@ export default function LoginPage() {
                         type="button"
                         variant="link"
                         size="sm"
-                        onClick={() => router.push('/register')}
+                        onClick={() => navigate('/register')}
                         className="px-0 h-auto"
                     >
                         إنشاء حساب جديد

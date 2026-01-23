@@ -1,12 +1,12 @@
 import { FormBuilder } from '@/app/components/form';
 import { Button } from '@/app/components/ui/button';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router';
 import { AuthCard } from '../components/AuthCard';
 import { useRegister } from '../hooks/useAuthActions';
 import { registerFormSchema, type RegisterFormValues } from '../lib/registerFormConfig';
 
 export default function RegisterPage() {
-    const router = useRouter();
+    const navigate = useNavigate();
     const registerMutation = useRegister();
 
     const handleSubmit = async (values: RegisterFormValues) => {
@@ -21,7 +21,7 @@ export default function RegisterPage() {
             {
                 onSuccess: (result) => {
                     if (result.success) {
-                        router.push('/login');
+                        navigate('/login');
                     }
                 },
             }
@@ -39,7 +39,7 @@ export default function RegisterPage() {
                         type="button"
                         variant="link"
                         size="sm"
-                        onClick={() => router.push('/login')}
+                        onClick={() => navigate('/login')}
                         className="px-0 h-auto"
                     >
                         تسجيل الدخول

@@ -8,7 +8,7 @@ import {
   OctagonXIcon,
   TriangleAlertIcon,
 } from "lucide-react"
-import { useThemeStore } from "@/stores/theme"
+import { useThemeStore } from "@/app/stores/theme"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 
 const Toaster = ({ ...props }: ToasterProps) => {
