@@ -51,7 +51,7 @@ function PackagingSubRows({
                         <TableCell key={cell.id} className="text-center whitespace-nowrap">
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
-                    ))}/home/sajjad/Documents/bms-frontend/app/(app)/(admin)/pre-registration-management
+                    ))}
                 </TableRow>
             ))}
         </>

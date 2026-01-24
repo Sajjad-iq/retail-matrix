@@ -10,7 +10,7 @@ export enum ProductStatus {
 export interface ProductPackagingListDto {
     id: string;
     name: string;
-    barcode?: Barcode;
+    barcode?: Barcode | null;
     sellingPrice: Price;
     status: ProductStatus;
 }

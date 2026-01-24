@@ -87,9 +87,9 @@ public class CreateProductPackagingCommandHandler : IRequestHandler<CreateProduc
             color: request.Color
         );
 
-        // 6. Persist changes
-        await _productRepository.UpdateAsync(product, cancellationToken);
-        await _productRepository.SaveChangesAsync(cancellationToken);
+        // 6. Persist packaging - explicitly add to repository since product was already saved
+        await _productPackagingRepository.AddAsync(packaging, cancellationToken);
+        await _productPackagingRepository.SaveChangesAsync(cancellationToken);
 
         return packaging.Id;
     }

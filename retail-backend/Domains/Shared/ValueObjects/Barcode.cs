@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace Domains.Shared.ValueObjects;
@@ -11,22 +12,23 @@ public sealed class Barcode : IEquatable<Barcode>
 
     public string Value { get; }
 
-    private Barcode(string value)
+    [JsonConstructor]
+    public Barcode(string value)
     {
-        Value = value;
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("الباركود مطلوب", nameof(value));
+
+        var normalizedBarcode = value.Trim();
+
+        if (!BarcodeRegex.IsMatch(normalizedBarcode))
+            throw new ArgumentException("الباركود يجب أن يحتوي على 8-13 رقم فقط", nameof(value));
+
+        Value = normalizedBarcode;
     }
 
     public static Barcode Create(string barcode)
     {
-        if (string.IsNullOrWhiteSpace(barcode))
-            throw new ArgumentException("الباركود مطلوب", nameof(barcode));
-
-        var normalizedBarcode = barcode.Trim();
-
-        if (!BarcodeRegex.IsMatch(normalizedBarcode))
-            throw new ArgumentException("الباركود يجب أن يحتوي على 8-13 رقم فقط", nameof(barcode));
-
-        return new Barcode(normalizedBarcode);
+        return new Barcode(barcode);
     }
 
     public bool Equals(Barcode? other)
