@@ -64,19 +64,18 @@ public class CreateProductPackagingCommandHandler : IRequestHandler<CreateProduc
                 product.AssignCategory(request.CategoryId.Value);
             }
             await _productRepository.AddAsync(product, cancellationToken);
+            // Save product first to satisfy FK constraint
+            await _productRepository.SaveChangesAsync(cancellationToken);
         }
 
-        // 4. Create value objects
-        var sellingPrice = Price.Create(request.SellingPriceAmount, request.SellingPriceCurrency);
-
-        // 5. Determine if this should be the default packaging
+        // 4. Determine if this should be the default packaging
         // First packaging for a product is automatically set as default
         bool isDefault = product.Packagings.Count == 0;
 
-        // 6. Add packaging to product using domain method
+        // 5. Add packaging to product using domain method
         var packaging = product.AddPackaging(
             name: request.Name,
-            sellingPrice: sellingPrice,
+            sellingPrice: request.SellingPrice,
             unitOfMeasure: request.UnitOfMeasure,
             barcode: request.Barcode,
             description: request.Description,
@@ -88,7 +87,7 @@ public class CreateProductPackagingCommandHandler : IRequestHandler<CreateProduc
             color: request.Color
         );
 
-        // 7. Persist changes
+        // 6. Persist changes
         await _productRepository.UpdateAsync(product, cancellationToken);
         await _productRepository.SaveChangesAsync(cancellationToken);
 

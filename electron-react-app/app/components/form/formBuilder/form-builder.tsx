@@ -15,6 +15,7 @@ import { RadioGroupField } from './fields/RadioGroupField';
 import { PhoneInputField } from './fields/PhoneInputField';
 import { DatePickerField } from './fields/DatePickerField';
 import { ImageUploadField } from './fields/ImageUploadField';
+import { InputWithUnitField } from './fields/InputWithUnitField';
 
 // Loading context (only thing Form doesn't provide)
 const LoadingContext = React.createContext(false);
@@ -279,6 +280,32 @@ function ImageField(
   );
 }
 
+function InputWithUnitInputField(
+  props: FieldProps & {
+    options: { label: string; value: string | number }[];
+    valueKey?: string;
+    unitKey?: string;
+    unitPlaceholder?: string;
+  },
+) {
+  const { control } = useFormContext();
+  const loading = React.useContext(LoadingContext);
+  return (
+    <FormField
+      control={control}
+      name={props.name}
+      render={({ field }) => (
+        <InputWithUnitField
+          field={{ ...props, type: 'input-with-unit' }}
+          value={field.value}
+          onChange={field.onChange}
+          isLoading={loading}
+        />
+      )}
+    />
+  );
+}
+
 function SubmitButton({
   children,
   loadingText,
@@ -363,5 +390,6 @@ export const FormBuilder = Object.assign(FormBuilderRoot, {
   Radio: RadioField,
   Date: DateField,
   Image: ImageField,
+  InputWithUnit: InputWithUnitInputField,
   Submit: SubmitButton,
 });

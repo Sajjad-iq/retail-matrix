@@ -7,6 +7,8 @@ import {
     type CreateProductFormValues,
     type CreateProductRequest,
     unitOfMeasureOptions,
+    currencyOptions,
+    weightUnitOptions,
     UnitOfMeasure,
 } from '../lib/validations';
 import { FormBuilder } from '@/app/components/form';
@@ -37,14 +39,20 @@ export function CreateProductDialog({ children, open, onOpenChange }: CreateProd
             productName: values.productName,
             categoryId: values.categoryId || undefined,
             name: values.name,
-            sellingPriceAmount: values.sellingPriceAmount,
-            sellingPriceCurrency: values.sellingPriceCurrency,
+            sellingPrice: {
+                amount: values.sellingPrice.amount,
+                currency: values.sellingPrice.currency,
+            },
             unitOfMeasure: values.unitOfMeasure,
             barcode: values.barcode || undefined,
             description: values.description || undefined,
             unitsPerPackage: values.unitsPerPackage,
             isDefault: values.isDefault,
             dimensions: values.dimensions || undefined,
+            weight: values.weight?.value ? {
+                value: values.weight.value,
+                unit: values.weight.unit,
+            } : undefined,
             color: values.color || undefined,
         };
 
@@ -74,13 +82,13 @@ export function CreateProductDialog({ children, open, onOpenChange }: CreateProd
                         productName: '',
                         categoryId: '',
                         name: '',
-                        sellingPriceAmount: 0,
-                        sellingPriceCurrency: 'IQD',
+                        sellingPrice: { amount: 0, currency: 'IQD' },
                         unitOfMeasure: UnitOfMeasure.Piece,
                         barcode: '',
                         description: '',
                         unitsPerPackage: 1,
                         isDefault: true,
+                        weight: { value: 0, unit: UnitOfMeasure.Kilogram },
                     }}
                     loading={isPending}
                     className="space-y-4 py-4 max-h-[60vh] overflow-y-auto"
@@ -105,21 +113,22 @@ export function CreateProductDialog({ children, open, onOpenChange }: CreateProd
                             required
                         />
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormBuilder.Number
-                                name="sellingPriceAmount"
-                                label="سعر البيع"
-                                placeholder="0"
-                                min={0}
-                                required
-                            />
-                            <FormBuilder.Select
-                                name="unitOfMeasure"
-                                label="وحدة القياس"
-                                options={unitOfMeasureOptions}
-                                required
-                            />
-                        </div>
+                        <FormBuilder.InputWithUnit
+                            name="sellingPrice"
+                            label="سعر البيع"
+                            placeholder="0"
+                            options={currencyOptions}
+                            valueKey="amount"
+                            unitKey="currency"
+                            required
+                        />
+
+                        <FormBuilder.Select
+                            name="unitOfMeasure"
+                            label="وحدة القياس"
+                            options={unitOfMeasureOptions}
+                            required
+                        />
 
                         <FormBuilder.Text
                             name="barcode"
@@ -139,6 +148,16 @@ export function CreateProductDialog({ children, open, onOpenChange }: CreateProd
                             label="الوصف (اختياري)"
                             placeholder="وصف المنتج أو وحدة البيع"
                             rows={2}
+                        />
+
+                        <FormBuilder.InputWithUnit
+                            name="weight"
+                            label="الوزن (اختياري)"
+                            placeholder="0"
+                            options={weightUnitOptions}
+                            valueKey="value"
+                            unitKey="unit"
+                            unitPlaceholder="الوحدة"
                         />
 
                         <div className="grid grid-cols-2 gap-4">

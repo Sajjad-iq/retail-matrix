@@ -68,6 +68,15 @@ export interface DatePickerFieldConfig extends BaseFieldConfig {
   dateFormat?: string;
 }
 
+// Input with unit field (e.g., price with currency, weight with unit)
+export interface InputWithUnitFieldConfig extends BaseFieldConfig {
+  type: 'input-with-unit';
+  options: { label: string; value: string | number }[];
+  valueKey?: string; // Key for the value in the object (default: 'value')
+  unitKey?: string; // Key for the unit in the object (default: 'unit')
+  unitPlaceholder?: string;
+}
+
 // Image upload field
 export interface ImageUploadFieldConfig extends BaseFieldConfig {
   type: 'image-upload';
@@ -90,4 +99,5 @@ export type FormFieldConfig =
   | SwitchFieldConfig
   | RadioFieldConfig
   | DatePickerFieldConfig
-  | ImageUploadFieldConfig;
+  | ImageUploadFieldConfig
+  | InputWithUnitFieldConfig;

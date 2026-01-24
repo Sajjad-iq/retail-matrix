@@ -13,8 +13,12 @@ public class CreateProductPackagingCommandValidator : AbstractValidator<CreatePr
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("اسم العبوة مطلوب");
 
-        RuleFor(x => x.SellingPriceAmount)
-            .GreaterThan(0).WithMessage("سعر البيع يجب أن يكون أكبر من صفر");
+        RuleFor(x => x.SellingPrice)
+            .NotNull().WithMessage("سعر البيع مطلوب");
+
+        RuleFor(x => x.SellingPrice.Amount)
+            .GreaterThan(0).WithMessage("سعر البيع يجب أن يكون أكبر من صفر")
+            .When(x => x.SellingPrice != null);
 
         RuleFor(x => x.UnitOfMeasure)
             .IsInEnum().WithMessage("وحدة القياس غير صحيحة");

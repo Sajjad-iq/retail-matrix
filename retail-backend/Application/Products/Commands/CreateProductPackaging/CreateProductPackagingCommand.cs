@@ -15,8 +15,7 @@ public record CreateProductPackagingCommand : IRequest<Guid>
 
     // Packaging-level properties
     public string Name { get; init; } = string.Empty;
-    public decimal SellingPriceAmount { get; init; }
-    public string SellingPriceCurrency { get; init; } = "IQD";
+    public Price SellingPrice { get; init; } = null!;  // Using Price value object
     public UnitOfMeasure UnitOfMeasure { get; init; }
     public string? Barcode { get; init; }
     public string? Description { get; init; }

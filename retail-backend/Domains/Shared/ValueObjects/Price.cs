@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Domains.Shared.ValueObjects;
 
 /// <summary>
@@ -15,13 +17,8 @@ public sealed class Price : IEquatable<Price>
         Currency = "IQD";
     }
 
-    private Price(decimal amount, string currency)
-    {
-        Amount = amount;
-        Currency = currency;
-    }
-
-    public static Price Create(decimal amount, string currency = "IQD")
+    [JsonConstructor]
+    public Price(decimal amount, string currency)
     {
         if (amount < 0)
             throw new ArgumentException("السعر لا يمكن أن يكون سالب", nameof(amount));
@@ -34,7 +31,13 @@ public sealed class Price : IEquatable<Price>
         if (normalizedCurrency.Length != 3)
             throw new ArgumentException("رمز العملة يجب أن يكون 3 أحرف (مثل IQD, USD)", nameof(currency));
 
-        return new Price(amount, normalizedCurrency);
+        Amount = amount;
+        Currency = normalizedCurrency;
+    }
+
+    public static Price Create(decimal amount, string currency = "IQD")
+    {
+        return new Price(amount, currency);
     }
 
     public Price Add(Price other)

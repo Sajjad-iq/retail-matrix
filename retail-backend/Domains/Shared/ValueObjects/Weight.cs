@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Domains.Products.Enums;
 
 namespace Domains.Shared.ValueObjects;
@@ -10,13 +11,8 @@ public sealed class Weight : IEquatable<Weight>
     public decimal Value { get; }
     public UnitOfMeasure Unit { get; }
 
-    private Weight(decimal value, UnitOfMeasure unit)
-    {
-        Value = value;
-        Unit = unit;
-    }
-
-    public static Weight Create(decimal value, UnitOfMeasure unit = UnitOfMeasure.Kilogram)
+    [JsonConstructor]
+    public Weight(decimal value, UnitOfMeasure unit)
     {
         if (value < 0)
             throw new ArgumentException("الوزن لا يمكن أن يكون سالب", nameof(value));
@@ -24,6 +20,12 @@ public sealed class Weight : IEquatable<Weight>
         if (!IsValidWeightUnit(unit))
             throw new ArgumentException($"وحدة القياس {unit} غير صالحة للوزن", nameof(unit));
 
+        Value = value;
+        Unit = unit;
+    }
+
+    public static Weight Create(decimal value, UnitOfMeasure unit = UnitOfMeasure.Kilogram)
+    {
         return new Weight(value, unit);
     }
 

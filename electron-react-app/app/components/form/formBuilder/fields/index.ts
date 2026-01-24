@@ -13,6 +13,7 @@
  * - PhoneInputField: Phone number input with country code
  * - TextInputField: Text, email, password, number, textarea, and select inputs
  * - DatePickerField: Date picker with calendar popover
+ * - InputWithUnitField: Input with unit select (e.g., price with currency, weight with unit)
  */
 
 export { ImageUploadField } from './ImageUploadField';
@@ -23,3 +24,4 @@ export { RadioGroupField } from './RadioGroupField';
 export { PhoneInputField } from './PhoneInputField';
 export { TextInputField } from './TextInputField';
 export { DatePickerField } from './DatePickerField';
+export { InputWithUnitField } from './InputWithUnitField';

@@ -64,6 +64,21 @@ export const unitOfMeasureOptions = [
     { label: 'كرتون', value: UnitOfMeasure.Carton.toString() },
 ];
 
+export const currencyOptions = [
+    { label: 'دينار عراقي', value: 'IQD' },
+    { label: 'دولار أمريكي', value: 'USD' },
+    { label: 'يورو', value: 'EUR' },
+];
+
+export const weightUnitOptions = [
+    { label: 'كيلوغرام', value: UnitOfMeasure.Kilogram.toString() },
+    { label: 'غرام', value: UnitOfMeasure.Gram.toString() },
+    { label: 'ملليغرام', value: UnitOfMeasure.Milligram.toString() },
+    { label: 'طن', value: UnitOfMeasure.MetricTon.toString() },
+    { label: 'باوند', value: UnitOfMeasure.Pound.toString() },
+    { label: 'أونصة', value: UnitOfMeasure.Ounce.toString() },
+];
+
 export const createProductSchema = z.object({
     // Product-level properties
     productName: z.string()
@@ -79,11 +94,12 @@ export const createProductSchema = z.object({
         .min(2, 'يجب أن يكون الاسم حرفين على الأقل')
         .max(200, 'يجب ألا يتجاوز الاسم 200 حرف'),
 
-    sellingPriceAmount: z.coerce.number()
-        .min(0, 'السعر يجب أن يكون أكبر من أو يساوي صفر')
-        .max(999999999, 'السعر كبير جداً'),
-
-    sellingPriceCurrency: z.string().default('IQD'),
+    sellingPrice: z.object({
+        amount: z.coerce.number()
+            .min(0, 'السعر يجب أن يكون أكبر من أو يساوي صفر')
+            .max(999999999, 'السعر كبير جداً'),
+        currency: z.string().default('IQD'),
+    }),
 
     unitOfMeasure: z.coerce.number()
         .min(0, 'وحدة القياس مطلوبة')
@@ -111,6 +127,11 @@ export const createProductSchema = z.object({
         .optional()
         .or(z.literal('')),
 
+    weight: z.object({
+        value: z.coerce.number().min(0, 'الوزن يجب أن يكون أكبر من أو يساوي صفر'),
+        unit: z.coerce.number(),
+    }).optional(),
+
     color: z.string()
         .max(50, 'اللون يجب ألا يتجاوز 50 حرف')
         .optional()
@@ -128,8 +149,10 @@ export interface CreateProductRequest {
 
     // Packaging-level
     name: string;
-    sellingPriceAmount: number;
-    sellingPriceCurrency: string;
+    sellingPrice: {
+        amount: number;
+        currency: string;
+    };
     unitOfMeasure: number;
     barcode?: string;
     description?: string;
@@ -137,5 +160,9 @@ export interface CreateProductRequest {
     isDefault: boolean;
     imageUrls?: string[];
     dimensions?: string;
+    weight?: {
+        value: number;
+        unit: number;
+    };
     color?: string;
 }
