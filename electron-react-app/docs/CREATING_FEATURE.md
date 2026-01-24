@@ -1,6 +1,6 @@
 # Creating a Feature
 
-Quick guide on how to create a new feature module in this Next.js project.
+Quick guide on how to create a new feature module in this Electron-React project.
 
 ---
 
@@ -19,143 +19,103 @@ features/[name]/
 
 ## 🚀 Step-by-Step Guide
 
-Use the **users feature** as a reference for creating new features.
+Use the **auth feature** or **users feature** as a reference.
 
 ### 1. Create Service
 
-**Reference**: [`features/users/services/usersService.ts`](file:///home/sajjad/Documents/nextjs-starter/features/users/services/usersService.ts)
+**Reference**: [`features/auth/services/authService.ts`](file:///home/sajjad/Documents/retail-matrix/electron-react-app/app/features/auth/services/authService.ts)
 
-Create API service with CRUD operations:
-- `getAll()` - Fetch all items
-- `getById(id)` - Fetch single item
-- `create(data)` - Create new item
-- `update(id, data)` - Update existing item
-- `delete(id)` - Delete item
+Create API service with axios operations.
+**Important**: Use raw axios calls or your http service. The global interceptor handles errors.
+
+```typescript
+export const myService = {
+    getAll: async () => {
+        const response = await httpService.getAxiosInstance().get('/api/items');
+        return response.data;
+    }
+}
+```
 
 ---
 
 ### 2. Create Hooks
 
-**Reference**: [`features/users/hooks/useUserActions.ts`](file:///home/sajjad/Documents/nextjs-starter/features/users/hooks/useUserActions.ts)
+**Reference**: [`features/auth/hooks/useAuthActions.ts`](file:///home/sajjad/Documents/retail-matrix/electron-react-app/app/features/auth/hooks/useAuthActions.ts)
 
-Create TanStack Query hooks:
-- `useItems()` - Query for list
-- `useItem(id)` - Query for single item
-- `useCreateItem()` - Mutation for create
-- `useUpdateItem()` - Mutation for update
-- `useDeleteItem()` - Mutation for delete
+Create TanStack Query hooks.
 
 **Key patterns**:
-- Use `useQuery` for fetching data
-- Use `useMutation` for create/update/delete
-- Invalidate queries after mutations
-- Add toast notifications for success/error
+- Use `useQuery` for fetching.
+- Use `useMutation` for actions.
+- **DO NOT** add `onError` handlers for API errors using `toast.error`. The global interceptor in `lib/config/http.ts` handles this automatically.
+- Only add `toast.success` in `onSuccess`.
+
+```typescript
+export function useCreateItem() {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: (data) => myService.create(data),
+        onSuccess: () => {
+            toast.success('Created successfully');
+            queryClient.invalidateQueries({ queryKey: ['items'] });
+        },
+        // No onError needed for standard API errors!
+    });
+}
+```
 
 ---
 
 ### 3. Create Types & Schemas
 
-**Type Reference**: [`features/users/lib/types.ts`](file:///home/sajjad/Documents/nextjs-starter/features/users/lib/types.ts)
-
-Define TypeScript types for your domain.
-
-**Schema Reference**: [`features/users/components/UserDialog.tsx`](file:///home/sajjad/Documents/nextjs-starter/features/users/components/UserDialog.tsx#L19-L25)
-
-Create Zod schema for form validation (see schema in UserDialog).
-
-**Columns Reference**: [`features/users/lib/usersColumns.tsx`](file:///home/sajjad/Documents/nextjs-starter/features/users/lib/usersColumns.tsx)
-
-Create table columns with:
-- Column definitions
-- Custom cell renderers (badges, dates, etc.)
-- Actions column with dialog trigger
+Define TypeScript interfaces in `lib/types.ts`.
+Define Zod schemas for forms.
 
 ---
 
 ### 4. Create Components
 
-**Dialog Reference**: [`features/users/components/UserDialog.tsx`](file:///home/sajjad/Documents/nextjs-starter/features/users/components/UserDialog.tsx)
-
-Create dialog component with:
-- `children` prop for trigger element
-- `DialogTrigger` wrapping children
-- FormBuilder for form
-- `onSuccess` callback for refetch
-- `DialogClose` ref for programmatic close
-
-**Key pattern**:
-```tsx
-<Dialog>
-  <DialogTrigger asChild>{children}</DialogTrigger>
-  <DialogContent>
-    <FormBuilder onSubmit={handleSubmit}>
-      {/* fields */}
-    </FormBuilder>
-    <DialogClose ref={closeRef} className="hidden" />
-  </DialogContent>
-</Dialog>
-```
+Create your UI components.
 
 ---
 
 ### 5. Create Page
 
-**Reference**: [`features/users/pages/UsersPage.tsx`](file:///home/sajjad/Documents/nextjs-starter/features/users/pages/UsersPage.tsx)
-
-Create page component with:
-- DataTable for list view
-- Dialog wrapped around "Add" button
-- Columns with `onSuccess` callback
-- Refetch on success
+Create page components in `features/[name]/pages/`.
 
 ---
 
 ### 6. Add Route
 
-**Reference**: [`app/(main)/users/page.tsx`](file:///home/sajjad/Documents/nextjs-starter/app/(main)/users/page.tsx)
+**Reference**: [`app/routes.tsx`](file:///home/sajjad/Documents/retail-matrix/electron-react-app/app/routes.tsx)
 
-Create route file that imports and renders your page component.
+Register your new page in the router configuration.
+
+```typescript
+// app/routes.tsx
+{
+    path: '/my-feature',
+    element: <MyFeaturePage />,
+}
+```
 
 ---
 
 ## ✅ Checklist
 
-When creating a new feature:
-
 - [ ] Create folder in `features/[name]/`
-- [ ] Copy structure from `features/users/`
-- [ ] Create service (reference: `usersService.ts`)
-- [ ] Create hooks (reference: `useUserActions.ts`)
-- [ ] Create types (reference: `types.ts`)
-- [ ] Create columns (reference: `usersColumns.tsx`)
-- [ ] Create dialog (reference: `UserDialog.tsx`)
-- [ ] Create page (reference: `UsersPage.tsx`)
-- [ ] Add route in `app/(main)/[name]/page.tsx`
-- [ ] Test CRUD operations
-
----
-
-## 📚 Reference Files
-
-**Complete feature example**: [`features/users/`](file:///home/sajjad/Documents/nextjs-starter/features/users)
-
-**Key files to study**:
-- Service: [`usersService.ts`](file:///home/sajjad/Documents/nextjs-starter/features/users/services/usersService.ts)
-- Hooks: [`useUserActions.ts`](file:///home/sajjad/Documents/nextjs-starter/features/users/hooks/useUserActions.ts)
-- Types: [`types.ts`](file:///home/sajjad/Documents/nextjs-starter/features/users/lib/types.ts)
-- Columns: [`usersColumns.tsx`](file:///home/sajjad/Documents/nextjs-starter/features/users/lib/usersColumns.tsx)
-- Dialog: [`UserDialog.tsx`](file:///home/sajjad/Documents/nextjs-starter/features/users/components/UserDialog.tsx)
-- Page: [`UsersPage.tsx`](file:///home/sajjad/Documents/nextjs-starter/features/users/pages/UsersPage.tsx)
-- Route: [`app/(main)/users/page.tsx`](file:///home/sajjad/Documents/nextjs-starter/app/(main)/users/page.tsx)
+- [ ] Create service 
+- [ ] Create hooks (Remember: No manual error handling for API calls)
+- [ ] Create types
+- [ ] Create page component
+- [ ] Register route in `app/routes.tsx`
 
 ---
 
 ## 🎯 Best Practices
 
-1. **Follow the users feature pattern** - It's the reference implementation
-2. **Use DialogTrigger** - No useState for dialog open/close
-3. **Invalidate queries** - Refresh data after mutations
-4. **Toast notifications** - Show success/error messages
-5. **onSuccess callback** - Pass to columns and dialogs for refetch
-6. **Zod validation** - Define schemas for forms
-7. **TypeScript types** - Define domain types
+1. **Centralized Error Handling**: Trust the `http.ts` interceptor. Don't catch errors in hooks just to show a toast.
+2. **Invalidate queries**: Always refresh data after mutations.
+3. **Zod validation**: Validate forms before submission.

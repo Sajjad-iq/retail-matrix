@@ -42,13 +42,7 @@ export function useLogin() {
 
                 // Invalidate and refetch user query
                 queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-            } else {
-                toast.error(result.message || 'فشل تسجيل الدخول');
             }
-        },
-        onError: (error: any) => {
-            console.error('[useLogin] Login error:', error);
-            toast.error(error.message || 'فشل تسجيل الدخول');
         },
     });
 }
@@ -62,20 +56,7 @@ export function useRegister() {
         onSuccess: (result) => {
             if (result.success) {
                 toast.success(result.message || 'تم التسجيل بنجاح! يمكنك الآن تسجيل الدخول');
-            } else {
-                toast.error(result.message || 'فشل التسجيل');
-
-                // Show validation errors if any
-                if (result.errors) {
-                    Object.entries(result.errors).forEach(([field, messages]) => {
-                        messages.forEach(msg => toast.error(`${field}: ${msg}`));
-                    });
-                }
             }
-        },
-        onError: (error: any) => {
-            console.error('[useRegister] Register error:', error);
-            toast.error(error.message || 'فشل التسجيل');
         },
     });
 }
