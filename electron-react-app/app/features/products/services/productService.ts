@@ -1,6 +1,7 @@
 import { httpService } from '@/app/lib/config/http';
 import { ApiResponse, PagedResult, PaginationParams } from '@/app/lib/types/global';
 import { ProductWithPackagingsDto } from '../lib/types';
+import { CreateProductRequest } from '../lib/validations';
 
 export const productService = {
     getMyProducts: async (params: PaginationParams = {}) => {
@@ -8,5 +9,10 @@ export const productService = {
             params,
         });
         return response.data.data;
-    }
+    },
+
+    createProduct: async (data: CreateProductRequest) => {
+        const response = await httpService.getAxiosInstance().post<ApiResponse<string>>('/api/ProductPackaging', data);
+        return response.data.data;
+    },
 };

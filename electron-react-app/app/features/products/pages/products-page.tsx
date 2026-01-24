@@ -5,6 +5,8 @@ import { useMyProducts } from '../hooks/useProductActions';
 import { PaginationParams } from '@/app/lib/types/global';
 import { Button } from '@/app/components/ui/button';
 import { Plus } from 'lucide-react';
+import { createRenderSubRow } from '../components/packaging-table';
+import { CreateProductDialog } from '../components/CreateProductDialog';
 
 export default function ProductsPage() {
     const [page, setPage] = useState(0);
@@ -33,6 +35,9 @@ export default function ProductsPage() {
         [page, pageSize, productsData]
     );
 
+    // Create renderSubRow function for packagings
+    const renderSubRow = useMemo(() => createRenderSubRow(), []);
+
     return (
         <div className="flex h-full flex-col space-y-4 p-4 md:p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
@@ -43,10 +48,12 @@ export default function ProductsPage() {
                     </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                    <Button>
-                        <Plus className="ml-2 h-4 w-4" />
-                        إضافة منتج
-                    </Button>
+                    <CreateProductDialog>
+                        <Button>
+                            <Plus className="ml-2 h-4 w-4" />
+                            إضافة منتج
+                        </Button>
+                    </CreateProductDialog>
                 </div>
             </div>
 
@@ -57,6 +64,9 @@ export default function ProductsPage() {
                     isLoading={isLoading}
                     pagination={pagination}
                     showToolbar={true}
+                    meta={{
+                        renderSubRow,
+                    }}
                 />
             </div>
         </div>

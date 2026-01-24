@@ -1,7 +1,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
-import { MoreHorizontal, Package, Barcode as BarcodeIcon, Calendar } from 'lucide-react';
+import { MoreHorizontal, Package, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { ProductWithPackagingsDto, ProductStatus } from '../lib/types';
 import {
     DropdownMenu,
@@ -11,12 +11,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/app/components/ui/tooltip';
 
 const getStatusBadge = (status: ProductStatus) => {
     switch (status) {
@@ -44,6 +38,34 @@ const formatDate = (dateString: string) => {
 
 export const columns: ColumnDef<ProductWithPackagingsDto>[] = [
     {
+        id: 'expander',
+        header: () => null,
+        cell: ({ row }) => {
+            const hasPackagings = row.original.packagings && row.original.packagings.length > 0;
+
+            if (!hasPackagings) {
+                return <div className="w-8" />;
+            }
+
+            return (
+                <div className="flex items-center justify-center">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => row.toggleExpanded()}
+                        className="h-8 w-8 p-0"
+                    >
+                        {row.getIsExpanded() ? (
+                            <ChevronUp className="h-4 w-4" />
+                        ) : (
+                            <ChevronDown className="h-4 w-4" />
+                        )}
+                    </Button>
+                </div>
+            );
+        },
+    },
+    {
         accessorKey: 'name',
         header: 'اسم المنتج',
         cell: ({ row }) => {
@@ -59,43 +81,12 @@ export const columns: ColumnDef<ProductWithPackagingsDto>[] = [
                     </div>
                     <div className="flex flex-col">
                         <span className="font-medium text-sm">{product.name}</span>
-                        <span className="text-xs text-muted-foreground line-clamp-1">
+                        <span className="text-xs text-muted-foreground">
                             {product.packagings?.length || 0} وحدات بيع
                         </span>
                     </div>
                 </div>
             )
-        },
-    },
-    {
-        id: 'barcode',
-        header: 'الباركود',
-        cell: ({ row }) => {
-            const packagings = row.original.packagings;
-            if (!packagings || packagings.length === 0) {
-                return <span className="text-muted-foreground text-sm">-</span>;
-            }
-
-            const firstBarcode = packagings[0].barcode;
-            if (!firstBarcode?.value) {
-                return <span className="text-muted-foreground text-sm">-</span>;
-            }
-
-            return (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div className="flex items-center gap-2 cursor-pointer">
-                                <BarcodeIcon className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm font-mono">{firstBarcode.value}</span>
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>انقر للنسخ</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            );
         },
     },
     {
@@ -107,29 +98,34 @@ export const columns: ColumnDef<ProductWithPackagingsDto>[] = [
         },
     },
     {
-        id: 'packagings',
-        header: 'وحدات البيع',
+        id: 'sellingPrice',
+        header: 'سعر البيع',
         cell: ({ row }) => {
             const packagings = row.original.packagings;
             if (!packagings || packagings.length === 0) {
-                return <span className="text-muted-foreground text-sm">لا توجد وحدات</span>;
+                return <span className="text-muted-foreground text-sm">-</span>;
             }
 
+            const firstUnit = packagings[0];
+            if (packagings.length === 1) {
+                return (
+                    <div className="font-medium text-sm">
+                        {firstUnit.sellingPrice.amount.toLocaleString()} {firstUnit.sellingPrice.currency}
+                    </div>
+                );
+            }
+
+            // Show price range if multiple packagings
+            const prices = packagings.map(p => p.sellingPrice.amount);
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+
             return (
-                <div className="flex flex-col gap-1 max-w-[200px]">
-                    {packagings.slice(0, 2).map((pkg) => (
-                        <div key={pkg.id} className="flex items-center justify-between gap-2 text-xs">
-                            <span className="truncate">{pkg.name}</span>
-                            <span className="font-medium whitespace-nowrap">
-                                {pkg.sellingPrice.amount.toLocaleString()} {pkg.sellingPrice.currency}
-                            </span>
-                        </div>
-                    ))}
-                    {packagings.length > 2 && (
-                        <span className="text-xs text-muted-foreground">
-                            +{packagings.length - 2} وحدات أخرى
-                        </span>
-                    )}
+                <div className="text-sm">
+                    <span className="font-medium">{minPrice.toLocaleString()}</span>
+                    <span className="text-muted-foreground mx-1">-</span>
+                    <span className="font-medium">{maxPrice.toLocaleString()}</span>
+                    <span className="text-muted-foreground mr-1">{firstUnit.sellingPrice.currency}</span>
                 </div>
             );
         },
