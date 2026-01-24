@@ -33,3 +33,23 @@ export interface ApiResponse<T = any> {
     errorCode?: string;
     errors?: Record<string, string[]>;
 }
+
+export enum OrganizationStatus {
+    Active = 0,
+    Suspended = 1,
+    Pending = 2,
+    Closed = 3
+}
+
+export interface Organization {
+    id: string;
+    name: string;
+    domain: string;
+    description: string;
+    address: string;
+    phone: string;
+    status: OrganizationStatus;
+    createdBy: string;
+    logoUrl?: string;
+    insertDate: string;
+}

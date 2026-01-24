@@ -13,6 +13,8 @@ import {
     SidebarMenuItem,
 } from '@/app/components/ui/sidebar';
 
+import { OrganizationSwitcher } from '@/app/features/organizations/components/OrganizationSwitcher';
+
 const menuItems = [
     {
         title: 'Home',
@@ -39,6 +41,9 @@ export function AppSidebar() {
     return (
         <Sidebar>
             <SidebarContent>
+                {/* Organization Switcher */}
+                <OrganizationSwitcher />
+
                 <SidebarGroup>
                     <SidebarGroupLabel>Application</SidebarGroupLabel>
                     <SidebarGroupContent>

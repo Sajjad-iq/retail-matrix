@@ -4,6 +4,7 @@ import { MainLayout } from '@/app/components/layouts/MainLayout';
 import LoginPage from '@/app/features/auth/pages/login';
 import RegisterPage from '@/app/features/auth/pages/register';
 import { ProtectedRoute } from '@/app/features/auth/components/ProtectedRoute';
+import SetupOrganizationPage from '@/app/features/organizations/pages/setup-organization';
 
 // Home page placeholder
 function HomePage() {
@@ -52,6 +53,10 @@ export const router = createHashRouter([
         // Protected routes (with sidebar)
         element: <ProtectedRoute />,
         children: [
+            {
+                path: '/setup-organization',
+                element: <SetupOrganizationPage />,
+            },
             {
                 element: <AppLayout />,
                 children: [
