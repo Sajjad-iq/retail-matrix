@@ -54,7 +54,7 @@ export function DataTableContent<TData, TValue>({
                   <TableHead
                     key={header.id}
                     className={cn(
-                      'font-semibold',
+                      'font-semibold text-start',
                       tableMeta?.tableHeaderCellClassName,
                     )}
                   >
@@ -97,7 +97,7 @@ export function DataTableContent<TData, TValue>({
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
-                        className={cn(tableMeta?.tableBodyCellClassName)}
+                        className={cn('text-start', tableMeta?.tableBodyCellClassName)}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

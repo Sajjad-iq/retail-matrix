@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Domains.Products.Enums;
 
 namespace Domains.Shared.ValueObjects;
@@ -17,7 +18,8 @@ public sealed class Discount : IEquatable<Discount>
         Type = DiscountType.None;
     }
 
-    private Discount(decimal value, DiscountType type)
+    [JsonConstructor]
+    public Discount(decimal value, DiscountType type)
     {
         Value = value;
         Type = type;

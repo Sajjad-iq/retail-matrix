@@ -28,6 +28,8 @@ function PackagingSubRows({
 
     const subRows = subTable.getRowModel().rows;
 
+    const headerGroups = subTable.getHeaderGroups();
+
     if (subRows.length === 0) {
         return (
             <TableRow>
@@ -42,13 +44,32 @@ function PackagingSubRows({
 
     return (
         <>
+            {/* Header Row */}
+            {headerGroups.map((headerGroup) => (
+                <TableRow
+                    key={headerGroup.id}
+                    className="bg-muted/50 border-muted"
+                >
+                    {headerGroup.headers.map((header) => (
+                        <TableCell
+                            key={header.id}
+                            className="text-start whitespace-nowrap text-xs font-semibold text-muted-foreground py-2"
+                        >
+                            {header.isPlaceholder
+                                ? null
+                                : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableCell>
+                    ))}
+                </TableRow>
+            ))}
+            {/* Data Rows */}
             {subRows.map((row) => (
                 <TableRow
                     key={row.id}
                     className="bg-muted/30 border-muted transition-colors hover:bg-muted/50"
                 >
                     {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="text-center whitespace-nowrap">
+                        <TableCell key={cell.id} className="text-start whitespace-nowrap">
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                     ))}
