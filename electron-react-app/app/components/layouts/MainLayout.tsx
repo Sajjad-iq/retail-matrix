@@ -13,8 +13,8 @@ interface MainLayoutProps {
  */
 export function MainLayout({ children }: MainLayoutProps) {
     return (
-        <SidebarProvider>
-            <div className="flex h-screen w-full overflow-hidden">
+        <SidebarProvider className="min-h-full h-full">
+            <div className="flex h-full w-full overflow-hidden">
                 <AppSidebar />
                 <main className="flex-1 flex flex-col overflow-hidden">
                     {/* Header with sidebar trigger */}
