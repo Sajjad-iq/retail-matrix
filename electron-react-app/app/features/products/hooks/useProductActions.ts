@@ -20,9 +20,6 @@ export const useCreateProduct = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['products'] });
             toast.success('تم إضافة المنتج بنجاح');
-        },
-        onError: () => {
-            toast.error('حدث خطأ أثناء إضافة المنتج');
-        },
+        }
     });
 };
