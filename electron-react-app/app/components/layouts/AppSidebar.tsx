@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Users, Settings, LogOut } from 'lucide-react';
+import { Home, Users, Settings, LogOut, Package } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -14,12 +14,18 @@ import {
 } from '@/app/components/ui/sidebar';
 
 import { OrganizationSwitcher } from '@/app/features/organizations/components/OrganizationSwitcher';
+import { Link } from 'react-router';
 
 const menuItems = [
     {
         title: 'الرئيسية',
         url: '/',
         icon: Home,
+    },
+    {
+        title: 'المنتجات',
+        url: '/products',
+        icon: Package,
     },
     {
         title: 'المستخدمين',
@@ -51,10 +57,10 @@ export function AppSidebar() {
                             {menuItems.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
-                                        <a href={item.url}>
+                                        <Link to={item.url}>
                                             <item.icon />
                                             <span>{item.title}</span>
-                                        </a>
+                                        </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))}

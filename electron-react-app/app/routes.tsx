@@ -5,6 +5,7 @@ import LoginPage from '@/app/features/auth/pages/login';
 import RegisterPage from '@/app/features/auth/pages/register';
 import { ProtectedRoute } from '@/app/features/auth/components/ProtectedRoute';
 import SetupOrganizationPage from '@/app/features/organizations/pages/setup-organization';
+import ProductsPage from '@/app/features/products/pages/products-page';
 
 // Home page placeholder
 function HomePage() {
@@ -63,6 +64,10 @@ export const router = createHashRouter([
                     {
                         path: '/',
                         element: <HomePage />,
+                    },
+                    {
+                        path: '/products',
+                        element: <ProductsPage />,
                     },
                 ],
             },
