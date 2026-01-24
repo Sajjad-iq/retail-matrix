@@ -14,13 +14,28 @@ class HttpService {
       },
     });
 
-    // Request interceptor - Add auth token
+    // Request interceptor - Add auth token and organization header
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
         const token = localStorage.getItem('accessToken');
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // Add C-Organization header from localStorage
+        const organizationStorage = localStorage.getItem('organization-storage');
+        if (organizationStorage && config.headers) {
+          try {
+            const parsed = JSON.parse(organizationStorage);
+            const organizationId = parsed?.state?.selectedOrganizationId;
+            if (organizationId) {
+              config.headers['C-Organization'] = organizationId;
+            }
+          } catch {
+            // Ignore JSON parse errors
+          }
+        }
+
         return config;
       },
       (error) => {
