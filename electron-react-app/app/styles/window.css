@@ -64,10 +64,7 @@
   position: relative;
 }
 
-/* Assign last children to use full height of window content */
-.window-content div:last-child {
-  height: 100%;
-}
+
 
 .window-titlebar {
   display: flex;
@@ -222,6 +219,7 @@
 .platform-darwin .window-titlebar-title {
   margin-left: var(--window-mac-titlebar-controls-margin);
 }
+
 .platform-darwin .window-titlebar-menu {
   left: var(--window-mac-titlebar-controls-margin);
 }

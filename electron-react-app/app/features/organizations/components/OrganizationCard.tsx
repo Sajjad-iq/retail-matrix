@@ -66,12 +66,12 @@ export function OrganizationCard({ organization, isSelected, onSelect }: Organiz
             </p>
 
             <div className="space-y-2 text-sm text-muted-foreground w-full">
-                <div className="flex items-center w-full" dir="ltr">
+                <div className="flex items-center w-full" >
                     <Globe className="w-4 h-4 me-3 text-primary/70" />
                     <span className="text-left">{organization.domain}</span>
                 </div>
                 {organization.phone && (
-                    <div className="flex items-center w-full" dir="ltr">
+                    <div className="flex items-center w-full" >
                         <Phone className="w-4 h-4 me-3 text-primary/70" />
                         <span className="text-left">{organization.phone}</span>
                     </div>
