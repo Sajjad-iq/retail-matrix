@@ -25,6 +25,18 @@ builder.Services.AddHttpContextAccessor();
 // JWT Authentication & Authorization
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // Controllers with global exception filter
 builder.Services.AddControllers(options =>
 {
@@ -50,6 +62,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowReactApp");
 
 app.UseAuthentication();
 app.UseAuthorization();

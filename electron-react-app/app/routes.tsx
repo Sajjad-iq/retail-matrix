@@ -3,6 +3,7 @@ import { BlankLayout } from '@/app/components/layouts/BlankLayout';
 import { MainLayout } from '@/app/components/layouts/MainLayout';
 import LoginPage from '@/app/features/auth/pages/login';
 import RegisterPage from '@/app/features/auth/pages/register';
+import { ProtectedRoute } from '@/app/features/auth/components/ProtectedRoute';
 
 // Home page placeholder
 function HomePage() {
@@ -49,11 +50,16 @@ export const router = createHashRouter([
     },
     {
         // Protected routes (with sidebar)
-        element: <AppLayout />,
+        element: <ProtectedRoute />,
         children: [
             {
-                path: '/',
-                element: <HomePage />,
+                element: <AppLayout />,
+                children: [
+                    {
+                        path: '/',
+                        element: <HomePage />,
+                    },
+                ],
             },
         ],
     },
