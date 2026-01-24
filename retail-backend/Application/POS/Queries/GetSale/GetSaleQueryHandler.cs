@@ -1,32 +1,27 @@
 using Application.Common.Exceptions;
+using Application.Common.Services;
 using Application.POS.DTOs;
 using Domains.Sales.Repositories;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 
 namespace Application.POS.Queries.GetSale;
 
 public class GetSaleQueryHandler : IRequestHandler<GetSaleQuery, SaleDto>
 {
     private readonly ISaleRepository _saleRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
 
     public GetSaleQueryHandler(
         ISaleRepository saleRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IOrganizationContext organizationContext)
     {
         _saleRepository = saleRepository;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
     }
 
     public async Task<SaleDto> Handle(GetSaleQuery request, CancellationToken cancellationToken)
     {
-        // Extract organization ID from JWT claims
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
+        var organizationId = _organizationContext.OrganizationId;
 
         // Get the sale
         var sale = await _saleRepository.GetByIdAsync(request.SaleId, cancellationToken);

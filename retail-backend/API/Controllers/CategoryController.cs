@@ -2,6 +2,7 @@ using API.Models;
 using Application.Products.Commands.CreateCategory;
 using Application.Products.Queries.GetCategoryById;
 using Application.Products.Queries.GetMyCategories;
+using Infrastructure.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ namespace API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[OrganizationAuthorize]
 public class CategoryController : ControllerBase
 {
     private readonly IMediator _mediator;

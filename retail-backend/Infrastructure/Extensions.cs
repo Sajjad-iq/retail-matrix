@@ -33,6 +33,7 @@ public static class Extensions
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<ICurrencyConversionService, CurrencyConversionService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IOrganizationContext, OrganizationContext>();
 
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();

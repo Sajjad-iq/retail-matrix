@@ -1,42 +1,30 @@
-using Application.Common.Exceptions;
+using Application.Common.Services;
 using Domains.Inventory.Entities;
 using Domains.Inventory.Repositories;
 using MediatR;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 
 namespace Application.Inventory.Commands.CreateInventoryOperation;
 
 public class CreateInventoryOperationCommandHandler : IRequestHandler<CreateInventoryOperationCommand, Guid>
 {
     private readonly IInventoryOperationRepository _inventoryOperationRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
 
     public CreateInventoryOperationCommandHandler(
         IInventoryOperationRepository inventoryOperationRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IOrganizationContext organizationContext)
     {
         _inventoryOperationRepository = inventoryOperationRepository;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
     }
 
     public async Task<Guid> Handle(CreateInventoryOperationCommand request, CancellationToken cancellationToken)
     {
-        // 1. Get current user ID from claims
-        var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            throw new UnauthorizedException("المستخدم غير مصرح له");
-        }
+        // 1. Get current user ID and organization ID from context
+        var userId = _organizationContext.UserId;
+        var organizationId = _organizationContext.OrganizationId;
 
-        // 2. Get organization ID from claims (assuming it's stored in claims)
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
-
-        // 3. Create inventory operation using factory method
+        // 2. Create inventory operation using factory method
         var operation = InventoryOperation.Create(
             operationType: request.OperationType,
             operationNumber: request.OperationNumber,
@@ -47,11 +35,11 @@ public class CreateInventoryOperationCommandHandler : IRequestHandler<CreateInve
             notes: request.Notes
         );
 
-        // 4. Persist operation
+        // 3. Persist operation
         await _inventoryOperationRepository.AddAsync(operation, cancellationToken);
         await _inventoryOperationRepository.SaveChangesAsync(cancellationToken);
 
-        // 5. Return operation ID
+        // 4. Return operation ID
         return operation.Id;
     }
 }

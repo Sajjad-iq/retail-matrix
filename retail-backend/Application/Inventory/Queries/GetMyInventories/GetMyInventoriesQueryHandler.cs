@@ -1,11 +1,9 @@
-using Application.Common.Exceptions;
+using Application.Common.Services;
 using Application.Inventory.DTOs;
 using AutoMapper;
 using Domains.Inventory.Repositories;
 using Domains.Shared.Base;
 using MediatR;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
 namespace Application.Inventory.Queries.GetMyInventories;
@@ -14,26 +12,21 @@ public class GetMyInventoriesQueryHandler : IRequestHandler<GetMyInventoriesQuer
 {
     private readonly IInventoryRepository _inventoryRepository;
     private readonly IMapper _mapper;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
 
     public GetMyInventoriesQueryHandler(
         IInventoryRepository inventoryRepository,
         IMapper mapper,
-        IHttpContextAccessor httpContextAccessor)
+        IOrganizationContext organizationContext)
     {
         _inventoryRepository = inventoryRepository;
         _mapper = mapper;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
     }
 
     public async Task<PagedResult<InventoryDto>> Handle(GetMyInventoriesQuery request, CancellationToken cancellationToken)
     {
-        // Get organization ID from claims
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
+        var organizationId = _organizationContext.OrganizationId;
 
         var pagingParams = new PagingParams
         {

@@ -26,7 +26,7 @@ public class JwtTokenService : IJwtTokenService
         _expirationMinutes = int.Parse(configuration["Jwt:ExpirationMinutes"] ?? "60");
     }
 
-    public string GenerateAccessToken(User user)
+    public string GenerateAccessToken(User user, IEnumerable<Guid>? ownedOrganizationIds = null)
     {
         var claims = new List<Claim>
         {
@@ -42,10 +42,17 @@ public class JwtTokenService : IJwtTokenService
             claims.Add(new Claim(ClaimTypes.Role, role.ToString()));
         }
 
-        // Add organization if exists
+        // Add member organization if exists (employee)
         if (!string.IsNullOrEmpty(user.MemberOfOrganization))
         {
-            claims.Add(new Claim("OrganizationId", user.MemberOfOrganization));
+            claims.Add(new Claim("MemberOfOrganization", user.MemberOfOrganization));
+        }
+
+        // Add owned organization IDs (business owner)
+        if (ownedOrganizationIds != null && ownedOrganizationIds.Any())
+        {
+            var ownedOrgIds = string.Join(",", ownedOrganizationIds);
+            claims.Add(new Claim("OwnedOrganizations", ownedOrgIds));
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));

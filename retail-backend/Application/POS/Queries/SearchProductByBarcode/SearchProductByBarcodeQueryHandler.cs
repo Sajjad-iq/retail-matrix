@@ -1,9 +1,8 @@
-using Application.Common.Exceptions;
+using Application.Common.Services;
 using Application.POS.DTOs;
 using Domains.Products.Repositories;
 using Domains.Stocks.Repositories;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 
 namespace Application.POS.Queries.SearchProductByBarcode;
 
@@ -11,25 +10,21 @@ public class SearchProductByBarcodeQueryHandler : IRequestHandler<SearchProductB
 {
     private readonly IProductPackagingRepository _productPackagingRepository;
     private readonly IStockRepository _stockRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
 
     public SearchProductByBarcodeQueryHandler(
         IProductPackagingRepository productPackagingRepository,
         IStockRepository stockRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IOrganizationContext organizationContext)
     {
         _productPackagingRepository = productPackagingRepository;
         _stockRepository = stockRepository;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
     }
 
     public async Task<PosProductDto?> Handle(SearchProductByBarcodeQuery request, CancellationToken cancellationToken)
     {
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
+        var organizationId = _organizationContext.OrganizationId;
 
         // Find product packaging by barcode
         var packaging = await _productPackagingRepository.GetByBarcodeAsync(request.Barcode, cancellationToken);

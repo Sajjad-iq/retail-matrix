@@ -6,6 +6,7 @@ using Application.Stocks.Queries.GetMyBatches;
 using Application.Stocks.Queries.GetMyStocks;
 using Application.Stocks.Queries.GetStockById;
 using Domains.Stocks.Enums;
+using Infrastructure.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,7 @@ namespace API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[OrganizationAuthorize]
 public class StockController : ControllerBase
 {
     private readonly IMediator _mediator;

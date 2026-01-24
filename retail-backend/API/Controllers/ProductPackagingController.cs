@@ -3,6 +3,7 @@ using Application.Products.Commands.CreateProductPackaging;
 using Application.Products.Queries.GetProductPackagingById;
 using Application.Products.Queries.GetProductPackagingByBarcode;
 using Application.Products.Queries.GetMyProducts;
+using Infrastructure.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +13,7 @@ namespace API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[OrganizationAuthorize]
 public class ProductPackagingController : ControllerBase
 {
     private readonly IMediator _mediator;

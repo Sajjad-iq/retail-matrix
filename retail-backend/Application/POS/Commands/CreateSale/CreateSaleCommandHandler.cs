@@ -1,4 +1,5 @@
 using Application.Common.Exceptions;
+using Application.Common.Services;
 using Domains.Common.Currency.Services;
 using Domains.Inventory.Repositories;
 using Domains.Products.Repositories;
@@ -8,7 +9,6 @@ using Domains.Shared.ValueObjects;
 using Domains.Stocks.Repositories;
 using Infrastructure.Data;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 
 namespace Application.POS.Commands.CreateSale;
 
@@ -18,7 +18,7 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Guid>
     private readonly IProductPackagingRepository _productPackagingRepository;
     private readonly IStockRepository _stockRepository;
     private readonly ICurrencyConversionService _currencyService;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
     private readonly IInventoryRepository _inventoryRepository;
     private readonly ApplicationDbContext _dbContext;
 
@@ -27,7 +27,7 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Guid>
         IProductPackagingRepository productPackagingRepository,
         IStockRepository stockRepository,
         ICurrencyConversionService currencyService,
-        IHttpContextAccessor httpContextAccessor,
+        IOrganizationContext organizationContext,
         IInventoryRepository inventoryRepository,
         ApplicationDbContext dbContext)
     {
@@ -35,26 +35,16 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Guid>
         _productPackagingRepository = productPackagingRepository;
         _stockRepository = stockRepository;
         _currencyService = currencyService;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
         _inventoryRepository = inventoryRepository;
         _dbContext = dbContext;
     }
 
     public async Task<Guid> Handle(CreateSaleCommand request, CancellationToken cancellationToken)
     {
-        // Extract organization ID and user ID from JWT claims
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("UserId")?.Value;
-
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
-
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            throw new UnauthorizedException("معرف المستخدم مطلوب");
-        }
+        // Extract organization ID and user ID from context
+        var organizationId = _organizationContext.OrganizationId;
+        var userId = _organizationContext.UserId;
 
         // Validate inventory exists and belongs to organization
         var inventory = await _inventoryRepository.GetByIdAsync(request.InventoryId, cancellationToken);

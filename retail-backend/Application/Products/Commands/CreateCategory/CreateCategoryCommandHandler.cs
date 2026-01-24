@@ -1,32 +1,28 @@
 using Application.Common.Exceptions;
+using Application.Common.Services;
 using Domains.Products.Entities;
 using Domains.Products.Repositories;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 
 namespace Application.Products.Commands.CreateCategory;
 
 public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryCommand, Guid>
 {
     private readonly ICategoryRepository _categoryRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
 
     public CreateCategoryCommandHandler(
         ICategoryRepository categoryRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IOrganizationContext organizationContext)
     {
         _categoryRepository = categoryRepository;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
     }
 
     public async Task<Guid> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
     {
-        // 1. Get organization ID from claims
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
+        // 1. Get organization ID from context
+        var organizationId = _organizationContext.OrganizationId;
 
         // 2. Verify parent category exists if provided
         if (request.ParentCategoryId.HasValue)

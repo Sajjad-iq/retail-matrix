@@ -1,32 +1,27 @@
-using Application.Common.Exceptions;
+using Application.Common.Services;
 using Application.POS.DTOs;
 using Domains.Sales.Repositories;
 using Domains.Shared.Base;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 
 namespace Application.POS.Queries.GetPosSalesHistory;
 
 public class GetPosSalesHistoryQueryHandler : IRequestHandler<GetPosSalesHistoryQuery, PagedResult<PosSaleListDto>>
 {
     private readonly ISaleRepository _saleRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
 
     public GetPosSalesHistoryQueryHandler(
         ISaleRepository saleRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IOrganizationContext organizationContext)
     {
         _saleRepository = saleRepository;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
     }
 
     public async Task<PagedResult<PosSaleListDto>> Handle(GetPosSalesHistoryQuery request, CancellationToken cancellationToken)
     {
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
+        var organizationId = _organizationContext.OrganizationId;
 
         var pagingParams = new PagingParams
         {

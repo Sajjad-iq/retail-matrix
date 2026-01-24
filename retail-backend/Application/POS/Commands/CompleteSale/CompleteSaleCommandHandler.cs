@@ -1,9 +1,9 @@
 using Application.Common.Exceptions;
+using Application.Common.Services;
 using Application.POS.DTOs;
 using Domains.Sales.Repositories;
 using Domains.Stocks.Repositories;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 
 namespace Application.POS.Commands.CompleteSale;
 
@@ -11,25 +11,21 @@ public class CompleteSaleCommandHandler : IRequestHandler<CompleteSaleCommand, C
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IStockRepository _stockRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
 
     public CompleteSaleCommandHandler(
         ISaleRepository saleRepository,
         IStockRepository stockRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IOrganizationContext organizationContext)
     {
         _saleRepository = saleRepository;
         _stockRepository = stockRepository;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
     }
 
     public async Task<CompletedSaleDto> Handle(CompleteSaleCommand request, CancellationToken cancellationToken)
     {
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
+        var organizationId = _organizationContext.OrganizationId;
 
         var sale = await _saleRepository.GetByIdWithTrackingAsync(request.SaleId, cancellationToken);
         if (sale == null)

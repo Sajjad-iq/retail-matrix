@@ -9,6 +9,7 @@ using Application.POS.Queries.GetSale;
 using Application.POS.Queries.SearchProductByBarcode;
 using Domains.Sales.Enums;
 using Domains.Shared.Base;
+using Infrastructure.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ namespace API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[OrganizationAuthorize]
 public class PosController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -1,10 +1,9 @@
-using Application.Common.Exceptions;
+using Application.Common.Services;
 using Application.Products.DTOs;
 using AutoMapper;
 using Domains.Products.Repositories;
 using Domains.Shared.Base;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 
 namespace Application.Products.Queries.GetMyCategories;
 
@@ -12,26 +11,21 @@ public class GetMyCategoriesQueryHandler : IRequestHandler<GetMyCategoriesQuery,
 {
     private readonly ICategoryRepository _categoryRepository;
     private readonly IMapper _mapper;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
 
     public GetMyCategoriesQueryHandler(
         ICategoryRepository categoryRepository,
         IMapper mapper,
-        IHttpContextAccessor httpContextAccessor)
+        IOrganizationContext organizationContext)
     {
         _categoryRepository = categoryRepository;
         _mapper = mapper;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
     }
 
     public async Task<PagedResult<CategoryDto>> Handle(GetMyCategoriesQuery request, CancellationToken cancellationToken)
     {
-        // Get organization ID from claims
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
+        var organizationId = _organizationContext.OrganizationId;
 
         // Get all categories for organization
         var categories = await _categoryRepository.GetByOrganizationAsync(organizationId, cancellationToken);

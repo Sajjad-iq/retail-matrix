@@ -1,11 +1,11 @@
 using Application.Common.Exceptions;
+using Application.Common.Services;
 using Domains.Common.Currency.Services;
 using Domains.Products.Repositories;
 using Domains.Sales.Repositories;
 using Domains.Shared.ValueObjects;
 using Domains.Stocks.Repositories;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 
 namespace Application.POS.Commands.UpdateSale;
 
@@ -15,30 +15,25 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, bool>
     private readonly IProductPackagingRepository _productPackagingRepository;
     private readonly IStockRepository _stockRepository;
     private readonly ICurrencyConversionService _currencyService;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
 
     public UpdateSaleCommandHandler(
         ISaleRepository saleRepository,
         IProductPackagingRepository productPackagingRepository,
         IStockRepository stockRepository,
         ICurrencyConversionService currencyService,
-        IHttpContextAccessor httpContextAccessor)
+        IOrganizationContext organizationContext)
     {
         _saleRepository = saleRepository;
         _productPackagingRepository = productPackagingRepository;
         _stockRepository = stockRepository;
         _currencyService = currencyService;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
     }
 
     public async Task<bool> Handle(UpdateSaleCommand request, CancellationToken cancellationToken)
     {
-        // Extract organization ID from JWT claims
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
+        var organizationId = _organizationContext.OrganizationId;
 
         // Get the sale with tracking for update
         var sale = await _saleRepository.GetByIdWithTrackingAsync(request.SaleId, cancellationToken);

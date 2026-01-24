@@ -2,6 +2,8 @@ using Application.Auth.DTOs;
 using Application.Common.Exceptions;
 using Application.Common.Services;
 using AutoMapper;
+using Domains.Organizations.Repositories;
+using Domains.Users.Enums;
 using Domains.Users.Repositories;
 using Domains.Users.Services;
 using MediatR;
@@ -11,17 +13,20 @@ namespace Application.Auth.Commands.Login;
 public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IOrganizationRepository _organizationRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IMapper _mapper;
 
     public LoginCommandHandler(
         IUserRepository userRepository,
+        IOrganizationRepository organizationRepository,
         IPasswordHasher passwordHasher,
         IJwtTokenService jwtTokenService,
         IMapper mapper)
     {
         _userRepository = userRepository;
+        _organizationRepository = organizationRepository;
         _passwordHasher = passwordHasher;
         _jwtTokenService = jwtTokenService;
         _mapper = mapper;
@@ -63,15 +68,23 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
         await _userRepository.UpdateAsync(user, cancellationToken);
         await _userRepository.SaveChangesAsync(cancellationToken);
 
-        // 6. Generate JWT tokens
-        var accessToken = _jwtTokenService.GenerateAccessToken(user);
+        // 6. Fetch owned organizations for business owners
+        IEnumerable<Guid>? ownedOrganizationIds = null;
+        if (user.AccountType == AccountType.BusinessOwner)
+        {
+            var ownedOrganizations = await _organizationRepository.GetByCreatorAsync(user.Id, cancellationToken);
+            ownedOrganizationIds = ownedOrganizations.Select(o => o.Id);
+        }
+
+        // 7. Generate JWT tokens with organization info
+        var accessToken = _jwtTokenService.GenerateAccessToken(user, ownedOrganizationIds);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
         var expiresAt = _jwtTokenService.GetTokenExpiration();
 
-        // 7. Map user to DTO
+        // 8. Map user to DTO
         var userDto = _mapper.Map<UserDto>(user);
 
-        // 8. Return token response
+        // 9. Return token response
         return new TokenDto
         {
             AccessToken = accessToken,

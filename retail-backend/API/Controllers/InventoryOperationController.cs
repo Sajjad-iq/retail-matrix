@@ -3,6 +3,7 @@ using Application.Inventory.Commands.CreateInventoryOperation;
 using Application.Inventory.Queries.GetInventoryOperationById;
 using Application.Inventory.Queries.GetMyInventoryOperations;
 using Application.Inventory.Queries.GetMyInventories;
+using Infrastructure.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +13,7 @@ namespace API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[OrganizationAuthorize]
 public class InventoryOperationController : ControllerBase
 {
     private readonly IMediator _mediator;

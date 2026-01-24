@@ -1,31 +1,27 @@
 using Application.Common.Exceptions;
+using Application.Common.Services;
 using Domains.Stocks.Repositories;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 
 namespace Application.Stocks.Commands.AdjustStockQuantity;
 
 public class AdjustStockQuantityCommandHandler : IRequestHandler<AdjustStockQuantityCommand, bool>
 {
     private readonly IStockRepository _stockRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
 
     public AdjustStockQuantityCommandHandler(
         IStockRepository stockRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IOrganizationContext organizationContext)
     {
         _stockRepository = stockRepository;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
     }
 
     public async Task<bool> Handle(AdjustStockQuantityCommand request, CancellationToken cancellationToken)
     {
-        // 1. Get organization ID from claims
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
+        // 1. Get organization ID from context
+        var organizationId = _organizationContext.OrganizationId;
 
         // 2. Get stock with batches
         var stock = await _stockRepository.GetWithBatchesAsync(request.StockId, cancellationToken);

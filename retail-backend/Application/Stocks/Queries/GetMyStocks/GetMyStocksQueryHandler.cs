@@ -1,10 +1,10 @@
 using Application.Common.Exceptions;
+using Application.Common.Services;
 using Application.Stocks.DTOs;
 using AutoMapper;
 using Domains.Shared.Base;
 using Domains.Stocks.Repositories;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 
 namespace Application.Stocks.Queries.GetMyStocks;
 
@@ -12,26 +12,22 @@ public class GetMyStocksQueryHandler : IRequestHandler<GetMyStocksQuery, PagedRe
 {
     private readonly IStockRepository _stockRepository;
     private readonly IMapper _mapper;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrganizationContext _organizationContext;
 
     public GetMyStocksQueryHandler(
         IStockRepository stockRepository,
         IMapper mapper,
-        IHttpContextAccessor httpContextAccessor)
+        IOrganizationContext organizationContext)
     {
         _stockRepository = stockRepository;
         _mapper = mapper;
-        _httpContextAccessor = httpContextAccessor;
+        _organizationContext = organizationContext;
     }
 
     public async Task<PagedResult<StockListDto>> Handle(GetMyStocksQuery request, CancellationToken cancellationToken)
     {
-        // 1. Get organization ID from claims
-        var orgIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("OrganizationId")?.Value;
-        if (string.IsNullOrEmpty(orgIdClaim) || !Guid.TryParse(orgIdClaim, out var organizationId))
-        {
-            throw new UnauthorizedException("معرف المؤسسة مطلوب");
-        }
+        // 1. Get organization ID from context
+        var organizationId = _organizationContext.OrganizationId;
 
         var pagingParams = new PagingParams
         {
