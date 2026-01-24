@@ -1,5 +1,3 @@
-'use client';
-
 import { ReactNode } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/app/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';

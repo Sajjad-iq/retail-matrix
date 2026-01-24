@@ -17,17 +17,17 @@ import { OrganizationSwitcher } from '@/app/features/organizations/components/Or
 
 const menuItems = [
     {
-        title: 'Home',
+        title: 'الرئيسية',
         url: '/',
         icon: Home,
     },
     {
-        title: 'Users',
+        title: 'المستخدمين',
         url: '/users',
         icon: Users,
     },
     {
-        title: 'Settings',
+        title: 'الإعدادات',
         url: '/settings',
         icon: Settings,
     },
@@ -39,13 +39,13 @@ export function AppSidebar() {
 
 
     return (
-        <Sidebar>
+        <Sidebar side="right" variant="sidebar" collapsible="icon">
             <SidebarContent>
                 {/* Organization Switcher */}
                 <OrganizationSwitcher />
 
                 <SidebarGroup>
-                    <SidebarGroupLabel>Application</SidebarGroupLabel>
+                    <SidebarGroupLabel>التطبيق</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {menuItems.map((item) => (
@@ -68,7 +68,7 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                         <SidebarMenuButton onClick={handleLogout}>
                             <LogOut />
-                            <span>Logout</span>
+                            <span>تسجيل خروج</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
