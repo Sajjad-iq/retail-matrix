@@ -66,6 +66,8 @@ export default function ProductsPage() {
                     showToolbar={true}
                     meta={{
                         renderSubRow,
+                        tableBodyCellClassName: 'align-top',
+                        tableHeaderCellClassName: 'align-top',
                     }}
                 />
             </div>

@@ -58,7 +58,7 @@ function PackagingSubRows({
                             {headerGroup.headers.map((header) => (
                                 <TableHead
                                     key={header.id}
-                                    className="text-start whitespace-nowrap text-xs font-semibold text-muted-foreground py-2 h-auto"
+                                    className="text-start align-top whitespace-nowrap text-xs font-semibold text-muted-foreground py-2 h-auto"
                                 >
                                     {header.isPlaceholder
                                         ? null
@@ -75,7 +75,7 @@ function PackagingSubRows({
                             className="bg-muted/30 border-muted transition-colors hover:bg-muted/50"
                         >
                             {row.getVisibleCells().map((cell) => (
-                                <TableCell key={cell.id} className="text-start whitespace-nowrap py-2">
+                                <TableCell key={cell.id} className="text-start align-top whitespace-nowrap py-2">
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                 </TableCell>
                             ))}

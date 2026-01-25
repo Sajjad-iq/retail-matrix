@@ -2,6 +2,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { MoreHorizontal, Package, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { formatPrice } from '@/lib/utils';
 import { ProductWithPackagingsDto, ProductStatus } from '../lib/types';
 import {
     DropdownMenu,
@@ -71,7 +72,7 @@ export const columns: ColumnDef<ProductWithPackagingsDto>[] = [
         cell: ({ row }) => {
             const product = row.original;
             return (
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                     <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                         {product.imageUrls && product.imageUrls.length > 0 ? (
                             <img src={product.imageUrls[0]} alt={product.name} className="h-full w-full object-cover" />
@@ -122,7 +123,7 @@ export const columns: ColumnDef<ProductWithPackagingsDto>[] = [
             if (packagings.length === 1) {
                 return (
                     <div className="font-medium text-sm">
-                        {firstUnit.sellingPrice.amount.toLocaleString()} {firstUnit.sellingPrice.currency}
+                        {formatPrice(firstUnit.sellingPrice.amount, firstUnit.sellingPrice.currency)}
                     </div>
                 );
             }
