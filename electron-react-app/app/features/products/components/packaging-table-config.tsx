@@ -6,6 +6,12 @@ import { Badge } from '@/app/components/ui/badge';
 import { formatPrice } from '@/lib/utils';
 import { getUnitLabel, getWeightUnitLabel } from '@/app/lib/constants';
 import { ProductPackagingListDto, ProductStatus, DiscountType } from '../lib/types';
+import { Trash2, Edit } from 'lucide-react';
+import { Button } from '@/app/components/ui/button';
+import { ConfirmDialog } from '@/app/components/ui/confirm-dialog';
+import { CreatePackagingDialog } from './create-packaging-dialog';
+import { useDeletePackaging } from '../hooks/useProductActions';
+import { toast } from 'sonner';
 
 const getStatusBadge = (status: ProductStatus) => {
     switch (status) {
@@ -228,4 +234,57 @@ export const createPackagingTableColumns = (): ColumnDef<ProductPackagingListDto
             return getStatusBadge(status);
         },
     },
+    {
+        id: 'actions',
+        cell: ({ row }) => {
+            return <PackagingActions packaging={row.original} />;
+        },
+    },
 ];
+
+function PackagingActions({ packaging }: { packaging: ProductPackagingListDto }) {
+    const { mutate: deletePackaging, isPending: isDeleting } = useDeletePackaging();
+
+    const handleDelete = () => {
+        deletePackaging(packaging.id);
+    };
+
+    return (
+        <div className="flex items-center gap-1 justify-end">
+            <CreatePackagingDialog
+                productId="" // Not needed for edit
+                productName="" // Not needed for edit if we don't display it or pass it differently
+                packaging={packaging}
+            >
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    title="تعديل وحدة البيع"
+                >
+                    <Edit className="h-4 w-4" />
+                    <span className="sr-only">تعديل وحدة البيع</span>
+                </Button>
+            </CreatePackagingDialog>
+
+            <ConfirmDialog
+                title="هل أنت متأكد من حذف وحدة البيع؟"
+                description={`سيتم حذف وحدة البيع "${packaging.name}". هذا الإجراء لا يمكن التراجع عنه.`}
+                confirmText={isDeleting ? "جاري الحذف..." : "حذف"}
+                cancelText="إلغاء"
+                onConfirm={handleDelete}
+                variant="destructive"
+            >
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    title="حذف وحدة البيع"
+                >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">حذف وحدة البيع</span>
+                </Button>
+            </ConfirmDialog>
+        </div>
+    );
+}

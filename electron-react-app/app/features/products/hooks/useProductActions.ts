@@ -47,3 +47,27 @@ export const useDeleteProduct = () => {
         }
     });
 };
+
+export const useUpdatePackaging = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (data: any) => productService.updatePackaging(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            toast.success('تم تحديث وحدة البيع بنجاح');
+        }
+    });
+};
+
+export const useDeletePackaging = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => productService.deletePackaging(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            toast.success('تم حذف وحدة البيع بنجاح');
+        }
+    });
+};

@@ -2,6 +2,8 @@ using API.Models;
 using Application.Products.Commands.CreateProductPackaging;
 using Application.Products.Commands.UpdateProduct;
 using Application.Products.Commands.DeleteProduct;
+using Application.Products.Commands.UpdateProductPackaging;
+using Application.Products.Commands.DeleteProductPackaging;
 using Application.Products.Queries.GetProductPackagingById;
 using Application.Products.Queries.GetProductPackagingByBarcode;
 using Application.Products.Queries.GetMyProducts;
@@ -61,6 +63,32 @@ public class ProductPackagingController : ControllerBase
     {
         await _mediator.Send(new DeleteProductCommand { Id = id });
         var response = ApiResponse<Unit>.SuccessResponse(Unit.Value, "تم حذف المنتج بنجاح");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Update existing product packaging
+    /// </summary>
+    [HttpPut("packaging")]
+    [ProducesResponseType(typeof(ApiResponse<Unit>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<Unit>>> UpdateProductPackaging([FromBody] UpdateProductPackagingCommand command)
+    {
+        await _mediator.Send(command);
+        var response = ApiResponse<Unit>.SuccessResponse(Unit.Value, "تم تحديث وحدة البيع بنجاح");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Delete product packaging
+    /// </summary>
+    [HttpDelete("packaging/{id}")]
+    [ProducesResponseType(typeof(ApiResponse<Unit>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<Unit>>> DeleteProductPackaging(Guid id)
+    {
+        await _mediator.Send(new DeleteProductPackagingCommand { Id = id });
+        var response = ApiResponse<Unit>.SuccessResponse(Unit.Value, "تم حذف وحدة البيع بنجاح");
         return Ok(response);
     }
 

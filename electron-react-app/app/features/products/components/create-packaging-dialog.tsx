@@ -1,3 +1,5 @@
+'use client';
+
 import { useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FormBuilder } from '@/app/components/form';
@@ -21,6 +23,7 @@ import {
     weightUnitOptions,
 } from '../lib/validations';
 import { productService } from '../services/productService';
+import { ProductPackagingListDto } from '../lib/types';
 
 interface CreatePackagingDialogProps {
     children?: React.ReactNode;
@@ -28,6 +31,7 @@ interface CreatePackagingDialogProps {
     onOpenChange?: (open: boolean) => void;
     productId: string;
     productName: string;
+    packaging?: ProductPackagingListDto; // If provided, we are in Edit mode
 }
 
 export function CreatePackagingDialog({
@@ -36,46 +40,71 @@ export function CreatePackagingDialog({
     onOpenChange,
     productId,
     productName,
+    packaging,
 }: CreatePackagingDialogProps) {
     const queryClient = useQueryClient();
     const closeRef = useRef<HTMLButtonElement>(null);
+    const isEditMode = !!packaging;
 
     const { mutate, isPending } = useMutation({
-        mutationFn: (data: CreatePackagingFormValues) =>
-            productService.createPackaging({ ...data, productId }),
+        mutationFn: (data: CreatePackagingFormValues) => {
+            if (isEditMode && packaging) {
+                return productService.updatePackaging({ ...data, id: packaging.id });
+            }
+            return productService.createPackaging({ ...data, productId });
+        },
         onSuccess: () => {
-            toast.success('تم إضافة وحدة البيع بنجاح');
+            toast.success(isEditMode ? 'تم تحديث وحدة البيع بنجاح' : 'تم إضافة وحدة البيع بنجاح');
             queryClient.invalidateQueries({ queryKey: ['my-products'] });
             closeRef.current?.click();
             onOpenChange?.(false);
         },
         onError: (error: any) => {
-            console.error('Failed to create packaging', error);
+            console.error(isEditMode ? 'Failed to update packaging' : 'Failed to create packaging', error);
+            toast.error(isEditMode ? 'فشل تحديث وحدة البيع' : 'فشل إضافة وحدة البيع');
         },
     });
+
+    const defaultValues: Partial<CreatePackagingFormValues> = packaging ? {
+        name: packaging.name,
+        sellingPrice: {
+            amount: packaging.sellingPrice.amount,
+            currency: packaging.sellingPrice.currency
+        },
+        unitOfMeasure: packaging.unitOfMeasure,
+        unitsPerPackage: packaging.unitsPerPackage,
+        barcode: packaging.barcode?.value || '',
+        description: packaging.description || '',
+        isDefault: packaging.isDefault,
+        weight: packaging.weight ? { value: packaging.weight.value, unit: packaging.weight.unit } : { value: 0, unit: 4 },
+        dimensions: packaging.dimensions || '',
+        color: packaging.color || '',
+    } : {
+        name: '',
+        sellingPrice: { amount: 0, currency: 'IQD' },
+        unitOfMeasure: 0,
+        unitsPerPackage: 1,
+        isDefault: false,
+        weight: { value: 0, unit: 4 },
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent className="sm:max-w-[600px]" dir="rtl">
                 <DialogHeader>
-                    <DialogTitle>إضافة وحدة بيع جديدة</DialogTitle>
+                    <DialogTitle>{isEditMode ? 'تعديل وحدة البيع' : 'إضافة وحدة بيع جديدة'}</DialogTitle>
                     <DialogDescription>
-                        إضافة وحدة بيع جديدة للمنتج: {productName}
+                        {isEditMode
+                            ? `تعديل وحدة البيع للمنتج: ${productName}`
+                            : `إضافة وحدة بيع جديدة للمنتج: ${productName}`}
                     </DialogDescription>
                 </DialogHeader>
 
                 <FormBuilder
                     schema={createPackagingSchema}
                     onSubmit={mutate}
-                    defaultValues={{
-                        name: '',
-                        sellingPrice: { amount: 0, currency: 'IQD' },
-                        unitOfMeasure: 0,
-                        unitsPerPackage: 1,
-                        isDefault: false,
-                        weight: { value: 0, unit: 4 }, // Default to Kilogram (4)
-                    }}
+                    defaultValues={defaultValues}
                     loading={isPending}
                     className="space-y-4"
                 >
@@ -158,8 +187,8 @@ export function CreatePackagingDialog({
                         <Button type="button" variant="outline" onClick={() => closeRef.current?.click()}>
                             إلغاء
                         </Button>
-                        <FormBuilder.Submit loadingText="جاري الإضافة...">
-                            إضافة وحدة البيع
+                        <FormBuilder.Submit loadingText={isEditMode ? "جاري التحديث..." : "جاري الإضافة..."}>
+                            {isEditMode ? 'حفظ التعديلات' : 'إضافة وحدة البيع'}
                         </FormBuilder.Submit>
                     </DialogFooter>
                 </FormBuilder>

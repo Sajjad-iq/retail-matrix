@@ -234,4 +234,31 @@ public class ProductPackaging : BaseEntity
         Color = color;
     }
 
+    public void UpdateInfo(
+        string name,
+        Price sellingPrice,
+        UnitOfMeasure unitOfMeasure,
+        string? barcode = null,
+        string? description = null,
+        int unitsPerPackage = 1,
+        bool isDefault = false,
+        List<string>? imageUrls = null,
+        string? dimensions = null,
+        Weight? weight = null,
+        string? color = null)
+    {
+        Name = name;
+        SellingPrice = sellingPrice;
+        UnitOfMeasure = unitOfMeasure;
+        Barcode = !string.IsNullOrWhiteSpace(barcode) ? BarcodeVO.Create(barcode) : null;
+        Description = description;
+        if (unitsPerPackage <= 0)
+            throw new ArgumentException("عدد الوحدات في العبوة يجب أن يكون أكبر من صفر", nameof(unitsPerPackage));
+        UnitsPerPackage = unitsPerPackage;
+        IsDefault = isDefault;
+        ImageUrls = imageUrls ?? new List<string>();
+        Dimensions = dimensions;
+        Weight = weight;
+        Color = color;
+    }
 }

@@ -30,4 +30,14 @@ export const productService = {
         const response = await httpService.getAxiosInstance().post<ApiResponse<string>>('/api/ProductPackaging', data);
         return response.data.data;
     },
+
+    updatePackaging: async (data: any) => {
+        const response = await httpService.getAxiosInstance().put<ApiResponse<string>>('/api/ProductPackaging/packaging', data);
+        return response.data.data;
+    },
+
+    deletePackaging: async (id: string) => {
+        const response = await httpService.getAxiosInstance().delete<ApiResponse<string>>(`/api/ProductPackaging/packaging/${id}`);
+        return response.data.data;
+    },
 };
