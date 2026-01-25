@@ -108,9 +108,13 @@ export function DataTableContent<TData, TValue>({
                   </TableRow>
 
                   {/* Render sub-rows if expanded */}
-                  {row.getIsExpanded() &&
-                    renderSubRow &&
-                    renderSubRow(row.original, row.index)}
+                  {row.getIsExpanded() && renderSubRow && (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="p-0">
+                        {renderSubRow(row.original, row.index)}
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </React.Fragment>
               ))
             ) : (

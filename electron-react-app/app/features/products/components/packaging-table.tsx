@@ -7,7 +7,14 @@ import {
     getCoreRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { TableRow, TableCell } from '@/app/components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/app/components/ui/table';
 import type { ProductWithPackagingsDto, ProductPackagingListDto } from '../lib/types';
 import { createPackagingTableColumns } from './packaging-table-config';
 
@@ -27,55 +34,56 @@ function PackagingSubRows({
     });
 
     const subRows = subTable.getRowModel().rows;
-
     const headerGroups = subTable.getHeaderGroups();
 
     if (subRows.length === 0) {
         return (
-            <TableRow>
-                <TableCell colSpan={columns.length} className="py-4 text-center">
-                    <span className="text-muted-foreground text-sm">
-                        لا توجد وحدات بيع لهذا المنتج
-                    </span>
-                </TableCell>
-            </TableRow>
+            <div className="p-4 text-center">
+                <span className="text-muted-foreground text-sm">
+                    لا توجد وحدات بيع لهذا المنتج
+                </span>
+            </div>
         );
     }
 
     return (
-        <>
-            {/* Header Row */}
-            {headerGroups.map((headerGroup) => (
-                <TableRow
-                    key={headerGroup.id}
-                    className="bg-muted/50 border-muted"
-                >
-                    {headerGroup.headers.map((header) => (
-                        <TableCell
-                            key={header.id}
-                            className="text-start whitespace-nowrap text-xs font-semibold text-muted-foreground py-2"
+        <div className="p-2 bg-muted/10 rounded-md">
+            <Table>
+                <TableHeader>
+                    {headerGroups.map((headerGroup) => (
+                        <TableRow
+                            key={headerGroup.id}
+                            className="bg-muted/50 border-muted hover:bg-muted/50"
                         >
-                            {header.isPlaceholder
-                                ? null
-                                : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableCell>
+                            {headerGroup.headers.map((header) => (
+                                <TableHead
+                                    key={header.id}
+                                    className="text-start whitespace-nowrap text-xs font-semibold text-muted-foreground py-2 h-auto"
+                                >
+                                    {header.isPlaceholder
+                                        ? null
+                                        : flexRender(header.column.columnDef.header, header.getContext())}
+                                </TableHead>
+                            ))}
+                        </TableRow>
                     ))}
-                </TableRow>
-            ))}
-            {/* Data Rows */}
-            {subRows.map((row) => (
-                <TableRow
-                    key={row.id}
-                    className="bg-muted/30 border-muted transition-colors hover:bg-muted/50"
-                >
-                    {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="text-start whitespace-nowrap">
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
+                </TableHeader>
+                <TableBody>
+                    {subRows.map((row) => (
+                        <TableRow
+                            key={row.id}
+                            className="bg-muted/30 border-muted transition-colors hover:bg-muted/50"
+                        >
+                            {row.getVisibleCells().map((cell) => (
+                                <TableCell key={cell.id} className="text-start whitespace-nowrap py-2">
+                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </TableCell>
+                            ))}
+                        </TableRow>
                     ))}
-                </TableRow>
-            ))}
-        </>
+                </TableBody>
+            </Table>
+        </div>
     );
 }
 
