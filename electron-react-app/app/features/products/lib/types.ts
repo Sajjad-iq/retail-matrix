@@ -102,6 +102,7 @@ export interface ProductWithPackagingsDto {
     status: ProductStatus;
     organizationId: string;
     categoryId?: string;
+    categoryName?: string;
     insertDate: string;
     packagings: ProductPackagingListDto[];
 }

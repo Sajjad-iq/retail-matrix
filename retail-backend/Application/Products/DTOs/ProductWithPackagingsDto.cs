@@ -10,6 +10,7 @@ public record ProductWithPackagingsDto
     public ProductStatus Status { get; init; }
     public Guid OrganizationId { get; init; }
     public Guid? CategoryId { get; init; }
+    public string? CategoryName { get; init; }
     public DateTime InsertDate { get; init; }
     public List<ProductPackagingListDto> Packagings { get; init; } = new();
 }

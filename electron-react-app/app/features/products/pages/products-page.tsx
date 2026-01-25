@@ -57,7 +57,7 @@ export default function ProductsPage() {
                 </div>
             </div>
 
-            <div className="h-full flex-1 flex-col space-y-8 md:flex">
+            <div className="flex h-full flex-1 flex-col space-y-8">
                 <DataTable
                     data={productsData?.items ?? []}
                     columns={columns}

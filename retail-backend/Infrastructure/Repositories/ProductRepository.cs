@@ -28,6 +28,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
         var query = _dbSet
             .AsNoTracking()
             .Include(p => p.Packagings)
+            .Include(p => p.Category)
             .Where(p => p.OrganizationId == organizationId)
             .OrderBy(p => p.Id);
 

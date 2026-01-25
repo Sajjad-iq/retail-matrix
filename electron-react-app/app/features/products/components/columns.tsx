@@ -90,6 +90,18 @@ export const columns: ColumnDef<ProductWithPackagingsDto>[] = [
         },
     },
     {
+        accessorKey: 'categoryName',
+        header: 'الفئة',
+        cell: ({ row }) => {
+            const categoryName = row.original.categoryName;
+            return (
+                <span className="text-sm font-medium">
+                    {categoryName || <span className="text-muted-foreground text-xs">غير مصنف</span>}
+                </span>
+            );
+        },
+    },
+    {
         accessorKey: 'status',
         header: 'الحالة',
         cell: ({ row }) => {
