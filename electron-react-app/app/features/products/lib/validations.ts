@@ -138,7 +138,61 @@ export const createProductSchema = z.object({
         .or(z.literal('')),
 });
 
+export const createPackagingSchema = z.object({
+    productId: z.string().optional(), // Will be passed from parent
+
+    name: z.string()
+        .min(1, 'اسم وحدة البيع مطلوب')
+        .min(2, 'يجب أن يكون الاسم حرفين على الأقل')
+        .max(200, 'يجب ألا يتجاوز الاسم 200 حرف'),
+
+    sellingPrice: z.object({
+        amount: z.coerce.number()
+            .min(0, 'السعر يجب أن يكون أكبر من أو يساوي صفر')
+            .max(999999999, 'السعر كبير جداً'),
+        currency: z.string().default('IQD'),
+    }),
+
+    unitOfMeasure: z.coerce.number()
+        .min(0, 'وحدة القياس مطلوبة')
+        .max(41, 'وحدة القياس غير صالحة'),
+
+    barcode: z.string()
+        .max(50, 'الباركود يجب ألا يتجاوز 50 حرف')
+        .optional()
+        .or(z.literal('')),
+
+    description: z.string()
+        .max(1000, 'الوصف يجب ألا يتجاوز 1000 حرف')
+        .optional()
+        .or(z.literal('')),
+
+    unitsPerPackage: z.coerce.number()
+        .min(1, 'عدد الوحدات يجب أن يكون 1 على الأقل')
+        .default(1),
+
+    isDefault: z.boolean().default(false),
+
+    imageUrls: z.array(z.string()).optional(),
+
+    dimensions: z.string()
+        .max(100, 'الأبعاد يجب ألا تتجاوز 100 حرف')
+        .optional()
+        .or(z.literal('')),
+
+    weight: z.object({
+        value: z.coerce.number().min(0, 'الوزن يجب أن يكون أكبر من أو يساوي صفر'),
+        unit: z.coerce.number(),
+    }).optional(),
+
+    color: z.string()
+        .max(50, 'اللون يجب ألا يتجاوز 50 حرف')
+        .optional()
+        .or(z.literal('')),
+});
+
 export type CreateProductFormValues = z.infer<typeof createProductSchema>;
+export type CreatePackagingFormValues = z.infer<typeof createPackagingSchema>;
 
 export interface CreateProductRequest {
     // Product-level

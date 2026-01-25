@@ -15,4 +15,9 @@ export const productService = {
         const response = await httpService.getAxiosInstance().post<ApiResponse<string>>('/api/ProductPackaging', data);
         return response.data.data;
     },
+
+    createPackaging: async (data: any) => {
+        const response = await httpService.getAxiosInstance().post<ApiResponse<string>>('/api/ProductPackaging', data);
+        return response.data.data;
+    },
 };

@@ -17,6 +17,9 @@ import {
 } from '@/app/components/ui/table';
 import type { ProductWithPackagingsDto, ProductPackagingListDto } from '../lib/types';
 import { createPackagingTableColumns } from './packaging-table-config';
+import { CreatePackagingDialog } from './create-packaging-dialog';
+import { Button } from '@/app/components/ui/button';
+import { Plus } from 'lucide-react';
 
 interface PackagingSubRowsProps {
     product: ProductWithPackagingsDto;
@@ -35,16 +38,6 @@ function PackagingSubRows({
 
     const subRows = subTable.getRowModel().rows;
     const headerGroups = subTable.getHeaderGroups();
-
-    if (subRows.length === 0) {
-        return (
-            <div className="p-4 text-center">
-                <span className="text-muted-foreground text-sm">
-                    لا توجد وحدات بيع لهذا المنتج
-                </span>
-            </div>
-        );
-    }
 
     return (
         <div className="p-2 bg-muted/10 rounded-md">
@@ -83,6 +76,21 @@ function PackagingSubRows({
                     ))}
                 </TableBody>
             </Table>
+            <div className="mt-2">
+                <CreatePackagingDialog
+                    productId={product.id}
+                    productName={product.name}
+                >
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full gap-2 text-muted-foreground hover:text-primary border border-dashed"
+                    >
+                        <Plus className="h-4 w-4" />
+                        إضافة وحدة بيع
+                    </Button>
+                </CreatePackagingDialog>
+            </div>
         </div>
     );
 }
