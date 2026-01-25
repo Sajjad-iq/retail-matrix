@@ -37,7 +37,7 @@ export const createPackagingTableColumns = (): ColumnDef<ProductPackagingListDto
         cell: ({ row }) => {
             const packaging = row.original;
             return (
-                <div className="flex items-start gap-2 pr-8">
+                <div className="flex items-start gap-2">
                     <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                         {packaging.imageUrls && packaging.imageUrls.length > 0 ? (
                             <img src={packaging.imageUrls[0]} alt={packaging.name} className="h-full w-full object-cover" />
