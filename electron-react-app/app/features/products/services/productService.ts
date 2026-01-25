@@ -16,6 +16,16 @@ export const productService = {
         return response.data.data;
     },
 
+    updateProduct: async (data: any) => {
+        const response = await httpService.getAxiosInstance().put<ApiResponse<string>>('/api/ProductPackaging', data);
+        return response.data.data;
+    },
+
+    deleteProduct: async (id: string) => {
+        const response = await httpService.getAxiosInstance().delete<ApiResponse<string>>(`/api/ProductPackaging/${id}`);
+        return response.data.data;
+    },
+
     createPackaging: async (data: any) => {
         const response = await httpService.getAxiosInstance().post<ApiResponse<string>>('/api/ProductPackaging', data);
         return response.data.data;

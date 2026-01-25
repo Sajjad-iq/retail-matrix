@@ -23,3 +23,27 @@ export const useCreateProduct = () => {
         }
     });
 };
+
+export const useUpdateProduct = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (data: any) => productService.updateProduct(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            toast.success('تم تحديث المنتج بنجاح');
+        }
+    });
+};
+
+export const useDeleteProduct = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => productService.deleteProduct(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            toast.success('تم حذف المنتج بنجاح');
+        }
+    });
+};

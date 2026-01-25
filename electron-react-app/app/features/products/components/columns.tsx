@@ -1,17 +1,14 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
-import { MoreHorizontal, Package, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { ProductWithPackagingsDto, ProductStatus } from '../lib/types';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/app/components/ui/dropdown-menu';
+import { Trash2, Edit, Copy } from 'lucide-react';
+import { ConfirmDialog } from '@/app/components/ui/confirm-dialog';
+import { EditProductDialog } from './edit-product-dialog';
+import { useDeleteProduct } from '../hooks/useProductActions';
+import { toast } from 'sonner';
 
 const getStatusBadge = (status: ProductStatus) => {
     switch (status) {
@@ -161,29 +158,66 @@ export const columns: ColumnDef<ProductWithPackagingsDto>[] = [
     {
         id: 'actions',
         cell: ({ row }) => {
-            const product = row.original;
-
-            return (
-                <DropdownMenu dir="rtl">
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
-                        <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(product.id)}
-                        >
-                            نسخ المعرف
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>عرض التفاصيل</DropdownMenuItem>
-                        <DropdownMenuItem>تعديل المنتج</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
+            return <ProductActions product={row.original} />;
         },
     },
 ];
+
+function ProductActions({ product }: { product: ProductWithPackagingsDto }) {
+    const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
+
+    const handleCopyId = () => {
+        navigator.clipboard.writeText(product.id);
+        toast.success('تم نسخ المعرف بنجاح');
+    };
+
+    const handleDelete = () => {
+        deleteProduct(product.id);
+    };
+
+    return (
+        <div className="flex items-center gap-1 justify-end">
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                onClick={handleCopyId}
+                title="نسخ المعرف"
+            >
+                <Copy className="h-4 w-4" />
+                <span className="sr-only">نسخ المعرف</span>
+            </Button>
+
+            <EditProductDialog product={product}>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    title="تعديل المنتج"
+                >
+                    <Edit className="h-4 w-4" />
+                    <span className="sr-only">تعديل المنتج</span>
+                </Button>
+            </EditProductDialog>
+
+            <ConfirmDialog
+                title="هل أنت متأكد من حذف هذا المنتج؟"
+                description={`سيتم حذف المنتج "${product.name}" وجميع وحدات البيع التابعة له. هذا الإجراء لا يمكن التراجع عنه.`}
+                confirmText={isDeleting ? "جاري الحذف..." : "حذف"}
+                cancelText="إلغاء"
+                onConfirm={handleDelete}
+                variant="destructive"
+            >
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    title="حذف المنتج"
+                >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">حذف المنتج</span>
+                </Button>
+            </ConfirmDialog>
+        </div>
+    );
+}
