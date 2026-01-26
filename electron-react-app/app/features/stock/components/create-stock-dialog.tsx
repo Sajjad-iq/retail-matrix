@@ -21,7 +21,7 @@ import {
 } from '@/app/features/stock/lib/validations';
 import { useCreateStock } from '@/app/features/stock/hooks/useStock';
 import { useMyInventories } from '@/app/features/locations/hooks/useInventoryActions';
-import { currencyOptions } from '@/app/features/products/lib/validations';
+import { currencyOptions } from '@/app/lib/constants';
 
 interface CreateStockDialogProps {
     children?: React.ReactNode;

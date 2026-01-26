@@ -7,10 +7,10 @@ import {
     type CreateProductFormValues,
     type CreateProductRequest,
     unitOfMeasureOptions,
-    currencyOptions,
     weightUnitOptions,
     UnitOfMeasure,
 } from '../lib/validations';
+import { currencyOptions } from '@/app/lib/constants';
 import { FormBuilder } from '@/app/components/form';
 import { Button } from '@/app/components/ui/button';
 import {

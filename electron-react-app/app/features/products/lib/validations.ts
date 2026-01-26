@@ -64,12 +64,6 @@ export const unitOfMeasureOptions = [
     { label: 'كرتون', value: UnitOfMeasure.Carton.toString() },
 ];
 
-export const currencyOptions = [
-    { label: 'دينار عراقي', value: 'IQD' },
-    { label: 'دولار أمريكي', value: 'USD' },
-    { label: 'يورو', value: 'EUR' },
-];
-
 export const weightUnitOptions = [
     { label: 'كيلوغرام', value: UnitOfMeasure.Kilogram.toString() },
     { label: 'غرام', value: UnitOfMeasure.Gram.toString() },

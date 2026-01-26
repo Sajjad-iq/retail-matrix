@@ -2,9 +2,11 @@ import { ColumnDef } from '@tanstack/react-table';
 import { StockBatchDto, StockCondition } from '../lib/types';
 import { formatPrice } from '@/lib/utils';
 import { Badge } from '@/app/components/ui/badge';
-import { Calendar } from 'lucide-react';
+import { Button } from '@/app/components/ui/button';
+import { Calendar, Plus } from 'lucide-react';
 import { DataTable } from '@/app/components/dataTable/DataTable';
 import { StockListDto } from '../lib/types';
+import { AddBatchDialog } from './add-batch-dialog';
 
 const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
@@ -85,24 +87,37 @@ export const batchColumns: ColumnDef<StockBatchDto>[] = [
 export function createRenderSubRow() {
     return (stock: StockListDto) => {
         const batches = stock.batches || [];
-
-        if (batches.length === 0) {
-            return (
-                <div className="p-4 text-center text-sm text-muted-foreground bg-muted/30">
-                    لا توجد دفعات لهذا المخزون
-                </div>
-            );
-        }
+        const productName = stock.productName || 'منتج غير معروف';
+        const packagingName = stock.packagingName;
+        const displayName = productName && packagingName 
+            ? `${productName} - ${packagingName}`
+            : productName;
 
         return (
-            <div className="p-4 bg-muted/10 rounded-md">
-                <h4 className="text-sm font-semibold mb-2">الدفعات ({batches.length})</h4>
+            <div className="p-2 bg-muted/10 rounded-md">
                 <div className="border rounded-md bg-background">
-                    <DataTable
-                        data={batches}
-                        columns={batchColumns}
-                        showToolbar={false}
-                    />
+                    {batches.length > 0 && (
+                        <DataTable
+                            data={batches}
+                            columns={batchColumns}
+                            showToolbar={false}
+                        />
+                    )}
+                </div>
+                <div className="mt-2">
+                    <AddBatchDialog
+                        stockId={stock.id}
+                        productName={displayName}
+                    >
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full gap-2 text-muted-foreground hover:text-primary border border-dashed"
+                        >
+                            <Plus className="h-4 w-4" />
+                            إضافة دفعة جديدة
+                        </Button>
+                    </AddBatchDialog>
                 </div>
             </div>
         );

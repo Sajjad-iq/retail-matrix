@@ -19,9 +19,9 @@ import {
     createPackagingSchema,
     CreatePackagingFormValues,
     unitOfMeasureOptions,
-    currencyOptions,
     weightUnitOptions,
 } from '../lib/validations';
+import { currencyOptions } from '@/app/lib/constants';
 import { productService } from '../services/productService';
 import { ProductPackagingListDto } from '../lib/types';
 

@@ -61,3 +61,8 @@ export const getUnitLabel = (unit: UnitOfMeasure): string => {
 export const getWeightUnitLabel = (unit: UnitOfMeasure): string => {
     return WEIGHT_UNIT_LABELS[unit] || '';
 };
+
+export const currencyOptions = [
+    { label: 'دينار عراقي', value: 'IQD' },
+    { label: 'دولار أمريكي', value: 'USD' },
+];
