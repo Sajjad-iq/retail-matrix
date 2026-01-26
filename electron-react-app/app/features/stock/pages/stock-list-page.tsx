@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useMyStocks } from '../hooks/useInventory';
+import { useMyStocks } from '../hooks/useStock';
 import { columns } from '../components/stock-table-config';
 import { createRenderSubRow } from '../components/batch-table';
 import { DataTable } from '@/app/components/dataTable/DataTable';

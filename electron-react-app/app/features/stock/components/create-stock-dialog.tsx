@@ -18,10 +18,10 @@ import {
     createStockSchema,
     CreateStockFormValues,
     stockConditionOptions,
-} from '@/app/features/inventory/lib/validations';
-import { useCreateStock } from '@/app/features/inventory/hooks/useInventory';
+} from '@/app/features/stock/lib/validations';
+import { useCreateStock } from '@/app/features/stock/hooks/useStock';
 import { useMyInventories } from '@/app/features/locations/hooks/useInventoryActions';
-import { currencyOptions } from '@/app/features/products/lib/validations'; // Reuse currency options
+import { currencyOptions } from '@/app/features/products/lib/validations';
 
 interface CreateStockDialogProps {
     children?: React.ReactNode;

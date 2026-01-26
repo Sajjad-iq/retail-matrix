@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { stockService } from '../services/inventoryService';
+import { stockService } from '../services/stockService';
 import { PaginationParams } from '@/app/lib/types/global';
 import { AddStockBatchRequest, CreateStockRequest, StockStatus } from '../lib/types';
 import { toast } from 'sonner';

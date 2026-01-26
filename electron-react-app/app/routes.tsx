@@ -6,7 +6,7 @@ import RegisterPage from '@/app/features/auth/pages/register';
 import { ProtectedRoute } from '@/app/features/auth/components/ProtectedRoute';
 import SetupOrganizationPage from '@/app/features/organizations/pages/setup-organization';
 import ProductsPage from '@/app/features/products/pages/products-page';
-import StockListPage from '@/app/features/inventory/pages/stock-list-page';
+import StockListPage from '@/app/features/stock/pages/stock-list-page';
 import { InventoryPage, InventoryOperationsPage } from '@/app/features/locations';
 
 // Home page placeholder
