@@ -1,6 +1,6 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { StockListDto } from '../lib/types';
-import { Package, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
 
@@ -39,27 +39,27 @@ export const columns: ColumnDef<StockListDto>[] = [
         },
     },
     {
-        accessorKey: 'productName', // NOTE: Backend DTO currently doesn't have productName directly, we might need to join or fetch. 
-        // Or assume user will add it eventually or we rely on productPackagingId lookup?
-        // Actually, StockListDto doesn't have ProductName. 
-        // For now, let's display ProductPackagingId or generic text, OR better yet, update the backend query to include Product.Name.
-        // Assuming for MVP we might show "Stock Item" or ID if name missing.
-        // Wait, the user wants "table and sub table".
-        // Let's check DTO again. Step 455 updated it with Batches but not ProductName.
-        // The default handler maps Stock -> StockListDto. Stock entity doesn't have Name. It needs to navigate Stock -> ProductPackaging -> Name.
-        // AutoMapper can flatten this if configured: .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.ProductPackaging.Name))
-        // I will assume it's NOT mapped yet so I'll show ID or placeholder.
+        accessorKey: 'productName',
         header: 'المنتج',
         cell: ({ row }) => {
+            const productName = row.original.productName;
+            const packagingName = row.original.packagingName;
+            
             return (
                 <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-sm">
-                        {/* Placeholder as Name isn't in DTO yet */}
-                        وحدة: {row.original.productPackagingId.substring(0, 8)}...
-                    </span>
+                    <div className="flex flex-col">
+                        <span className="font-medium text-sm">
+                            {productName || 'منتج غير معروف'}
+                        </span>
+                        {packagingName && (
+                            <span className="text-xs text-muted-foreground">
+                                {packagingName}
+                            </span>
+                        )}
+                    </div>
                 </div>
-            )
+            );
         }
     },
     {

@@ -107,6 +107,8 @@ public class StockRepository : Repository<Stock>, IStockRepository
     {
         var query = _dbSet
             .Include(s => s.Batches)
+            .Include(s => s.ProductPackaging)
+            .ThenInclude(p => p.Product)
             .Where(s => s.OrganizationId == organizationId)
             .Where(s => s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) > 0 &&
                         s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) <= reorderLevel)
@@ -130,6 +132,8 @@ public class StockRepository : Repository<Stock>, IStockRepository
     {
         var query = _dbSet
             .Include(s => s.Batches)
+            .Include(s => s.ProductPackaging)
+            .ThenInclude(p => p.Product)
             .Where(s => s.OrganizationId == organizationId)
             .Where(s => !s.Batches.Any() || s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) == 0)
             .OrderBy(s => s.ProductPackagingId);

@@ -53,6 +53,7 @@ export interface StockListDto {
     totalAvailableQuantity: number;
     insertDate: string;
     productName?: string;
+    packagingName?: string;
     batches: StockBatchDto[];
 }
 
