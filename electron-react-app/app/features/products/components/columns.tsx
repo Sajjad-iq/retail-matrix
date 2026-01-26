@@ -1,7 +1,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
-import { Package, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, Calendar, ChevronDown, ChevronUp, PackageOpen } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { ProductWithPackagingsDto, ProductStatus } from '../lib/types';
 import { Trash2, Edit, Copy } from 'lucide-react';
@@ -9,6 +9,7 @@ import { ConfirmDialog } from '@/app/components/ui/confirm-dialog';
 import { EditProductDialog } from './edit-product-dialog';
 import { useDeleteProduct } from '../hooks/useProductActions';
 import { toast } from 'sonner';
+import { Link } from 'react-router';
 
 const getStatusBadge = (status: ProductStatus) => {
     switch (status) {
@@ -177,6 +178,19 @@ function ProductActions({ product }: { product: ProductWithPackagingsDto }) {
 
     return (
         <div className="flex items-center gap-1 justify-end">
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                title="عرض المخزون"
+                asChild
+            >
+                <Link to={`/inventory/stocks?productName=${encodeURIComponent(product.name)}`}>
+                    <PackageOpen className="h-4 w-4" />
+                    <span className="sr-only">عرض المخزون</span>
+                </Link>
+            </Button>
+
             <Button
                 variant="ghost"
                 size="icon"

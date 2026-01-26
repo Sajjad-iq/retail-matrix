@@ -3,7 +3,7 @@
 import { Link } from 'react-router';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { Barcode as BarcodeIcon, Star, Package, Ruler, Scale, Palette, Percent, Tag, Plus } from 'lucide-react';
+import { Barcode as BarcodeIcon, Star, Package as PackageIcon, Ruler, Scale, Palette, Percent, Tag, Package } from 'lucide-react';
 import { Badge } from '@/app/components/ui/badge';
 import { formatPrice } from '@/lib/utils';
 import { getUnitLabel, getWeightUnitLabel } from '@/app/lib/constants';
@@ -50,7 +50,7 @@ export const createPackagingTableColumns = (): ColumnDef<ProductPackagingListDto
                         {packaging.imageUrls && packaging.imageUrls.length > 0 ? (
                             <img src={packaging.imageUrls[0]} alt={packaging.name} className="h-full w-full object-cover" />
                         ) : (
-                            <Package className="h-4 w-4 text-muted-foreground" />
+                            <PackageIcon className="h-4 w-4 text-muted-foreground" />
                         )}
                     </div>
                     <div>
@@ -93,7 +93,7 @@ export const createPackagingTableColumns = (): ColumnDef<ProductPackagingListDto
             const packaging = row.original;
             return (
                 <div className="flex items-start gap-1">
-                    <Package className="h-3 w-3 text-muted-foreground" />
+                    <PackageIcon className="h-3 w-3 text-muted-foreground" />
                     <span className="text-sm">
                         {packaging.unitsPerPackage} {getUnitLabel(packaging.unitOfMeasure)}
                     </span>
@@ -257,12 +257,12 @@ function PackagingActions({ packaging }: { packaging: ProductPackagingListDto })
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-muted-foreground hover:text-primary"
-                title="إضافة مخزون"
+                title="عرض المخزون"
                 asChild
             >
-                <Link to={`/inventory/stocks?packagingId=${packaging.id}&packagingName=${encodeURIComponent(packaging.name)}`}>
-                    <Plus className="h-4 w-4" />
-                    <span className="sr-only">إضافة مخزون</span>
+                <Link to={`/inventory/stocks?productPackagingId=${packaging.id}`}>
+                    <Package className="h-4 w-4" />
+                    <span className="sr-only">عرض المخزون</span>
                 </Link>
             </Button>
 

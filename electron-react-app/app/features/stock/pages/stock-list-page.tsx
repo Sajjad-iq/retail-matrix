@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router';
 import { useMyStocks } from '../hooks/useStock';
 import { columns } from '../components/stock-table-config';
 import { createRenderSubRow } from '../components/batch-table';
@@ -8,9 +9,18 @@ import { StockFiltersComponent, StockFilters } from '../components/stock-filters
 import { StockQueryParams } from '../services/stockService';
 
 export default function StockListPage() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
-    const [filters, setFilters] = useState<StockFilters>({});
+    
+    // Initialize filters from URL params
+    const [filters, setFilters] = useState<StockFilters>(() => {
+        return {
+            inventoryId: searchParams.get('inventoryId') || undefined,
+            productPackagingId: searchParams.get('packagingId') || undefined,
+            productName: searchParams.get('productName') || undefined,
+        };
+    });
 
     const params: StockQueryParams = {
         pageNumber: page + 1,
@@ -25,6 +35,13 @@ export default function StockListPage() {
     const handleFiltersChange = (newFilters: StockFilters) => {
         setFilters(newFilters);
         setPage(0); // Reset to first page when filters change
+        
+        // Update URL params
+        const newSearchParams = new URLSearchParams();
+        if (newFilters.inventoryId) newSearchParams.set('inventoryId', newFilters.inventoryId);
+        if (newFilters.productPackagingId) newSearchParams.set('packagingId', newFilters.productPackagingId);
+        if (newFilters.productName) newSearchParams.set('productName', newFilters.productName);
+        setSearchParams(newSearchParams);
     };
 
     const pagination = useMemo(

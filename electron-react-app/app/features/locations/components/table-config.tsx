@@ -1,8 +1,9 @@
 import { ColumnDef } from '@tanstack/react-table';
+import { Link } from 'react-router';
 import { InventoryDto, InventoryType } from '../lib/types';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
-import { Pencil, MapPin } from 'lucide-react';
+import { Pencil, MapPin, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { InventoryDialog } from './InventoryDialog';
@@ -31,9 +32,8 @@ export const createColumns = (): ColumnDef<InventoryDto>[] => [
         id: 'name',
         accessorKey: 'name',
         header: 'اسم المخزن',
-        cell: ({ getValue, row }) => {
+        cell: ({ getValue }) => {
             const name = getValue() as string;
-            const type = row.original.type;
             return (
                 <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -101,12 +101,21 @@ export const createColumns = (): ColumnDef<InventoryDto>[] => [
             const inventory = row.original;
             return (
                 <div className="flex items-center justify-center gap-2">
+                    <Button
+                        variant="outline"
+                        asChild
+                        size="icon"
+                    >
+                        <Link to={`/inventory/stocks?inventoryId=${inventory.id}`}>
+                            <Package className="h-4 w-4 ml-1" />
+                        </Link>
+                    </Button>
+
                     <InventoryDialog
                         inventoryId={inventory.id}
                         trigger={
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="icon">
                                 <Pencil className="h-4 w-4 ml-1" />
-                                تعديل
                             </Button>
                         }
                     />
