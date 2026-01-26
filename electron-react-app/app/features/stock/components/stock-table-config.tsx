@@ -40,24 +40,22 @@ export const columns: ColumnDef<StockListDto>[] = [
     },
     {
         accessorKey: 'productName',
-        header: 'المنتج',
+        header: 'المنتج والتعبئة',
         cell: ({ row }) => {
             const productName = row.original.productName;
             const packagingName = row.original.packagingName;
             
+            // Combine product name with packaging for clarity
+            const displayName = productName && packagingName 
+                ? `${productName} - ${packagingName}`
+                : productName || packagingName || 'منتج غير معروف';
+            
             return (
                 <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex flex-col">
-                        <span className="font-medium text-sm">
-                            {productName || 'منتج غير معروف'}
-                        </span>
-                        {packagingName && (
-                            <span className="text-xs text-muted-foreground">
-                                {packagingName}
-                            </span>
-                        )}
-                    </div>
+                    <span className="font-medium text-sm">
+                        {displayName}
+                    </span>
                 </div>
             );
         }
