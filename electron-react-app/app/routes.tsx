@@ -7,8 +7,7 @@ import { ProtectedRoute } from '@/app/features/auth/components/ProtectedRoute';
 import SetupOrganizationPage from '@/app/features/organizations/pages/setup-organization';
 import ProductsPage from '@/app/features/products/pages/products-page';
 import StockListPage from '@/app/features/inventory/pages/stock-list-page';
-import InventoryOperationsPage from '@/app/features/inventory/pages/operations-list-page';
-import InventoryPage from '@/app/features/locations/pages/inventory-page';
+import { InventoryPage, InventoryOperationsPage } from '@/app/features/locations';
 
 // Home page placeholder
 function HomePage() {

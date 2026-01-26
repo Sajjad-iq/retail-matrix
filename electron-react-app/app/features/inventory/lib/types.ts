@@ -21,17 +21,6 @@ export enum StockCondition {
     Used = 3
 }
 
-export enum InventoryOperationType {
-    Purchase = 0,
-    Sale = 1,
-    Transfer = 2,
-    Stocktake = 3,
-    Adjustment = 4,
-    Return = 5,
-    Damage = 6,
-    Expired = 7
-}
-
 export interface StockBatchDto {
     id: string;
     stockId: string;
@@ -53,7 +42,7 @@ export interface StockDto {
     totalQuantity: number;
     totalAvailableQuantity: number;
     insertDate: string;
-    batchesPromise?: StockBatchDto[]; // Some endpoints might return it differently
+    batchesPromise?: StockBatchDto[];
 }
 
 export interface StockListDto {
@@ -63,7 +52,7 @@ export interface StockListDto {
     totalQuantity: number;
     totalAvailableQuantity: number;
     insertDate: string;
-    productName?: string; // Enhanced DTO usually has this or we fetch it
+    productName?: string;
     batches: StockBatchDto[];
 }
 
@@ -83,15 +72,4 @@ export interface AddStockBatchRequest {
     expiryDate?: string;
     condition?: StockCondition;
     costPrice?: Price;
-}
-
-export interface InventoryOperationDto {
-    id: string;
-    operationType: InventoryOperationType;
-    operationNumber: string;
-    sourceInventoryId?: string;
-    destinationInventoryId?: string;
-    notes?: string;
-    insertDate: string;
-    createdBy: string;
 }

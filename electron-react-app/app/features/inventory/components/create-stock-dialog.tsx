@@ -19,7 +19,8 @@ import {
     CreateStockFormValues,
     stockConditionOptions,
 } from '@/app/features/inventory/lib/validations';
-import { useCreateStock, useMyInventories } from '@/app/features/inventory/hooks/useInventory';
+import { useCreateStock } from '@/app/features/inventory/hooks/useInventory';
+import { useMyInventories } from '@/app/features/locations/hooks/useInventoryActions';
 import { currencyOptions } from '@/app/features/products/lib/validations'; // Reuse currency options
 
 interface CreateStockDialogProps {
@@ -43,10 +44,9 @@ export function CreateStockDialog({ children }: CreateStockDialogProps) {
 
     const { mutate: createStock, isPending } = useCreateStock();
 
-
     // Fetch inventories for the select
-    const { data: inventoriesData } = useMyInventories();
-    const inventoryItems = Array.isArray(inventoriesData) ? inventoriesData : (inventoriesData?.items || []);
+    const { data: inventoriesData } = useMyInventories({ pageNumber: 1, pageSize: 100 });
+    const inventoryItems = inventoriesData?.items || [];
 
     const inventoryOptions = inventoryItems.map((inv: any) => ({
         label: inv.name || 'مخزن بدون اسم',

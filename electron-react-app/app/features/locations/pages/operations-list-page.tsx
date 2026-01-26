@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useMyInventoryOperations } from '../hooks/useInventory';
+import { useMyInventoryOperations } from '../hooks/useInventoryActions';
 import { DataTable } from '@/app/components/dataTable/DataTable';
 import { PaginationParams } from '@/app/lib/types/global';
 import { ColumnDef } from '@tanstack/react-table';
