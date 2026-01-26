@@ -3,19 +3,29 @@ import { useMyStocks } from '../hooks/useStock';
 import { columns } from '../components/stock-table-config';
 import { createRenderSubRow } from '../components/batch-table';
 import { DataTable } from '@/app/components/dataTable/DataTable';
-import { PaginationParams } from '@/app/lib/types/global';
 import { CreateStockDialog } from '../components/create-stock-dialog';
+import { StockFiltersComponent, StockFilters } from '../components/stock-filters';
+import { StockQueryParams } from '../services/stockService';
 
 export default function StockListPage() {
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
+    const [filters, setFilters] = useState<StockFilters>({});
 
-    const params: PaginationParams = {
+    const params: StockQueryParams = {
         pageNumber: page + 1,
         pageSize: pageSize,
+        inventoryId: filters.inventoryId,
+        productPackagingId: filters.productPackagingId,
+        productName: filters.productName,
     };
 
     const { data: stocksData, isLoading } = useMyStocks(params);
+
+    const handleFiltersChange = (newFilters: StockFilters) => {
+        setFilters(newFilters);
+        setPage(0); // Reset to first page when filters change
+    };
 
     const pagination = useMemo(
         () => ({
@@ -51,6 +61,9 @@ export default function StockListPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Filters */}
+            <StockFiltersComponent filters={filters} onFiltersChange={handleFiltersChange} />
 
             <div className="flex h-full flex-1 flex-col space-y-8">
                 <DataTable

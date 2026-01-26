@@ -95,6 +95,8 @@ public class StockController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] Guid? inventoryId = null,
+        [FromQuery] Guid? productPackagingId = null,
+        [FromQuery] string? productName = null,
         [FromQuery] StockStatus stockStatus = StockStatus.All,
         [FromQuery] int? reorderLevel = null)
     {
@@ -103,6 +105,8 @@ public class StockController : ControllerBase
             PageNumber = pageNumber,
             PageSize = pageSize,
             InventoryId = inventoryId,
+            ProductPackagingId = productPackagingId,
+            ProductName = productName,
             StockStatus = stockStatus,
             ReorderLevel = reorderLevel
         });

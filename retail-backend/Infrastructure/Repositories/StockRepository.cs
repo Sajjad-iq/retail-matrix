@@ -55,8 +55,14 @@ public class StockRepository : Repository<Stock>, IStockRepository
             .FirstOrDefaultAsync(s => s.Id == stockId, cancellationToken);
     }
 
-    public async Task<PagedResult<Stock>> GetByOrganizationAsync(
+    public async Task<PagedResult<Stock>> GetByFiltersAsync(
         Guid organizationId,
+        Guid? inventoryId,
+        Guid? productPackagingId,
+        string? productName,
+        bool isLowStock,
+        int? reorderLevel,
+        bool isOutOfStock,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
@@ -64,79 +70,49 @@ public class StockRepository : Repository<Stock>, IStockRepository
             .Include(s => s.Batches)
             .Include(s => s.ProductPackaging)
             .ThenInclude(p => p.Product)
-            .Where(s => s.OrganizationId == organizationId)
-            .OrderBy(s => s.ProductPackagingId);
+            .Where(s => s.OrganizationId == organizationId);
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        // Apply basic filters
+        if (inventoryId.HasValue)
+        {
+            query = query.Where(s => s.InventoryId == inventoryId.Value);
+        }
 
-        var items = await query
-            .Skip(pagingParams.Skip)
-            .Take(pagingParams.Take)
-            .ToListAsync(cancellationToken);
+        if (productPackagingId.HasValue)
+        {
+            query = query.Where(s => s.ProductPackagingId == productPackagingId.Value);
+        }
 
-        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
-    }
+        if (!string.IsNullOrWhiteSpace(productName))
+        {
+            query = query.Where(s => s.ProductPackaging != null &&
+                                     s.ProductPackaging.Product != null &&
+                                     s.ProductPackaging.Product.Name.Contains(productName));
+        }
 
-    public async Task<PagedResult<Stock>> GetByInventoryAsync(
-        Guid inventoryId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        var query = _dbSet
-            .Include(s => s.Batches)
-            .Include(s => s.ProductPackaging)
-            .ThenInclude(p => p.Product)
-            .Where(s => s.InventoryId == inventoryId)
-            .OrderBy(s => s.ProductPackagingId);
+        // Apply stock status filters
+        if (isLowStock && reorderLevel.HasValue)
+        {
+            query = query.Where(s => s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) > 0 &&
+                                     s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) <= reorderLevel.Value);
+        }
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        if (isOutOfStock)
+        {
+            query = query.Where(s => !s.Batches.Any() || s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) == 0);
+        }
 
-        var items = await query
-            .Skip(pagingParams.Skip)
-            .Take(pagingParams.Take)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
-    }
-
-    public async Task<PagedResult<Stock>> GetLowStockItemsAsync(
-        Guid organizationId,
-        int reorderLevel,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        var query = _dbSet
-            .Include(s => s.Batches)
-            .Include(s => s.ProductPackaging)
-            .ThenInclude(p => p.Product)
-            .Where(s => s.OrganizationId == organizationId)
-            .Where(s => s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) > 0 &&
-                        s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) <= reorderLevel)
-            .OrderBy(s => s.Batches.Sum(b => b.Quantity - b.ReservedQuantity))
-            .ThenBy(s => s.ProductPackagingId);
-
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await query
-            .Skip(pagingParams.Skip)
-            .Take(pagingParams.Take)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
-    }
-
-    public async Task<PagedResult<Stock>> GetOutOfStockItemsAsync(
-        Guid organizationId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        var query = _dbSet
-            .Include(s => s.Batches)
-            .Include(s => s.ProductPackaging)
-            .ThenInclude(p => p.Product)
-            .Where(s => s.OrganizationId == organizationId)
-            .Where(s => !s.Batches.Any() || s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) == 0)
-            .OrderBy(s => s.ProductPackagingId);
+        // Apply ordering
+        if (isLowStock)
+        {
+            query = query
+                .OrderBy(s => s.Batches.Sum(b => b.Quantity - b.ReservedQuantity))
+                .ThenBy(s => s.ProductPackagingId);
+        }
+        else
+        {
+            query = query.OrderBy(s => s.ProductPackagingId);
+        }
 
         var totalCount = await query.CountAsync(cancellationToken);
 

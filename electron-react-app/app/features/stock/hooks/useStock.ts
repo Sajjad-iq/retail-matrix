@@ -1,10 +1,9 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { stockService } from '../services/stockService';
-import { PaginationParams } from '@/app/lib/types/global';
-import { AddStockBatchRequest, CreateStockRequest, StockStatus } from '../lib/types';
+import { stockService, StockQueryParams } from '../services/stockService';
+import { AddStockBatchRequest, CreateStockRequest } from '../lib/types';
 import { toast } from 'sonner';
 
-export const useMyStocks = (params: PaginationParams & { stockStatus?: StockStatus }) => {
+export const useMyStocks = (params: StockQueryParams) => {
     return useQuery({
         queryKey: ['stocks', 'my', params],
         queryFn: () => stockService.getMyStocks(params),

@@ -29,56 +29,31 @@ public class GetMyStocksQueryHandler : IRequestHandler<GetMyStocksQuery, PagedRe
         // 1. Get organization ID from context
         var organizationId = _organizationContext.OrganizationId;
 
+        // 2. Validate low stock filter
+        if (request.StockStatus == StockStatus.LowStock && !request.ReorderLevel.HasValue)
+        {
+            throw new ValidationException("مستوى إعادة الطلب مطلوب لفلترة المخزون المنخفض");
+        }
+
         var pagingParams = new PagingParams
         {
             PageNumber = request.PageNumber,
             PageSize = request.PageSize
         };
 
-        // 2. Query based on status filter
-        PagedResult<Domains.Stocks.Entities.Stock> result;
+        // 3. Query using single repository method with all filters
+        var result = await _stockRepository.GetByFiltersAsync(
+            organizationId,
+            request.InventoryId,
+            request.ProductPackagingId,
+            request.ProductName,
+            isLowStock: request.StockStatus == StockStatus.LowStock,
+            request.ReorderLevel,
+            isOutOfStock: request.StockStatus == StockStatus.OutOfStock,
+            pagingParams,
+            cancellationToken);
 
-        switch (request.StockStatus)
-        {
-            case StockStatus.LowStock:
-                if (!request.ReorderLevel.HasValue)
-                {
-                    throw new ValidationException("مستوى إعادة الطلب مطلوب لفلترة المخزون المنخفض");
-                }
-                result = await _stockRepository.GetLowStockItemsAsync(
-                    organizationId,
-                    request.ReorderLevel.Value,
-                    pagingParams,
-                    cancellationToken);
-                break;
-
-            case StockStatus.OutOfStock:
-                result = await _stockRepository.GetOutOfStockItemsAsync(
-                    organizationId,
-                    pagingParams,
-                    cancellationToken);
-                break;
-
-            case StockStatus.All:
-            default:
-                if (request.InventoryId.HasValue)
-                {
-                    result = await _stockRepository.GetByInventoryAsync(
-                        request.InventoryId.Value,
-                        pagingParams,
-                        cancellationToken);
-                }
-                else
-                {
-                    result = await _stockRepository.GetByOrganizationAsync(
-                        organizationId,
-                        pagingParams,
-                        cancellationToken);
-                }
-                break;
-        }
-
-        // 3. Map to DTOs
+        // 4. Map to DTOs
         var dtos = _mapper.Map<List<StockListDto>>(result.Items);
 
         return new PagedResult<StockListDto>(

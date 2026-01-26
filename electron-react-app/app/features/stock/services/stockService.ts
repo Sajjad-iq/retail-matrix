@@ -2,14 +2,26 @@ import { httpService } from '@/app/lib/config/http';
 import { ApiResponse, PagedResult, PaginationParams } from '@/app/lib/types/global';
 import { AddStockBatchRequest, CreateStockRequest, StockListDto, StockStatus } from '../lib/types';
 
+export interface StockQueryParams extends PaginationParams {
+    inventoryId?: string;
+    productPackagingId?: string;
+    productName?: string;
+    stockStatus?: StockStatus;
+    reorderLevel?: number;
+}
+
 export const stockService = {
-    getMyStocks: async (params: PaginationParams & { stockStatus?: StockStatus }) => {
+    getMyStocks: async (params: StockQueryParams) => {
         const axios = httpService.getAxiosInstance();
         const response = await axios.get<ApiResponse<PagedResult<StockListDto>>>('/api/Stock/my', {
             params: {
                 pageNumber: params.pageNumber,
                 pageSize: params.pageSize,
-                stockStatus: params.stockStatus
+                inventoryId: params.inventoryId,
+                productPackagingId: params.productPackagingId,
+                productName: params.productName,
+                stockStatus: params.stockStatus,
+                reorderLevel: params.reorderLevel,
             }
         });
         return response.data.data;

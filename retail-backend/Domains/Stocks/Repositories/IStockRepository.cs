@@ -26,25 +26,15 @@ public interface IStockRepository : IRepository<Stock>
         Guid stockId,
         CancellationToken cancellationToken = default);
 
-    // Paginated queries
-    Task<PagedResult<Stock>> GetByOrganizationAsync(
+    // Paginated queries with filters
+    Task<PagedResult<Stock>> GetByFiltersAsync(
         Guid organizationId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default);
-
-    Task<PagedResult<Stock>> GetByInventoryAsync(
-        Guid inventoryId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default);
-
-    Task<PagedResult<Stock>> GetLowStockItemsAsync(
-        Guid organizationId,
-        int reorderLevel,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default);
-
-    Task<PagedResult<Stock>> GetOutOfStockItemsAsync(
-        Guid organizationId,
+        Guid? inventoryId,
+        Guid? productPackagingId,
+        string? productName,
+        bool isLowStock,
+        int? reorderLevel,
+        bool isOutOfStock,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 

@@ -33,8 +33,16 @@ export const addStockBatchSchema = z.object({
     }).optional()
 });
 
+export const stockFiltersSchema = z.object({
+    inventoryId: z.string().optional(),
+    productId: z.string().optional(),
+    productPackagingId: z.string().optional(),
+    productName: z.string().optional(),
+});
+
 export type CreateStockFormValues = z.infer<typeof createStockSchema>;
 export type AddStockBatchFormValues = z.infer<typeof addStockBatchSchema>;
+export type StockFiltersFormValues = z.infer<typeof stockFiltersSchema>;
 
 export const stockConditionOptions = [
     { label: 'جديد', value: StockCondition.New.toString() },
