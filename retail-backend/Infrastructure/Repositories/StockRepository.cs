@@ -62,6 +62,8 @@ public class StockRepository : Repository<Stock>, IStockRepository
     {
         var query = _dbSet
             .Include(s => s.Batches)
+            .Include(s => s.ProductPackaging)
+            .ThenInclude(p => p.Product)
             .Where(s => s.OrganizationId == organizationId)
             .OrderBy(s => s.ProductPackagingId);
 
@@ -82,6 +84,8 @@ public class StockRepository : Repository<Stock>, IStockRepository
     {
         var query = _dbSet
             .Include(s => s.Batches)
+            .Include(s => s.ProductPackaging)
+            .ThenInclude(p => p.Product)
             .Where(s => s.InventoryId == inventoryId)
             .OrderBy(s => s.ProductPackagingId);
 

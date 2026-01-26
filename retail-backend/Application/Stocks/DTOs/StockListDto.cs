@@ -8,4 +8,7 @@ public record StockListDto
     public int TotalQuantity { get; init; }
     public int TotalAvailableQuantity { get; init; }
     public DateTime InsertDate { get; init; }
+    public string? ProductName { get; init; }
+    public string? PackagingName { get; init; }
+    public List<StockBatchDto> Batches { get; init; } = new();
 }

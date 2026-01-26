@@ -45,7 +45,9 @@ public class MappingProfile : Profile
         // Stock mappings
         CreateMap<Stock, StockDto>()
             .ForMember(d => d.Batches, opt => opt.MapFrom(s => s.Batches));
-        CreateMap<Stock, StockListDto>();
+        CreateMap<Stock, StockListDto>()
+             .ForMember(d => d.ProductName, opt => opt.MapFrom(s => s.ProductPackaging != null && s.ProductPackaging.Product != null ? s.ProductPackaging.Product.Name : null))
+             .ForMember(d => d.PackagingName, opt => opt.MapFrom(s => s.ProductPackaging != null ? s.ProductPackaging.Name : null));
 
         // StockBatch mappings
         CreateMap<StockBatch, StockBatchDto>();

@@ -1,7 +1,9 @@
 'use client';
 
+import { Link } from 'react-router';
+
 import { ColumnDef } from '@tanstack/react-table';
-import { Barcode as BarcodeIcon, Star, Package, Ruler, Scale, Palette, Percent, Tag } from 'lucide-react';
+import { Barcode as BarcodeIcon, Star, Package, Ruler, Scale, Palette, Percent, Tag, Plus } from 'lucide-react';
 import { Badge } from '@/app/components/ui/badge';
 import { formatPrice } from '@/lib/utils';
 import { getUnitLabel, getWeightUnitLabel } from '@/app/lib/constants';
@@ -251,6 +253,19 @@ function PackagingActions({ packaging }: { packaging: ProductPackagingListDto })
 
     return (
         <div className="flex items-center gap-1 justify-end">
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                title="إضافة مخزون"
+                asChild
+            >
+                <Link to={`/inventory/stocks?packagingId=${packaging.id}&packagingName=${encodeURIComponent(packaging.name)}`}>
+                    <Plus className="h-4 w-4" />
+                    <span className="sr-only">إضافة مخزون</span>
+                </Link>
+            </Button>
+
             <CreatePackagingDialog
                 productId="" // Not needed for edit
                 productName="" // Not needed for edit if we don't display it or pass it differently

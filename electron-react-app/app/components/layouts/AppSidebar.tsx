@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Users, Settings, LogOut, Package } from 'lucide-react';
+import { Home, Users, Settings, LogOut, Package, ClipboardList } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -26,6 +26,16 @@ const menuItems = [
         title: 'المنتجات',
         url: '/products',
         icon: Package,
+    },
+    {
+        title: 'المخزون',
+        url: '/inventory/stocks',
+        icon: Package, // Consider a different icon if available, e.g. Warehouse or Boxes
+    },
+    {
+        title: 'سجل العمليات',
+        url: '/inventory/operations',
+        icon: ClipboardList, // Need to import this
     },
     {
         title: 'المستخدمين',
