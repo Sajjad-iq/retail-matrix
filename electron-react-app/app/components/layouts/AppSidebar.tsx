@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Users, Settings, LogOut, Package, ClipboardList } from 'lucide-react';
+import { Home, Users, Settings, LogOut, Package, ClipboardList, Warehouse } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -28,14 +28,19 @@ const menuItems = [
         icon: Package,
     },
     {
+        title: 'المخازن',
+        url: '/inventory/locations',
+        icon: Warehouse,
+    },
+    {
         title: 'المخزون',
         url: '/inventory/stocks',
-        icon: Package, // Consider a different icon if available, e.g. Warehouse or Boxes
+        icon: Package,
     },
     {
         title: 'سجل العمليات',
         url: '/inventory/operations',
-        icon: ClipboardList, // Need to import this
+        icon: ClipboardList,
     },
     {
         title: 'المستخدمين',

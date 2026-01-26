@@ -29,7 +29,7 @@ export const inventoryService = {
 
     getMyInventoryOperations: async (params: PaginationParams) => {
         const axios = httpService.getAxiosInstance();
-        const response = await axios.get<ApiResponse<PagedResult<InventoryOperationDto>>>('/api/InventoryOperation/my', {
+        const response = await axios.get<ApiResponse<PagedResult<InventoryOperationDto>>>('/api/Inventory/operations/my', {
             params
         });
         return response.data.data;
@@ -37,13 +37,7 @@ export const inventoryService = {
 
     createInventoryOperation: async (data: any) => { // Type as CreateInventoryOperationRequest
         const axios = httpService.getAxiosInstance();
-        const response = await axios.post<ApiResponse<string>>('/api/InventoryOperation', data);
+        const response = await axios.post<ApiResponse<string>>('/api/Inventory/operations', data);
         return response.data.data;
-    },
-
-    getMyInventories: async () => {
-        const axios = httpService.getAxiosInstance();
-        const response = await axios.get<ApiResponse<any>>('/api/InventoryOperation/inventories/my');
-        return response.data.data; // Adjust return type if PagedResult
     }
 };
