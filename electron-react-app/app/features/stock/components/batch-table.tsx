@@ -30,6 +30,11 @@ const getConditionLabel = (condition: StockCondition) => {
 
 export const batchColumns: ColumnDef<StockBatchDto>[] = [
     {
+        id: 'expander',
+        header: () => null,
+        cell: () => null,
+    },
+    {
         accessorKey: 'batchNumber',
         header: 'رقم الدفعة',
         cell: ({ row }) => <span className="font-mono text-xs">{row.original.batchNumber}</span>
@@ -89,21 +94,29 @@ export function createRenderSubRow() {
         const batches = stock.batches || [];
         const productName = stock.productName || 'منتج غير معروف';
         const packagingName = stock.packagingName;
-        const displayName = productName && packagingName 
+        const displayName = productName && packagingName
             ? `${productName} - ${packagingName}`
             : productName;
 
         return (
             <div className="p-2 bg-muted/10 rounded-md">
-                <div className="border rounded-md bg-background">
-                    {batches.length > 0 && (
+                {batches.length > 0 && (
+                    <div className="[&>div>div]:border-0 [&>div>div]:rounded-none">
                         <DataTable
                             data={batches}
                             columns={batchColumns}
                             showToolbar={false}
+                            showPagination={false}
+                            meta={{
+                                tableHeaderClassName: 'bg-muted/50',
+                                tableHeaderRowClassName: 'border-muted hover:bg-muted/50',
+                                tableHeaderCellClassName: 'text-start align-top whitespace-nowrap text-xs font-semibold text-muted-foreground py-2 h-auto',
+                                tableBodyRowClassName: 'bg-muted/30 border-muted transition-colors hover:bg-muted/50',
+                                tableBodyCellClassName: 'text-start align-top whitespace-nowrap py-2',
+                            }}
                         />
-                    )}
-                </div>
+                    </div>
+                )}
                 <div className="mt-2">
                     <AddBatchDialog
                         stockId={stock.id}
