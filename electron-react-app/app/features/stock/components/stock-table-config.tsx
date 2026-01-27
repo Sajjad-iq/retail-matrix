@@ -1,6 +1,6 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { StockListDto } from '../lib/types';
-import { Package, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
+import { Package, ChevronDown, ChevronUp, Calendar, Warehouse } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
 
@@ -68,6 +68,21 @@ export const columns: ColumnDef<StockListDto>[] = [
                             {stock.batches?.length || 0} دفعات
                         </span>
                     </div>
+                </div>
+            );
+        }
+    },
+    {
+        accessorKey: 'inventoryName',
+        header: 'المخزن',
+        cell: ({ row }) => {
+            const inventoryName = row.original.inventoryName;
+            return (
+                <div className="flex items-center gap-2">
+                    <Warehouse className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">
+                        {inventoryName || <span className="text-muted-foreground text-xs">غير محدد</span>}
+                    </span>
                 </div>
             );
         }

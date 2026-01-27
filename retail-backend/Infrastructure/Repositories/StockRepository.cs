@@ -70,6 +70,7 @@ public class StockRepository : Repository<Stock>, IStockRepository
             .Include(s => s.Batches)
             .Include(s => s.ProductPackaging)
             .ThenInclude(p => p.Product)
+            .Include(s => s.Inventory)
             .Where(s => s.OrganizationId == organizationId);
 
         // Apply basic filters

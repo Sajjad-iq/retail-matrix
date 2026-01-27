@@ -38,8 +38,9 @@ public class Stock : BaseEntity
     // Navigation - Batches collection
     public IReadOnlyCollection<StockBatch> Batches => _batches.AsReadOnly();
 
-    // Navigation
+    // Navigation properties
     public ProductPackaging? ProductPackaging { get; private set; }
+    public Inventory.Entities.Inventory? Inventory { get; private set; }
 
     // Computed properties (aggregated from batches)
     public int TotalQuantity => _batches.Sum(b => b.Quantity);
