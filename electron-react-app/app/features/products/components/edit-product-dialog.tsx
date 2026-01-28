@@ -14,11 +14,11 @@ import {
 } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 import { useUpdateProduct } from '../hooks/useProductActions';
-import { ProductWithPackagingsDto } from '../lib/types';
+import { ProductListDto } from '../lib/types';
 
 interface EditProductDialogProps {
     children?: React.ReactNode;
-    product: ProductWithPackagingsDto;
+    product: ProductListDto;
 }
 
 export function EditProductDialog({ children, product }: EditProductDialogProps) {

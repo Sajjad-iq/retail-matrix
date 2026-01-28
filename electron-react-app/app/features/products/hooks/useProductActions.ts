@@ -67,7 +67,16 @@ export const useDeletePackaging = () => {
         mutationFn: (id: string) => productService.deletePackaging(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['product-packagings'] });
             toast.success('تم حذف وحدة البيع بنجاح');
         }
+    });
+};
+
+export const useProductPackagings = (productId: string) => {
+    return useQuery({
+        queryKey: ['product-packagings', productId],
+        queryFn: () => productService.getMyPackagings({ pageNumber: 1, pageSize: 100, productId }),
+        enabled: !!productId,
     });
 };

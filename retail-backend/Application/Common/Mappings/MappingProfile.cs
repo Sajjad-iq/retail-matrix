@@ -36,7 +36,7 @@ public class MappingProfile : Profile
         CreateMap<InventoryEntity, InventoryDto>();
 
         // Product mappings
-        CreateMap<Product, ProductWithPackagingsDto>()
+        CreateMap<Product, ProductListDto>()
             .ForMember(d => d.CategoryName, opt => opt.MapFrom(s => s.Category != null ? s.Category.Name : null));
 
         // ProductPackaging mappings

@@ -5,7 +5,7 @@ using Domains.Products.Enums;
 
 namespace Application.Products.Queries.GetMyProducts;
 
-public record GetMyProductsQuery : IRequest<PagedResult<ProductWithPackagingsDto>>
+public record GetMyProductsQuery : IRequest<PagedResult<ProductListDto>>
 {
     public int PageNumber { get; init; } = 1;
     public int PageSize { get; init; } = 10;

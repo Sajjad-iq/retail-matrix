@@ -7,7 +7,7 @@ using MediatR;
 
 namespace Application.Products.Queries.GetMyProducts;
 
-public class GetMyProductsQueryHandler : IRequestHandler<GetMyProductsQuery, PagedResult<ProductWithPackagingsDto>>
+public class GetMyProductsQueryHandler : IRequestHandler<GetMyProductsQuery, PagedResult<ProductListDto>>
 {
     private readonly IProductRepository _productRepository;
     private readonly IMapper _mapper;
@@ -23,7 +23,7 @@ public class GetMyProductsQueryHandler : IRequestHandler<GetMyProductsQuery, Pag
         _organizationContext = organizationContext;
     }
 
-    public async Task<PagedResult<ProductWithPackagingsDto>> Handle(GetMyProductsQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<ProductListDto>> Handle(GetMyProductsQuery request, CancellationToken cancellationToken)
     {
         var organizationId = _organizationContext.OrganizationId;
 
@@ -44,16 +44,16 @@ public class GetMyProductsQueryHandler : IRequestHandler<GetMyProductsQuery, Pag
             IsRawMaterial = request.IsRawMaterial
         };
 
-        // Get products with their packagings
+        // Get products without packagings
         var pagedProducts = await _productRepository.GetListAsync(
             organizationId,
             filter,
             pagingParams,
             cancellationToken);
 
-        var dtos = _mapper.Map<List<ProductWithPackagingsDto>>(pagedProducts.Items);
+        var dtos = _mapper.Map<List<ProductListDto>>(pagedProducts.Items);
 
-        return new PagedResult<ProductWithPackagingsDto>(
+        return new PagedResult<ProductListDto>(
             dtos,
             pagedProducts.TotalCount,
             pagedProducts.PageNumber,

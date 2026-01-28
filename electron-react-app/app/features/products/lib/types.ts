@@ -95,7 +95,7 @@ export interface ProductPackagingListDto {
     insertDate: string;
 }
 
-export interface ProductWithPackagingsDto {
+export interface ProductListDto {
     id: string;
     name: string;
     imageUrls: string[];
@@ -104,7 +104,6 @@ export interface ProductWithPackagingsDto {
     categoryId?: string;
     categoryName?: string;
     insertDate: string;
-    packagings: ProductPackagingListDto[];
 }
 
 export interface ProductFilter extends PaginationParams {

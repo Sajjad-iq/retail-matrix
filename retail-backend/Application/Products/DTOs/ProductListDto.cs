@@ -2,7 +2,7 @@ using Domains.Products.Enums;
 
 namespace Application.Products.DTOs;
 
-public record ProductWithPackagingsDto
+public record ProductListDto
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
@@ -12,5 +12,4 @@ public record ProductWithPackagingsDto
     public Guid? CategoryId { get; init; }
     public string? CategoryName { get; init; }
     public DateTime InsertDate { get; init; }
-    public List<ProductPackagingListDto> Packagings { get; init; } = new();
 }

@@ -1,81 +1,52 @@
 'use client';
 
-import * as React from 'react';
-import {
-    ColumnDef,
-    flexRender,
-    getCoreRowModel,
-    useReactTable,
-} from '@tanstack/react-table';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/app/components/ui/table';
-import type { ProductWithPackagingsDto, ProductPackagingListDto } from '../lib/types';
+import { ColumnDef } from '@tanstack/react-table';
+import { ProductPackagingListDto, ProductListDto } from '../lib/types';
 import { createPackagingTableColumns } from './packaging-table-config';
-import { CreatePackagingDialog } from './create-packaging-dialog';
 import { Button } from '@/app/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
+import { DataTable } from '@/app/components/dataTable/DataTable';
+import { CreatePackagingDialog } from './create-packaging-dialog';
+import { useProductPackagings } from '../hooks/useProductActions';
 
-interface PackagingSubRowsProps {
-    product: ProductWithPackagingsDto;
-    columns: ColumnDef<ProductPackagingListDto>[];
-}
+const ProductPackagingsSubTable = ({ product }: { product: ProductListDto }) => {
+    const { data, isLoading } = useProductPackagings(product.id);
+    const packagings = data?.items || [];
 
-function PackagingSubRows({
-    product,
-    columns,
-}: PackagingSubRowsProps) {
-    const subTable = useReactTable({
-        data: product.packagings,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-    });
+    if (isLoading) {
+        return (
+            <div className="p-4 flex justify-center text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                جاري تحميل وحدات البيع...
+            </div>
+        );
+    }
 
-    const subRows = subTable.getRowModel().rows;
-    const headerGroups = subTable.getHeaderGroups();
+    const columns = createPackagingTableColumns();
 
     return (
         <div className="p-2 bg-muted/10 rounded-md">
-            <Table>
-                <TableHeader>
-                    {headerGroups.map((headerGroup) => (
-                        <TableRow
-                            key={headerGroup.id}
-                            className="bg-muted/50 border-muted hover:bg-muted/50"
-                        >
-                            {headerGroup.headers.map((header) => (
-                                <TableHead
-                                    key={header.id}
-                                    className="text-start align-top whitespace-nowrap text-xs font-semibold text-muted-foreground py-2 h-auto"
-                                >
-                                    {header.isPlaceholder
-                                        ? null
-                                        : flexRender(header.column.columnDef.header, header.getContext())}
-                                </TableHead>
-                            ))}
-                        </TableRow>
-                    ))}
-                </TableHeader>
-                <TableBody>
-                    {subRows.map((row) => (
-                        <TableRow
-                            key={row.id}
-                            className="bg-muted/30 border-muted transition-colors hover:bg-muted/50"
-                        >
-                            {row.getVisibleCells().map((cell) => (
-                                <TableCell key={cell.id} className="text-start align-top whitespace-nowrap py-2">
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+            {packagings.length > 0 ? (
+                <div className="[&>div>div]:border-0 [&>div>div]:rounded-none">
+                    <DataTable
+                        data={packagings}
+                        columns={columns}
+                        showToolbar={false}
+                        showPagination={false}
+                        meta={{
+                            tableHeaderClassName: 'bg-muted/50',
+                            tableHeaderRowClassName: 'border-muted hover:bg-muted/50',
+                            tableHeaderCellClassName: 'text-start align-top whitespace-nowrap text-xs font-semibold text-muted-foreground py-2 h-auto',
+                            tableBodyRowClassName: 'bg-muted/30 border-muted transition-colors hover:bg-muted/50',
+                            tableBodyCellClassName: 'text-start align-top whitespace-nowrap py-2',
+                        }}
+                    />
+                </div>
+            ) : (
+                <div className="text-center p-4 text-muted-foreground text-sm border border-dashed rounded-md bg-muted/30">
+                    لا توجد وحدات بيع لهذا المنتج
+                </div>
+            )}
             <div className="mt-2">
                 <CreatePackagingDialog
                     productId={product.id}
@@ -93,19 +64,8 @@ function PackagingSubRows({
             </div>
         </div>
     );
-}
+};
 
-export const createRenderSubRow = () => {
-    const columns = createPackagingTableColumns();
-
-    const RenderSubRow = (product: ProductWithPackagingsDto) => {
-        return (
-            <PackagingSubRows
-                product={product}
-                columns={columns}
-            />
-        );
-    };
-    RenderSubRow.displayName = 'RenderSubRow';
-    return RenderSubRow;
+export function createRenderSubRow() {
+    return (product: ProductListDto) => <ProductPackagingsSubTable product={product} />;
 };

@@ -7,6 +7,7 @@ using Application.Products.Commands.DeleteProductPackaging;
 using Application.Products.Queries.GetProductPackagingById;
 using Application.Products.Queries.GetProductPackagingByBarcode;
 using Application.Products.Queries.GetMyProducts;
+using Application.Products.Queries.GetMyPackagings;
 using Infrastructure.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -119,7 +120,7 @@ public class ProductPackagingController : ControllerBase
     }
 
     /// <summary>
-    /// Get my products with their packagings (for current user's organization)
+    /// Get my products (for current user's organization)
     /// </summary>
     [HttpGet("products/my")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
@@ -127,6 +128,18 @@ public class ProductPackagingController : ControllerBase
     {
         var products = await _mediator.Send(query);
         var response = ApiResponse<object>.SuccessResponse(products, "تم جلب قائمة المنتجات بنجاح");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Get my product packagings (for current user's organization)
+    /// </summary>
+    [HttpGet("packagings/my")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<object>>> GetMyPackagings([FromQuery] GetMyPackagingsQuery query)
+    {
+        var packagings = await _mediator.Send(query);
+        var response = ApiResponse<object>.SuccessResponse(packagings, "تم جلب قائمة وحدات البيع بنجاح");
         return Ok(response);
     }
 }

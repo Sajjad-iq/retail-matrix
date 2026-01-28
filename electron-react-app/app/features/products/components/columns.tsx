@@ -3,7 +3,7 @@ import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { Package, Calendar, ChevronDown, ChevronUp, PackageOpen } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
-import { ProductWithPackagingsDto, ProductStatus } from '../lib/types';
+import { ProductListDto, ProductStatus } from '../lib/types';
 import { Trash2, Edit, Copy } from 'lucide-react';
 import { ConfirmDialog } from '@/app/components/ui/confirm-dialog';
 import { EditProductDialog } from './edit-product-dialog';
@@ -35,17 +35,11 @@ const formatDate = (dateString: string) => {
     }).format(date);
 };
 
-export const columns: ColumnDef<ProductWithPackagingsDto>[] = [
+export const columns: ColumnDef<ProductListDto>[] = [
     {
         id: 'expander',
         header: () => null,
         cell: ({ row }) => {
-            const hasPackagings = row.original.packagings && row.original.packagings.length > 0;
-
-            if (!hasPackagings) {
-                return <div className="w-8" />;
-            }
-
             return (
                 <div className="flex items-center justify-center">
                     <Button
@@ -80,9 +74,6 @@ export const columns: ColumnDef<ProductWithPackagingsDto>[] = [
                     </div>
                     <div className="flex flex-col">
                         <span className="font-medium text-sm">{product.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                            {product.packagings?.length || 0} وحدات بيع
-                        </span>
                     </div>
                 </div>
             )
@@ -109,39 +100,6 @@ export const columns: ColumnDef<ProductWithPackagingsDto>[] = [
         },
     },
     {
-        id: 'sellingPrice',
-        header: 'سعر البيع',
-        cell: ({ row }) => {
-            const packagings = row.original.packagings;
-            if (!packagings || packagings.length === 0) {
-                return <span className="text-muted-foreground text-sm">-</span>;
-            }
-
-            const firstUnit = packagings[0];
-            if (packagings.length === 1) {
-                return (
-                    <div className="font-medium text-sm">
-                        {formatPrice(firstUnit.sellingPrice.amount, firstUnit.sellingPrice.currency)}
-                    </div>
-                );
-            }
-
-            // Show price range if multiple packagings
-            const prices = packagings.map(p => p.sellingPrice.amount);
-            const minPrice = Math.min(...prices);
-            const maxPrice = Math.max(...prices);
-
-            return (
-                <div className="text-sm">
-                    <span className="font-medium">{minPrice.toLocaleString()}</span>
-                    <span className="text-muted-foreground mx-1">-</span>
-                    <span className="font-medium">{maxPrice.toLocaleString()}</span>
-                    <span className="text-muted-foreground mr-1">{firstUnit.sellingPrice.currency}</span>
-                </div>
-            );
-        },
-    },
-    {
         accessorKey: 'insertDate',
         header: 'تاريخ الإضافة',
         cell: ({ row }) => {
@@ -164,7 +122,7 @@ export const columns: ColumnDef<ProductWithPackagingsDto>[] = [
     },
 ];
 
-function ProductActions({ product }: { product: ProductWithPackagingsDto }) {
+function ProductActions({ product }: { product: ProductListDto }) {
     const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
 
     const handleCopyId = () => {

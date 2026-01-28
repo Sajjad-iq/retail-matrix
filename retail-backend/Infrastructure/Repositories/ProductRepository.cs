@@ -28,7 +28,6 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
         var query = _dbSet
             .AsNoTracking()
-            .Include(p => p.Packagings)
             .Include(p => p.Category)
             .Where(p => p.OrganizationId == organizationId);
 
@@ -61,23 +60,18 @@ public class ProductRepository : Repository<Product>, IProductRepository
             query = query.Where(p => p.Name.Contains(filter.Name));
         }
 
-        // Filter by SearchTerm (Name or Barcode/Description in packaging)
+        // Filter by SearchTerm (Name only)
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
             var term = filter.SearchTerm.ToLower();
-            query = query.Where(p =>
-                p.Name.ToLower().Contains(term) ||
-                p.Packagings.Any(pkg =>
-                    (pkg.Barcode != null && ((string)pkg.Barcode).ToLower().Contains(term)) ||
-                    (pkg.Description != null && pkg.Description.ToLower().Contains(term))
-                )
-            );
+            query = query.Where(p => p.Name.ToLower().Contains(term));
         }
 
-        // Filter by Barcode directly
+        // Filter by Barcode - would need to be handled differently or removed
+        // since packagings are no longer loaded with products
         if (!string.IsNullOrWhiteSpace(filter.Barcode))
         {
-            query = query.Where(p => p.Packagings.Any(pkg => pkg.Barcode == filter.Barcode));
+            // Skip barcode filter for products list, handle at packaging level instead
         }
 
         query = query.OrderByDescending(p => p.InsertDate);

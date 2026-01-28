@@ -1,5 +1,6 @@
 using Domains.Products.Entities;
 using Domains.Products.Enums;
+using Domains.Products.Models;
 using Domains.Products.Repositories;
 using Domains.Shared.Base;
 using Infrastructure.Data;
@@ -16,6 +17,63 @@ public class ProductPackagingRepository : Repository<ProductPackaging>, IProduct
     {
     }
 
+    public async Task<PagedResult<ProductPackaging>> GetListAsync(
+        Guid organizationId,
+        ProductPackagingFilter filter,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbSet
+            .AsNoTracking()
+            .Include(p => p.Product)
+            .Where(p => p.Product!.OrganizationId == organizationId);
+
+        // Filter by ProductId
+        if (filter.ProductId.HasValue)
+        {
+            query = query.Where(p => p.ProductId == filter.ProductId.Value);
+        }
+
+        // Filter by Status
+        if (filter.Status.HasValue)
+        {
+            query = query.Where(p => p.Status == filter.Status.Value);
+        }
+
+        // Filter by SearchTerm (Name, Description, or Product Name)
+        if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+        {
+            var term = filter.SearchTerm.ToLower();
+            query = query.Where(p =>
+                p.Name.ToLower().Contains(term) ||
+                (p.Description != null && p.Description.ToLower().Contains(term)) ||
+                (p.Product != null && p.Product.Name.ToLower().Contains(term))
+            );
+        }
+
+        // Filter by Barcode
+        if (!string.IsNullOrWhiteSpace(filter.Barcode))
+        {
+            query = query.Where(p => p.Barcode == filter.Barcode);
+        }
+
+        // Filter by IsDefault
+        if (filter.IsDefault.HasValue)
+        {
+            query = query.Where(p => p.IsDefault == filter.IsDefault.Value);
+        }
+
+        query = query.OrderByDescending(p => p.InsertDate);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip(pagingParams.Skip)
+            .Take(pagingParams.Take)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<ProductPackaging>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+    }
 
     public async Task<ProductPackaging?> GetByIdWithProductAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -36,74 +94,6 @@ public class ProductPackagingRepository : Repository<ProductPackaging>, IProduct
         return await _dbSet
             .Include(p => p.Product)
             .FirstOrDefaultAsync(p => p.Barcode == barcode, cancellationToken);
-    }
-
-    public async Task<ProductPackaging?> GetDefaultPackagingAsync(Guid productId, CancellationToken cancellationToken = default)
-    {
-        return await _dbSet
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.ProductId == productId && p.IsDefault, cancellationToken);
-    }
-
-    public async Task<PagedResult<ProductPackaging>> GetByProductIdAsync(
-        Guid productId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        var query = _dbSet
-            .AsNoTracking()
-            .Where(p => p.ProductId == productId)
-            .OrderBy(p => p.ProductId);
-
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await query
-            .Skip(pagingParams.Skip)
-            .Take(pagingParams.Take)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<ProductPackaging>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
-    }
-
-    public async Task<PagedResult<ProductPackaging>> GetByOrganizationAsync(
-        Guid organizationId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        var query = _dbSet
-            .AsNoTracking()
-            .Include(p => p.Product)
-            .Where(p => p.Product!.OrganizationId == organizationId)
-            .OrderBy(p => p.ProductId);
-
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await query
-            .Skip(pagingParams.Skip)
-            .Take(pagingParams.Take)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<ProductPackaging>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
-    }
-
-    public async Task<PagedResult<ProductPackaging>> GetActivePackagingsAsync(
-        Guid productId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        var query = _dbSet
-            .AsNoTracking()
-            .Where(p => p.ProductId == productId && p.Status == ProductStatus.Active)
-            .OrderBy(p => p.ProductId);
-
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await query
-            .Skip(pagingParams.Skip)
-            .Take(pagingParams.Take)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<ProductPackaging>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 
     public async Task<bool> ExistsByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
