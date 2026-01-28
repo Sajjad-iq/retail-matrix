@@ -54,7 +54,6 @@ export interface StockListDto {
     productName?: string;
     packagingName?: string;
     inventoryName?: string;
-    batches: StockBatchDto[];
 }
 
 export interface CreateStockRequest {

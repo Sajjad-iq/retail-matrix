@@ -11,5 +11,4 @@ public record StockListDto
     public string? ProductName { get; init; }
     public string? PackagingName { get; init; }
     public string? InventoryName { get; init; }
-    public List<StockBatchDto> Batches { get; init; } = new();
 }

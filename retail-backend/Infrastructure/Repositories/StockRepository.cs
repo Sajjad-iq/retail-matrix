@@ -63,7 +63,6 @@ public class StockRepository : Repository<Stock>, IStockRepository
         CancellationToken cancellationToken = default)
     {
         var query = _dbSet
-            .Include(s => s.Batches)
             .Include(s => s.ProductPackaging)
             .ThenInclude(p => p.Product)
             .Include(s => s.Inventory)
@@ -119,8 +118,10 @@ public class StockRepository : Repository<Stock>, IStockRepository
         var totalCount = await query.CountAsync(cancellationToken);
 
         var items = await query
+            .Include(s => s.Batches)
             .Skip(pagingParams.Skip)
             .Take(pagingParams.Take)
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
 
         return new PagedResult<Stock>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
@@ -146,6 +147,11 @@ public class StockRepository : Repository<Stock>, IStockRepository
         var query = _context.Set<StockBatch>()
             .Include(b => b.Stock)
             .Where(b => b.Stock!.OrganizationId == organizationId);
+
+        if (filter.StockId.HasValue)
+        {
+            query = query.Where(b => b.StockId == filter.StockId.Value);
+        }
 
         if (filter.Condition.HasValue)
         {

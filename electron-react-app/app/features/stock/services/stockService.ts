@@ -1,6 +1,6 @@
 import { httpService } from '@/app/lib/config/http';
 import { ApiResponse, PagedResult } from '@/app/lib/types/global';
-import { AddStockBatchRequest, CreateStockRequest, StockListDto } from '../lib/types';
+import { AddStockBatchRequest, CreateStockRequest, StockListDto, StockBatchDto } from '../lib/types';
 
 export interface StockQueryParams {
     pageNumber: number;
@@ -40,9 +40,10 @@ export const stockService = {
         batchStatus?: number;
         daysThreshold?: number;
         condition?: number;
+        stockId?: string;
     }) => {
         const axios = httpService.getAxiosInstance();
-        const response = await axios.get<ApiResponse<PagedResult<unknown>>>('/api/Stock/batches/my', {
+        const response = await axios.get<ApiResponse<PagedResult<StockBatchDto>>>('/api/Stock/batches/my', {
             params
         });
         return response.data.data;

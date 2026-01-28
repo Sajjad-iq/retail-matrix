@@ -36,8 +36,10 @@ public class GetMyBatchesQueryHandler : IRequestHandler<GetMyBatchesQuery, Paged
             PageSize = request.PageSize
         };
 
-        // 2. Query based on batch status and condition filter
-        var filter = new StockBatchFilter();
+        var filter = new StockBatchFilter
+        {
+            StockId = request.StockId
+        };
 
         if (request.Condition.HasValue)
         {
@@ -57,8 +59,7 @@ public class GetMyBatchesQueryHandler : IRequestHandler<GetMyBatchesQuery, Paged
 
                 case BatchStatus.All:
                 default:
-                    // For "All" batches, we get all batches with expiry dates
-                    filter = filter with { DaysToExpiry = int.MaxValue };
+                    // For "All" batches, we get all batches (no filters applied)
                     break;
             }
         }

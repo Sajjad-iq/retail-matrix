@@ -34,3 +34,11 @@ export const useAddStockBatch = () => {
         }
     });
 };
+
+export const useStockBatches = (stockId: string) => {
+    return useQuery({
+        queryKey: ['stock-batches', stockId],
+        queryFn: () => stockService.getMyBatches({ pageNumber: 1, pageSize: 100, stockId }),
+        enabled: !!stockId,
+    });
+};

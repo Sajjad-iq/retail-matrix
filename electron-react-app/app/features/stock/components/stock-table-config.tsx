@@ -18,12 +18,6 @@ export const columns: ColumnDef<StockListDto>[] = [
         id: 'expander',
         header: () => null,
         cell: ({ row }) => {
-            const hasBatches = row.original.batches && row.original.batches.length > 0;
-
-            if (!hasBatches) {
-                return <div className="w-8" />;
-            }
-
             return (
                 <div className="flex items-center justify-center">
                     <Button
@@ -65,7 +59,7 @@ export const columns: ColumnDef<StockListDto>[] = [
                             {displayName}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                            {stock.batches?.length || 0} دفعات
+                            عرض التفاصيل
                         </span>
                     </div>
                 </div>
@@ -93,12 +87,9 @@ export const columns: ColumnDef<StockListDto>[] = [
         cell: ({ row }) => {
             const qty = row.original.totalAvailableQuantity;
             return (
-                <Badge
-                    variant={qty > 0 ? "default" : "destructive"}
-                    className={qty > 0 ? "bg-green-500/15 text-green-700 hover:bg-green-500/25 border-green-200" : ""}
-                >
+                <span className={`font-semibold ${qty > 0 ? "text-green-600" : "text-destructive"}`}>
                     {qty}
-                </Badge>
+                </span>
             );
         }
     },
