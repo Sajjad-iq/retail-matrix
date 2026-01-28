@@ -1,6 +1,6 @@
 import { httpService } from '@/app/lib/config/http';
 import { ApiResponse, PagedResult, PaginationParams } from '@/app/lib/types/global';
-import { InventoryDto, CreateInventoryRequest, UpdateInventoryRequest, InventoryOperationDto, CreateInventoryOperationRequest } from '../lib/types';
+import { InventoryDto, CreateInventoryRequest, UpdateInventoryRequest, InventoryOperationDto } from '../lib/types';
 
 export const inventoryLocationService = {
     getMyInventories: async (params: PaginationParams = {}) => {
@@ -33,10 +33,7 @@ export const inventoryLocationService = {
         return response.data.data;
     },
 
-    createInventoryOperation: async (data: CreateInventoryOperationRequest) => {
-        const response = await httpService.getAxiosInstance().post<ApiResponse<string>>('/api/Inventory/operations', data);
-        return response.data.data;
-    },
+
 
     getInventoryOperationById: async (id: string) => {
         const response = await httpService.getAxiosInstance().get<ApiResponse<InventoryOperationDto>>(`/api/Inventory/operations/${id}`);

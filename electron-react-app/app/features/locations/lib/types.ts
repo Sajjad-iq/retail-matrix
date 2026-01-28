@@ -77,9 +77,4 @@ export interface InventoryOperationItemDto {
     notes?: string;
 }
 
-export interface CreateInventoryOperationRequest {
-    operationType: InventoryOperationType;
-    sourceInventoryId?: string;
-    destinationInventoryId?: string;
-    notes?: string;
-}
+
