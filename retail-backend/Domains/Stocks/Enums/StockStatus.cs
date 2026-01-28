@@ -1,4 +1,4 @@
-namespace Application.Stocks.Queries.GetMyStocks;
+namespace Domains.Stocks.Enums;
 
 public enum StockStatus
 {

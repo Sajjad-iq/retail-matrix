@@ -10,7 +10,7 @@ using Infrastructure.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using StockStatus = Application.Stocks.Queries.GetMyStocks.StockStatus;
+
 using BatchStatus = Application.Stocks.Queries.GetMyBatches.BatchStatus;
 
 namespace API.Controllers;
@@ -91,27 +91,9 @@ public class StockController : ControllerBase
     /// </summary>
     [HttpGet("my")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetMyStocks(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        [FromQuery] Guid? inventoryId = null,
-        [FromQuery] Guid? productId = null,
-        [FromQuery] Guid? productPackagingId = null,
-        [FromQuery] string? productName = null,
-        [FromQuery] StockStatus stockStatus = StockStatus.All,
-        [FromQuery] int? reorderLevel = null)
+    public async Task<ActionResult<ApiResponse<object>>> GetMyStocks([FromQuery] GetMyStocksQuery query)
     {
-        var stocks = await _mediator.Send(new GetMyStocksQuery
-        {
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            InventoryId = inventoryId,
-            ProductId = productId,
-            ProductPackagingId = productPackagingId,
-            ProductName = productName,
-            StockStatus = stockStatus,
-            ReorderLevel = reorderLevel
-        });
+        var stocks = await _mediator.Send(query);
         var response = ApiResponse<object>.SuccessResponse(stocks, "تم جلب قائمة المخزون بنجاح");
         return Ok(response);
     }
@@ -121,21 +103,9 @@ public class StockController : ControllerBase
     /// </summary>
     [HttpGet("batches/my")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetMyBatches(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        [FromQuery] BatchStatus batchStatus = BatchStatus.All,
-        [FromQuery] int daysThreshold = 30,
-        [FromQuery] StockCondition? condition = null)
+    public async Task<ActionResult<ApiResponse<object>>> GetMyBatches([FromQuery] GetMyBatchesQuery query)
     {
-        var batches = await _mediator.Send(new GetMyBatchesQuery
-        {
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            BatchStatus = batchStatus,
-            DaysThreshold = daysThreshold,
-            Condition = condition
-        });
+        var batches = await _mediator.Send(query);
         var response = ApiResponse<object>.SuccessResponse(batches, "تم جلب قائمة الدفعات بنجاح");
         return Ok(response);
     }

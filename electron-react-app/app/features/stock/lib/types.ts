@@ -2,16 +2,14 @@ import { Price } from "@/app/lib/types/global";
 
 export enum StockStatus {
     All = 0,
-    InStock = 1,
-    LowStock = 2,
-    OutOfStock = 3
+    LowStock = 1,
+    OutOfStock = 2
 }
 
 export enum BatchStatus {
     All = 0,
-    Active = 1,
-    Expired = 2,
-    NearExpiry = 3
+    Expired = 1,
+    NearExpiry = 2
 }
 
 export enum StockCondition {
@@ -33,6 +31,7 @@ export interface StockBatchDto {
     costPrice?: Price;
     insertDate: string;
     isExpired: boolean;
+    daysUntilExpiry?: number;
 }
 
 export interface StockDto {

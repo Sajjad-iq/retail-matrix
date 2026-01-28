@@ -17,16 +17,7 @@ export const stockService = {
     getMyStocks: async (params: StockQueryParams) => {
         const axios = httpService.getAxiosInstance();
         const response = await axios.get<ApiResponse<PagedResult<StockListDto>>>('/api/Stock/my', {
-            params: {
-                pageNumber: params.pageNumber,
-                pageSize: params.pageSize,
-                inventoryId: params.inventoryId,
-                productId: params.productId,
-                productPackagingId: params.productPackagingId,
-                productName: params.productName,
-                stockStatus: params.stockStatus,
-                reorderLevel: params.reorderLevel,
-            }
+            params
         });
         return response.data.data;
     },
@@ -40,6 +31,20 @@ export const stockService = {
     addBatch: async (stockId: string, data: AddStockBatchRequest) => {
         const axios = httpService.getAxiosInstance();
         const response = await axios.post<ApiResponse<string>>(`/api/Stock/${stockId}/batch`, data);
+        return response.data.data;
+    },
+
+    getMyBatches: async (params: {
+        pageNumber: number;
+        pageSize: number;
+        batchStatus?: number;
+        daysThreshold?: number;
+        condition?: number;
+    }) => {
+        const axios = httpService.getAxiosInstance();
+        const response = await axios.get<ApiResponse<PagedResult<unknown>>>('/api/Stock/batches/my', {
+            params
+        });
         return response.data.data;
     },
 };

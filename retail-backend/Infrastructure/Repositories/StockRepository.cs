@@ -1,5 +1,6 @@
 using Domains.Stocks.Entities;
 using Domains.Stocks.Enums;
+using Domains.Stocks.Models;
 using Domains.Stocks.Repositories;
 using Domains.Shared.Base;
 using Infrastructure.Data;
@@ -55,15 +56,9 @@ public class StockRepository : Repository<Stock>, IStockRepository
             .FirstOrDefaultAsync(s => s.Id == stockId, cancellationToken);
     }
 
-    public async Task<PagedResult<Stock>> GetByFiltersAsync(
+    public async Task<PagedResult<Stock>> GetListAsync(
         Guid organizationId,
-        Guid? inventoryId,
-        Guid? productId,
-        Guid? productPackagingId,
-        string? productName,
-        bool isLowStock,
-        int? reorderLevel,
-        bool isOutOfStock,
+        StockFilter filter,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
@@ -74,44 +69,43 @@ public class StockRepository : Repository<Stock>, IStockRepository
             .Include(s => s.Inventory)
             .Where(s => s.OrganizationId == organizationId);
 
-        // Apply basic filters
-        if (inventoryId.HasValue)
+        // Apply filters
+        if (filter.InventoryId.HasValue)
         {
-            query = query.Where(s => s.InventoryId == inventoryId.Value);
+            query = query.Where(s => s.InventoryId == filter.InventoryId.Value);
         }
 
-        if (productId.HasValue)
+        if (filter.ProductId.HasValue)
         {
             query = query.Where(s => s.ProductPackaging != null &&
-                                     s.ProductPackaging.ProductId == productId.Value);
+                                     s.ProductPackaging.ProductId == filter.ProductId.Value);
         }
 
-        if (productPackagingId.HasValue)
+        if (filter.ProductPackagingId.HasValue)
         {
-            query = query.Where(s => s.ProductPackagingId == productPackagingId.Value);
+            query = query.Where(s => s.ProductPackagingId == filter.ProductPackagingId.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(productName))
+        if (!string.IsNullOrWhiteSpace(filter.ProductName))
         {
             query = query.Where(s => s.ProductPackaging != null &&
                                      s.ProductPackaging.Product != null &&
-                                     s.ProductPackaging.Product.Name.Contains(productName));
+                                     s.ProductPackaging.Product.Name.Contains(filter.ProductName));
         }
 
         // Apply stock status filters
-        if (isLowStock && reorderLevel.HasValue)
+        if (filter.Status == StockStatus.LowStock && filter.ReorderLevel.HasValue)
         {
             query = query.Where(s => s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) > 0 &&
-                                     s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) <= reorderLevel.Value);
+                                     s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) <= filter.ReorderLevel.Value);
         }
-
-        if (isOutOfStock)
+        else if (filter.Status == StockStatus.OutOfStock)
         {
             query = query.Where(s => !s.Batches.Any() || s.Batches.Sum(b => b.Quantity - b.ReservedQuantity) == 0);
         }
 
         // Apply ordering
-        if (isLowStock)
+        if (filter.Status == StockStatus.LowStock)
         {
             query = query
                 .OrderBy(s => s.Batches.Sum(b => b.Quantity - b.ReservedQuantity))
@@ -143,65 +137,35 @@ public class StockRepository : Repository<Stock>, IStockRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<PagedResult<StockBatch>> GetExpiredBatchesAsync(
+    public async Task<PagedResult<StockBatch>> GetBatchesListAsync(
         Guid organizationId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        var now = DateTime.UtcNow;
-        var query = _context.Set<StockBatch>()
-            .Include(b => b.Stock)
-            .Where(b => b.Stock!.OrganizationId == organizationId)
-            .Where(b => b.ExpiryDate.HasValue && b.ExpiryDate.Value < now)
-            .OrderBy(b => b.ExpiryDate)
-            .ThenBy(b => b.BatchNumber);
-
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await query
-            .Skip(pagingParams.Skip)
-            .Take(pagingParams.Take)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<StockBatch>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
-    }
-
-    public async Task<PagedResult<StockBatch>> GetNearExpiryBatchesAsync(
-        Guid organizationId,
-        int daysThreshold,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        var now = DateTime.UtcNow;
-        var thresholdDate = now.AddDays(daysThreshold);
-        var query = _context.Set<StockBatch>()
-            .Include(b => b.Stock)
-            .Where(b => b.Stock!.OrganizationId == organizationId)
-            .Where(b => b.ExpiryDate.HasValue && b.ExpiryDate.Value >= now && b.ExpiryDate.Value <= thresholdDate)
-            .OrderBy(b => b.ExpiryDate)
-            .ThenBy(b => b.BatchNumber);
-
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await query
-            .Skip(pagingParams.Skip)
-            .Take(pagingParams.Take)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<StockBatch>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
-    }
-
-    public async Task<PagedResult<StockBatch>> GetBatchesByConditionAsync(
-        Guid organizationId,
-        StockCondition condition,
+        StockBatchFilter filter,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
         var query = _context.Set<StockBatch>()
             .Include(b => b.Stock)
-            .Where(b => b.Stock!.OrganizationId == organizationId)
-            .Where(b => b.Condition == condition)
-            .OrderBy(b => b.BatchNumber);
+            .Where(b => b.Stock!.OrganizationId == organizationId);
+
+        if (filter.Condition.HasValue)
+        {
+            query = query.Where(b => b.Condition == filter.Condition.Value);
+        }
+
+        if (filter.IsExpired == true)
+        {
+            var now = DateTime.UtcNow;
+            query = query.Where(b => b.ExpiryDate.HasValue && b.ExpiryDate.Value < now);
+        }
+
+        if (filter.DaysToExpiry.HasValue)
+        {
+            var now = DateTime.UtcNow;
+            var thresholdDate = now.AddDays(filter.DaysToExpiry.Value);
+            query = query.Where(b => b.ExpiryDate.HasValue && b.ExpiryDate.Value >= now && b.ExpiryDate.Value <= thresholdDate);
+        }
+
+        query = query.OrderBy(b => b.ExpiryDate).ThenBy(b => b.BatchNumber);
 
         var totalCount = await query.CountAsync(cancellationToken);
 

@@ -12,6 +12,6 @@ public record GetMyStocksQuery : IRequest<PagedResult<StockListDto>>
     public Guid? ProductId { get; init; }
     public Guid? ProductPackagingId { get; init; }
     public string? ProductName { get; init; }
-    public StockStatus StockStatus { get; init; } = StockStatus.All;
+    public Domains.Stocks.Enums.StockStatus StockStatus { get; init; } = Domains.Stocks.Enums.StockStatus.All;
     public int? ReorderLevel { get; init; }
 }

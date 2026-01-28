@@ -4,6 +4,7 @@ using Application.Stocks.DTOs;
 using AutoMapper;
 using Domains.Shared.Base;
 using Domains.Stocks.Repositories;
+using Domains.Stocks.Enums;
 using MediatR;
 
 namespace Application.Stocks.Queries.GetMyStocks;
@@ -42,17 +43,20 @@ public class GetMyStocksQueryHandler : IRequestHandler<GetMyStocksQuery, PagedRe
         };
 
         // 3. Query using single repository method with all filters
-        var result = await _stockRepository.GetByFiltersAsync(
-            organizationId: organizationId,
-            inventoryId: request.InventoryId,
-            productId: request.ProductId,
-            productPackagingId: request.ProductPackagingId,
-            productName: request.ProductName,
-            isLowStock: request.StockStatus == StockStatus.LowStock,
-            reorderLevel: request.ReorderLevel,
-            isOutOfStock: request.StockStatus == StockStatus.OutOfStock,
-            pagingParams: pagingParams,
-            cancellationToken: cancellationToken);
+        // 3. Query using single repository method with all filters
+        var result = await _stockRepository.GetListAsync(
+            organizationId,
+            new Domains.Stocks.Models.StockFilter
+            {
+                InventoryId = request.InventoryId,
+                ProductId = request.ProductId,
+                ProductPackagingId = request.ProductPackagingId,
+                ProductName = request.ProductName,
+                Status = request.StockStatus,
+                ReorderLevel = request.ReorderLevel
+            },
+            pagingParams,
+            cancellationToken);
 
         // 4. Map to DTOs
         var dtos = _mapper.Map<List<StockListDto>>(result.Items);

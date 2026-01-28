@@ -1,5 +1,6 @@
 using Domains.Stocks.Entities;
 using Domains.Stocks.Enums;
+using Domains.Stocks.Models;
 using Domains.Shared.Base;
 
 namespace Domains.Stocks.Repositories;
@@ -27,15 +28,10 @@ public interface IStockRepository : IRepository<Stock>
         CancellationToken cancellationToken = default);
 
     // Paginated queries with filters
-    Task<PagedResult<Stock>> GetByFiltersAsync(
+    // Paginated queries with filters
+    Task<PagedResult<Stock>> GetListAsync(
         Guid organizationId,
-        Guid? inventoryId,
-        Guid? productId,
-        Guid? productPackagingId,
-        string? productName,
-        bool isLowStock,
-        int? reorderLevel,
-        bool isOutOfStock,
+        StockFilter filter,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
@@ -46,20 +42,9 @@ public interface IStockRepository : IRepository<Stock>
         CancellationToken cancellationToken = default);
 
     // Batch-specific queries
-    Task<PagedResult<StockBatch>> GetExpiredBatchesAsync(
+    Task<PagedResult<StockBatch>> GetBatchesListAsync(
         Guid organizationId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default);
-
-    Task<PagedResult<StockBatch>> GetNearExpiryBatchesAsync(
-        Guid organizationId,
-        int daysThreshold,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default);
-
-    Task<PagedResult<StockBatch>> GetBatchesByConditionAsync(
-        Guid organizationId,
-        StockCondition condition,
+        StockBatchFilter filter,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
