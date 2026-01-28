@@ -1,4 +1,5 @@
 using Domains.Inventory.Entities;
+using Domains.Inventory.Models;
 using Domains.Shared.Base;
 
 namespace Domains.Inventory.Repositories;
@@ -8,8 +9,9 @@ namespace Domains.Inventory.Repositories;
 /// </summary>
 public interface IInventoryOperationRepository : IRepository<InventoryOperation>
 {
-    Task<PagedResult<InventoryOperation>> GetByOrganizationAsync(
+    Task<PagedResult<InventoryOperation>> GetListAsync(
         Guid organizationId,
+        InventoryOperationFilter filter,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 }

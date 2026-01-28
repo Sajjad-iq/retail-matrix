@@ -34,8 +34,17 @@ public class GetMyInventoriesQueryHandler : IRequestHandler<GetMyInventoriesQuer
             PageSize = request.PageSize
         };
 
-        var pagedInventories = await _inventoryRepository.GetByOrganizationAsync(
+        var filter = new Domains.Inventory.Models.InventoryFilter
+        {
+            SearchTerm = request.SearchTerm,
+            Type = request.Type,
+            ParentId = request.ParentId,
+            IsActive = request.IsActive
+        };
+
+        var pagedInventories = await _inventoryRepository.GetListAsync(
             organizationId,
+            filter,
             pagingParams,
             cancellationToken);
 

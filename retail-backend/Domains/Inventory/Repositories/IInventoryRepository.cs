@@ -1,4 +1,5 @@
 using Domains.Inventory.Enums;
+using Domains.Inventory.Models;
 using Domains.Shared.Base;
 using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
@@ -11,26 +12,9 @@ public interface IInventoryRepository : IRepository<InventoryEntity>
 {
     Task<InventoryEntity?> GetByCodeAsync(string code, Guid organizationId, CancellationToken cancellationToken = default);
 
-    Task<PagedResult<InventoryEntity>> GetByOrganizationAsync(
+    Task<PagedResult<InventoryEntity>> GetListAsync(
         Guid organizationId,
+        InventoryFilter filter,
         PagingParams pagingParams,
-        CancellationToken cancellationToken = default);
-
-    Task<PagedResult<InventoryEntity>> GetByTypeAsync(
-        Guid organizationId,
-        InventoryType type,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default);
-
-    Task<List<InventoryEntity>> GetChildrenAsync(
-        Guid parentId,
-        CancellationToken cancellationToken = default);
-
-    Task<List<InventoryEntity>> GetRootInventoriesAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken = default);
-
-    Task<List<InventoryEntity>> GetActiveInventoriesAsync(
-        Guid organizationId,
         CancellationToken cancellationToken = default);
 }

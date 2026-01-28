@@ -75,17 +75,13 @@ public class InventoryController : ControllerBase
     }
 
     /// <summary>
-    /// Get all inventories for current organization with pagination
+    /// Get all inventories for current organization with pagination and filters
     /// </summary>
     [HttpGet("my")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetMyInventories([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<ApiResponse<object>>> GetMyInventories([FromQuery] GetMyInventoriesQuery query)
     {
-        var inventories = await _mediator.Send(new GetMyInventoriesQuery
-        {
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        });
+        var inventories = await _mediator.Send(query);
         var response = ApiResponse<object>.SuccessResponse(inventories, "تم جلب قائمة المخازن بنجاح");
         return Ok(response);
     }
@@ -109,17 +105,13 @@ public class InventoryController : ControllerBase
     }
 
     /// <summary>
-    /// Get my inventory operations (for current user's organization) with pagination
+    /// Get my inventory operations (for current user's organization) with pagination and filters
     /// </summary>
     [HttpGet("operations/my")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetMyInventoryOperations([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<ApiResponse<object>>> GetMyInventoryOperations([FromQuery] GetMyInventoryOperationsQuery query)
     {
-        var operations = await _mediator.Send(new GetMyInventoryOperationsQuery
-        {
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        });
+        var operations = await _mediator.Send(query);
         var response = ApiResponse<object>.SuccessResponse(operations, "تم جلب قائمة عمليات المخزون بنجاح");
         return Ok(response);
     }
