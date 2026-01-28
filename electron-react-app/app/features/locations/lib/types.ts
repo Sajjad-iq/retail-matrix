@@ -50,11 +50,32 @@ export interface InventoryOperationDto {
     id: string;
     operationType: InventoryOperationType;
     operationNumber: string;
+    operationDate: string;
     sourceInventoryId?: string;
+    sourceInventoryName?: string;
     destinationInventoryId?: string;
+    destinationInventoryName?: string;
+    userId: string;
+    userName: string;
+    userAvatar?: string;
+    organizationId: string;
+    status: number;
     notes?: string;
     insertDate: string;
-    createdBy: string;
+    items: InventoryOperationItemDto[];
+}
+
+export interface InventoryOperationItemDto {
+    id: string;
+    productPackagingId: string;
+    productName: string;
+    barcode?: string;
+    quantity: number;
+    unitPrice: {
+        amount: number;
+        currency: string;
+    };
+    notes?: string;
 }
 
 export interface CreateInventoryOperationRequest {

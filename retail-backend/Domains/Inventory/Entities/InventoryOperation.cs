@@ -54,6 +54,7 @@ public class InventoryOperation : BaseEntity
     // Navigation properties
     public InventoryEntity? SourceInventory { get; private set; }
     public InventoryEntity? DestinationInventory { get; private set; }
+    public Domains.Users.Entities.User? User { get; private set; }
     public List<InventoryOperationItem> Items { get; private set; }
 
     /// <summary>

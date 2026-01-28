@@ -93,6 +93,11 @@ public class InventoryOperationConfiguration : IEntityTypeConfiguration<Inventor
             .HasForeignKey(o => o.DestinationInventoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(o => o.User)
+            .WithMany()
+            .HasForeignKey(o => o.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(o => o.Items)
             .WithOne(i => i.Operation)
             .HasForeignKey(i => i.InventoryOperationId)

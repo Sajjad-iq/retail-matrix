@@ -40,6 +40,9 @@ public class InventoryOperationRepository : Repository<InventoryOperation>, IInv
         var query = _dbSet
             .AsNoTracking()
             .Include(o => o.Items)
+            .Include(o => o.User)
+            .Include(o => o.SourceInventory)
+            .Include(o => o.DestinationInventory)
             .Where(o => o.OrganizationId == organizationId)
             .OrderByDescending(o => o.OperationDate);
 

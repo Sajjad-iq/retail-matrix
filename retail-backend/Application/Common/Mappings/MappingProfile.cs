@@ -27,7 +27,11 @@ public class MappingProfile : Profile
 
         // Inventory mappings
         CreateMap<InventoryOperation, InventoryOperationDto>();
-        CreateMap<InventoryOperation, InventoryOperationListDto>();
+        CreateMap<InventoryOperation, InventoryOperationListDto>()
+            .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User != null ? s.User.Name : "Unknown"))
+            .ForMember(d => d.UserAvatar, opt => opt.MapFrom(s => s.User != null ? s.User.Avatar : null))
+            .ForMember(d => d.SourceInventoryName, opt => opt.MapFrom(s => s.SourceInventory != null ? s.SourceInventory.Name : null))
+            .ForMember(d => d.DestinationInventoryName, opt => opt.MapFrom(s => s.DestinationInventory != null ? s.DestinationInventory.Name : null));
         CreateMap<InventoryOperationItem, InventoryOperationItemDto>();
         CreateMap<InventoryEntity, InventoryDto>();
 
