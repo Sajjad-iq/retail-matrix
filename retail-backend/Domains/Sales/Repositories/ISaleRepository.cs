@@ -17,6 +17,16 @@ public interface ISaleRepository : IRepository<Sale>
     /// </summary>
     Task<Sale?> GetByIdWithTrackingAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Get active draft sale for a specific inventory and user
+    /// </summary>
+    Task<Sale?> GetActiveDraftSaleAsync(Guid inventoryId, Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get base currency for organization
+    /// </summary>
+    Task<Domains.Common.Currency.Entities.Currency?> GetBaseCurrencyAsync(Guid organizationId, CancellationToken cancellationToken = default);
+
     // Paginated queries
     Task<PagedResult<Sale>> GetByOrganizationAsync(
         Guid organizationId,

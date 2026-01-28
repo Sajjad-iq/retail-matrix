@@ -34,6 +34,28 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
+    public async Task<Sale?> GetActiveDraftSaleAsync(Guid inventoryId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        // Note: Sale doesn't store InventoryId, so we just get the most recent draft sale for the user
+        return await _dbSet
+            .Include(s => s.Items)
+            .AsNoTracking()
+            .Where(s => s.SalesPersonId == userId && s.Status == SaleStatus.Draft)
+            .OrderByDescending(s => s.SaleDate)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<Domains.Common.Currency.Entities.Currency?> GetBaseCurrencyAsync(Guid organizationId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Set<Domains.Common.Currency.Entities.Currency>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => 
+                c.OrganizationId == organizationId && 
+                c.IsBaseCurrency && 
+                !c.IsDeleted, 
+                cancellationToken);
+    }
+
     public async Task<PagedResult<Sale>> GetByOrganizationAsync(
         Guid organizationId,
         PagingParams pagingParams,

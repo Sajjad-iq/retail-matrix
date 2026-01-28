@@ -1,8 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
 
 // Cache duration constants
-const STALE_TIME = 3 * 60 * 1000; // 3 minutes - data considered fresh
-const GC_TIME = 5 * 60 * 1000; // 5 minutes - garbage collection time
+const STALE_TIME = 0; // 3 minutes - data considered fresh
+const GC_TIME = 0; // 5 minutes - garbage collection time
 
 /**
  * TanStack Query Client Configuration

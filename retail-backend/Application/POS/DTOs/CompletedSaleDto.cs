@@ -15,5 +15,6 @@ public record CompletedSaleDto
     public Price TotalDiscount { get; init; } = null!;
     public Price GrandTotal { get; init; } = null!;
     public Price AmountPaid { get; init; } = null!;
+    public Price Change { get; init; } = null!;
     public int TotalItems => Items.Sum(i => i.Quantity);
 }

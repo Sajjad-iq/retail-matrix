@@ -8,10 +8,11 @@ import {
 } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
-import { Minus, Plus, Package, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, Package, ShoppingCart, Loader2 } from 'lucide-react';
 import { PosProductDto, PosPackagingDto } from '../lib/types';
 import { formatPrice } from '@/lib/utils';
 import { useCartStore } from '../stores/cartStore';
+import { useUpdateSale, useDraftSale } from '../hooks/usePosActions';
 import { toast } from 'sonner';
 
 interface ProductDialogProps {
@@ -23,7 +24,19 @@ interface ProductDialogProps {
 export function ProductDialog({ product, open, onClose }: ProductDialogProps) {
     const [selectedPackaging, setSelectedPackaging] = useState<PosPackagingDto | null>(null);
     const [quantity, setQuantity] = useState(1);
-    const addItem = useCartStore(state => state.addItem);
+    
+    const inventoryId = useCartStore(state => state.inventoryId);
+    const draftSaleId = useCartStore(state => state.draftSaleId);
+    
+    const { data: draftSale } = useDraftSale(inventoryId);
+    const updateSale = useUpdateSale();
+
+    // Set draft sale ID when it's loaded
+    useEffect(() => {
+        if (draftSale?.saleId && draftSale.saleId !== draftSaleId) {
+            useCartStore.getState().setDraftSaleId(draftSale.saleId);
+        }
+    }, [draftSale, draftSaleId]);
 
     // Reset state when dialog opens/closes
     const handleOpenChange = (isOpen: boolean) => {
@@ -42,26 +55,82 @@ export function ProductDialog({ product, open, onClose }: ProductDialogProps) {
         }
     }, [product, open]);
 
-    const handleAddToCart = () => {
-        if (!product || !selectedPackaging) return;
+    const handleAddToCart = async () => {
+        if (!product || !selectedPackaging || !draftSale || !inventoryId) return;
 
         if (quantity > selectedPackaging.availableStock) {
             toast.error(`الكمية المتوفرة: ${selectedPackaging.availableStock}`);
             return;
         }
 
-        addItem(
-            {
-                productId: product.productId,
-                productName: product.productName,
-                imageUrl: product.imageUrls[0]
-            },
-            selectedPackaging,
-            quantity
+        // Check if item already exists in draft sale
+        const existingItem = draftSale.items.find(
+            item => item.productPackagingId === selectedPackaging.packagingId
         );
 
-        toast.success('تمت الإضافة إلى السلة');
-        handleOpenChange(false);
+        // Prepare updated items list - map to SaleItemInput format
+        const updatedItems = existingItem
+            ? draftSale.items.map(item =>
+                  item.productPackagingId === selectedPackaging.packagingId
+                      ? {
+                            productPackagingId: item.productPackagingId,
+                            quantity: item.quantity + quantity,
+                            discount: item.discount
+                                ? {
+                                      amount: item.discount.value,
+                                      isPercentage: item.discount.type === 1,
+                                  }
+                                : undefined,
+                        }
+                      : {
+                            productPackagingId: item.productPackagingId,
+                            quantity: item.quantity,
+                            discount: item.discount
+                                ? {
+                                      amount: item.discount.value,
+                                      isPercentage: item.discount.type === 1,
+                                  }
+                                : undefined,
+                        }
+              )
+            : [
+                  ...draftSale.items.map(item => ({
+                      productPackagingId: item.productPackagingId,
+                      quantity: item.quantity,
+                      discount: item.discount
+                          ? {
+                                amount: item.discount.value,
+                                isPercentage: item.discount.type === 1,
+                            }
+                          : undefined,
+                  })),
+                  {
+                      productPackagingId: selectedPackaging.packagingId,
+                      quantity,
+                      discount: selectedPackaging.discount
+                          ? {
+                                amount: selectedPackaging.discount.value,
+                                isPercentage: selectedPackaging.discount.type === 1,
+                            }
+                          : undefined,
+                  },
+              ];
+
+        try {
+            await updateSale.mutateAsync({
+                saleId: draftSale.saleId,
+                data: {
+                    inventoryId,
+                    items: updatedItems,
+                    notes: draftSale.notes,
+                },
+            });
+
+            toast.success('تمت الإضافة إلى السلة');
+            handleOpenChange(false);
+        } catch {
+            // Error handled by interceptor
+        }
     };
 
     if (!product) return null;
@@ -250,10 +319,19 @@ export function ProductDialog({ product, open, onClose }: ProductDialogProps) {
                             className="w-full gap-2"
                             size="lg"
                             onClick={handleAddToCart}
-                            disabled={!selectedPackaging || !selectedPackaging.inStock}
+                            disabled={!selectedPackaging || !selectedPackaging.inStock || updateSale.isPending}
                         >
-                            <ShoppingCart className="h-5 w-5" />
-                            إضافة إلى السلة
+                            {updateSale.isPending ? (
+                                <>
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                    جاري الإضافة...
+                                </>
+                            ) : (
+                                <>
+                                    <ShoppingCart className="h-5 w-5" />
+                                    إضافة إلى السلة
+                                </>
+                            )}
                         </Button>
                     </div>
                 </div>

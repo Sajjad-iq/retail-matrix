@@ -86,6 +86,12 @@ public class CompleteSaleCommandHandler : IRequestHandler<CompleteSaleCommand, C
         await _saleRepository.SaveChangesAsync(cancellationToken);
         await _stockRepository.SaveChangesAsync(cancellationToken);
 
+        // Calculate change
+        var change = Domains.Shared.ValueObjects.Price.Create(
+            request.AmountPaid - sale.GrandTotal.Amount,
+            sale.GrandTotal.Currency
+        );
+
         // Return completed sale DTO
         return new CompletedSaleDto
         {
@@ -105,7 +111,8 @@ public class CompleteSaleCommandHandler : IRequestHandler<CompleteSaleCommand, C
             }).ToList(),
             TotalDiscount = sale.TotalDiscount,
             GrandTotal = sale.GrandTotal,
-            AmountPaid = sale.AmountPaid
+            AmountPaid = sale.AmountPaid,
+            Change = change
         };
     }
 }

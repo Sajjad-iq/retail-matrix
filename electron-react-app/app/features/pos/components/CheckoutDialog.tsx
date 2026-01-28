@@ -8,11 +8,10 @@ import {
 } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { Badge } from '@/app/components/ui/badge';
 import { Separator } from '@/app/components/ui/separator';
 import { CheckCircle2, Loader2, Receipt, X } from 'lucide-react';
 import { useCartStore } from '../stores/cartStore';
-import { useCreateSale, useCompleteSale } from '../hooks/usePosActions';
+import { useCompleteSale, useDraftSale } from '../hooks/usePosActions';
 import { formatPrice } from '@/lib/utils';
 import { CompletedSaleDto } from '../lib/types';
 
@@ -27,19 +26,14 @@ export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps
     const [completedSale, setCompletedSale] = useState<CompletedSaleDto | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const items = useCartStore(state => state.items);
     const inventoryId = useCartStore(state => state.inventoryId);
-    const clearCart = useCartStore(state => state.clearCart);
-    const getTotal = useCartStore(state => state.getTotal);
-    const getTotalDiscount = useCartStore(state => state.getTotalDiscount);
-
-    const createSale = useCreateSale();
+    const { data: draftSale } = useDraftSale(inventoryId);
     const completeSale = useCompleteSale();
 
-    const total = getTotal();
-    const totalDiscount = getTotalDiscount();
+    const total = draftSale?.grandTotal.amount || 0;
+    const totalDiscount = draftSale?.totalDiscount || { amount: 0, currency: 'IQD' };
     const amountPaidNum = parseFloat(amountPaid) || 0;
-    const change = amountPaidNum - total.amount;
+    const change = amountPaidNum - total;
 
     const handleOpenChange = (isOpen: boolean) => {
         if (!isOpen && !isProcessing) {
@@ -50,43 +44,24 @@ export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps
     };
 
     const handleCompleteSale = async () => {
-        if (!inventoryId || items.length === 0) return;
+        if (!inventoryId || !draftSale) return;
 
-        if (amountPaidNum < total.amount) {
+        if (amountPaidNum < total) {
             return; // Amount paid is less than total
         }
 
         setIsProcessing(true);
 
         try {
-            // Step 1: Create sale (draft)
-            const saleId = await createSale.mutateAsync({
-                inventoryId,
-                items: items.map(item => ({
-                    productPackagingId: item.packagingId,
-                    quantity: item.quantity,
-                    discount: item.discount ? {
-                        amount: item.discount.value,
-                        isPercentage: item.discount.type === 1
-                    } : undefined
-                })),
-                notes: undefined
-            });
-
-            // Step 2: Complete sale with payment
             const completed = await completeSale.mutateAsync({
-                saleId: saleId ?? '',
+                saleId: draftSale.saleId,
                 inventoryId,
                 amountPaid: amountPaidNum
             });
 
-            // Step 3: Show success
             setCompletedSale(completed ?? null);
-            clearCart();
-
         } catch {
             // Error is handled by the interceptor
-            setIsProcessing(false);
         } finally {
             setIsProcessing(false);
         }
@@ -99,69 +74,72 @@ export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps
         onClose();
     };
 
-    // Success view
+    // Show success screen if sale is completed
     if (completedSale) {
         return (
             <Dialog open={open} onOpenChange={handleOpenChange}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <div className="flex items-center justify-center mb-4">
+                        <div className="flex flex-col items-center gap-4 py-4">
                             <div className="rounded-full bg-green-100 p-3">
                                 <CheckCircle2 className="h-12 w-12 text-green-600" />
                             </div>
+                            <DialogTitle className="text-2xl text-center">
+                                تمت عملية البيع بنجاح!
+                            </DialogTitle>
                         </div>
-                        <DialogTitle className="text-center text-2xl">تمت عملية البيع بنجاح</DialogTitle>
                     </DialogHeader>
 
-                    <div className="space-y-4 py-4">
-                        {/* Sale Info */}
-                        <div className="text-center space-y-2">
-                            <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                                <Receipt className="h-4 w-4" />
-                                <span>رقم البيع: {completedSale.saleNumber}</span>
+                    <div className="space-y-4">
+                        <div className="bg-muted p-4 rounded-lg space-y-2">
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">رقم البيع:</span>
+                                <span className="font-semibold">{completedSale.saleNumber}</span>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                                {new Date(completedSale.completedAt).toLocaleString('ar-SA')}
-                            </p>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">التاريخ:</span>
+                                <span className="font-semibold">
+                                    {new Date(completedSale.saleDate).toLocaleDateString('ar')}
+                                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">عدد الأصناف:</span>
+                                <span className="font-semibold">{completedSale.totalItems}</span>
+                            </div>
                         </div>
 
                         <Separator />
 
-                        {/* Summary */}
                         <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">عدد الأصناف:</span>
-                                <span className="font-medium">{completedSale.totalItems}</span>
-                            </div>
-                            {completedSale.totalDiscount.amount > 0 && (
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">الخصم:</span>
-                                    <span className="font-medium text-green-600">
-                                        -{formatPrice(completedSale.totalDiscount)}
-                                    </span>
-                                </div>
-                            )}
-                            <div className="flex justify-between text-lg font-bold">
+                            <div className="flex justify-between text-lg">
                                 <span>الإجمالي:</span>
-                                <span className="text-primary">{formatPrice(completedSale.grandTotal)}</span>
+                                <span className="font-bold">
+                                    {formatPrice(completedSale.grandTotal)}
+                                </span>
                             </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">المدفوع:</span>
-                                <span className="font-medium">{formatPrice(completedSale.amountPaid)}</span>
+                            <div className="flex justify-between text-lg">
+                                <span>المبلغ المدفوع:</span>
+                                <span className="font-bold">
+                                    {formatPrice(completedSale.amountPaid)}
+                                </span>
                             </div>
-                            {change > 0 && (
-                                <div className="flex justify-between text-lg font-semibold">
+                            {completedSale.change.amount > 0 && (
+                                <div className="flex justify-between text-lg text-green-600">
                                     <span>الباقي:</span>
-                                    <span className="text-green-600">
-                                        {formatPrice({ amount: change, currency: total.currency })}
+                                    <span className="font-bold">
+                                        {formatPrice(completedSale.change)}
                                     </span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <DialogFooter>
-                        <Button onClick={handleFinish} className="w-full" size="lg">
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={handleFinish} className="flex-1 gap-2">
+                            <Receipt className="h-4 w-4" />
+                            طباعة الفاتورة
+                        </Button>
+                        <Button onClick={handleFinish} className="flex-1">
                             إنهاء
                         </Button>
                     </DialogFooter>
@@ -170,111 +148,132 @@ export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps
         );
     }
 
-    // Checkout view
+    // Show checkout form
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="max-w-md">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl">إتمام عملية البيع</DialogTitle>
+                    <div className="flex items-center justify-between">
+                        <DialogTitle className="text-2xl">إتمام الشراء</DialogTitle>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenChange(false)}
+                            disabled={isProcessing}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </DialogHeader>
 
-                <div className="space-y-6 py-4">
+                <div className="space-y-6">
                     {/* Sale Summary */}
-                    <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
-                        <div className="flex justify-between text-sm">
+                    <div className="bg-muted p-4 rounded-lg space-y-2">
+                        <div className="flex justify-between">
                             <span className="text-muted-foreground">عدد الأصناف:</span>
-                            <span className="font-medium">{items.length}</span>
+                            <span className="font-semibold">{draftSale?.totalItems || 0}</span>
                         </div>
                         {totalDiscount.amount > 0 && (
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">الخصم:</span>
-                                <span className="font-medium text-green-600">
-                                    -{formatPrice(totalDiscount)}
-                                </span>
+                            <div className="flex justify-between text-green-600">
+                                <span>الخصم:</span>
+                                <span className="font-semibold">-{formatPrice(totalDiscount)}</span>
                             </div>
                         )}
                         <Separator />
-                        <div className="flex justify-between text-xl font-bold">
+                        <div className="flex justify-between text-lg font-bold">
                             <span>الإجمالي:</span>
-                            <span className="text-primary">{formatPrice(total)}</span>
+                            <span className="text-primary">{formatPrice({ amount: total, currency: 'IQD' })}</span>
                         </div>
                     </div>
 
                     {/* Amount Paid Input */}
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         <label className="text-sm font-medium">المبلغ المدفوع:</label>
                         <Input
                             type="number"
-                            placeholder="أدخل المبلغ المدفوع"
+                            placeholder="0.00"
                             value={amountPaid}
                             onChange={(e) => setAmountPaid(e.target.value)}
-                            className="text-2xl font-bold text-center"
-                            min={0}
-                            step={0.01}
+                            className="text-2xl text-center font-bold"
                             autoFocus
+                            disabled={isProcessing}
                         />
-                        {amountPaidNum > 0 && amountPaidNum < total.amount && (
-                            <p className="text-xs text-destructive">
-                                المبلغ المدفوع أقل من الإجمالي
-                            </p>
-                        )}
-                    </div>
 
-                    {/* Quick Amount Buttons */}
-                    <div className="grid grid-cols-3 gap-2">
-                        {[1000, 5000, 10000, 20000, 50000, 100000].map((amount) => (
-                            <Button
-                                key={amount}
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setAmountPaid(amount.toString())}
-                            >
-                                {amount.toLocaleString()}
-                            </Button>
-                        ))}
+                        {/* Quick Amount Buttons */}
+                        <div className="grid grid-cols-4 gap-2">
+                            {[1000, 5000, 10000, 20000].map((amount) => (
+                                <Button
+                                    key={amount}
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setAmountPaid(String(amount))}
+                                    disabled={isProcessing}
+                                >
+                                    {amount.toLocaleString()}
+                                </Button>
+                            ))}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => setAmountPaid(String(total))}
+                            disabled={isProcessing}
+                        >
+                            المبلغ المضبوط
+                        </Button>
                     </div>
-
-                    {/* Exact Amount Button */}
-                    <Button
-                        variant="secondary"
-                        className="w-full"
-                        onClick={() => setAmountPaid(total.amount.toString())}
-                    >
-                        المبلغ بالضبط ({formatPrice(total)})
-                    </Button>
 
                     {/* Change Display */}
-                    {amountPaidNum >= total.amount && change > 0 && (
-                        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-green-900">الباقي:</span>
-                                <span className="text-2xl font-bold text-green-600">
-                                    {formatPrice({ amount: change, currency: total.currency })}
-                                </span>
-                            </div>
+                    {amountPaidNum > 0 && (
+                        <div className="p-4 bg-muted rounded-lg">
+                            {amountPaidNum < total ? (
+                                <div className="text-center text-destructive">
+                                    <p className="text-sm font-medium">المبلغ غير كافٍ</p>
+                                    <p className="text-xs">
+                                        المتبقي: {formatPrice({ amount: total - amountPaidNum, currency: 'IQD' })}
+                                    </p>
+                                </div>
+                            ) : change > 0 ? (
+                                <div className="text-center">
+                                    <p className="text-sm text-muted-foreground">الباقي:</p>
+                                    <p className="text-2xl font-bold text-green-600">
+                                        {formatPrice({ amount: change, currency: 'IQD' })}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="text-center">
+                                    <p className="text-sm font-medium text-green-600">
+                                        ✓ المبلغ المضبوط
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
 
                 <DialogFooter className="gap-2">
-                    <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isProcessing}>
-                        <X className="h-4 w-4 ml-2" />
+                    <Button
+                        variant="outline"
+                        onClick={() => handleOpenChange(false)}
+                        disabled={isProcessing}
+                    >
                         إلغاء
                     </Button>
                     <Button
                         onClick={handleCompleteSale}
-                        disabled={amountPaidNum < total.amount || isProcessing}
-                        className="flex-1"
+                        disabled={amountPaidNum < total || isProcessing || !draftSale}
+                        className="flex-1 gap-2"
                         size="lg"
                     >
                         {isProcessing ? (
                             <>
-                                <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                                <Loader2 className="h-5 w-5 animate-spin" />
                                 جاري المعالجة...
                             </>
                         ) : (
                             <>
-                                <CheckCircle2 className="h-4 w-4 ml-2" />
+                                <CheckCircle2 className="h-5 w-5" />
                                 إتمام البيع
                             </>
                         )}

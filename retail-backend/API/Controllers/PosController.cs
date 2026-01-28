@@ -5,6 +5,7 @@ using Application.POS.Commands.CreateSale;
 using Application.POS.Commands.UpdateSale;
 using Application.POS.DTOs;
 using Application.POS.Queries.GetInventoryProducts;
+using Application.POS.Queries.GetOrCreateDraftSale;
 using Application.POS.Queries.GetPosSalesHistory;
 using Application.POS.Queries.GetSale;
 using Application.POS.Queries.SearchProductByBarcode;
@@ -29,6 +30,19 @@ public class PosController : ControllerBase
     public PosController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    /// <summary>
+    /// Get or create draft sale for inventory
+    /// </summary>
+    [HttpGet("inventory/{inventoryId}/draft-sale")]
+    [ProducesResponseType(typeof(ApiResponse<SaleDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<SaleDto>>> GetOrCreateDraftSale(Guid inventoryId)
+    {
+        var query = new GetOrCreateDraftSaleQuery { InventoryId = inventoryId };
+        var sale = await _mediator.Send(query);
+        var response = ApiResponse<SaleDto>.SuccessResponse(sale, "تم جلب البيع المسودة بنجاح");
+        return Ok(response);
     }
 
     /// <summary>

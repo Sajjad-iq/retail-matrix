@@ -10,6 +10,14 @@ import {
 } from '../lib/types';
 
 export const posService = {
+    // Get or create draft sale for inventory
+    getOrCreateDraftSale: async (inventoryId: string) => {
+        const response = await httpService.getAxiosInstance().get<ApiResponse<SaleDto>>(
+            `/api/Pos/inventory/${inventoryId}/draft-sale`
+        );
+        return response.data.data;
+    },
+
     // Get inventory products for POS
     getInventoryProducts: async (filters: PosProductFilter) => {
         const { inventoryId, ...params } = filters;
@@ -20,7 +28,7 @@ export const posService = {
         return response.data.data;
     },
 
-    // Search product by barcode
+    // Search product by barcode (for future barcode scanner feature)
     searchByBarcode: async (barcode: string, inventoryId: string) => {
         const response = await httpService.getAxiosInstance().get<ApiResponse<PosProductDto>>(
             `/api/Pos/product/barcode/${barcode}`,
@@ -30,27 +38,12 @@ export const posService = {
     },
 
     // Sale operations
-    createSale: async (data: CreateSaleRequest) => {
-        const response = await httpService.getAxiosInstance().post<ApiResponse<string>>(
-            '/api/Pos/sales',
-            data
-        );
-        return response.data.data; // Returns saleId (Guid as string)
-    },
-
     updateSale: async (saleId: string, data: CreateSaleRequest) => {
         const response = await httpService.getAxiosInstance().put<ApiResponse<boolean>>(
             `/api/Pos/sales/${saleId}`,
             data
         );
         return response.data.data; // Returns boolean
-    },
-
-    getSale: async (saleId: string) => {
-        const response = await httpService.getAxiosInstance().get<ApiResponse<SaleDto>>(
-            `/api/Pos/sales/${saleId}`
-        );
-        return response.data.data; // Returns SaleDto
     },
 
     cancelSale: async (saleId: string) => {

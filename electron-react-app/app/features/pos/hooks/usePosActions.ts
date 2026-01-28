@@ -3,12 +3,24 @@ import { posService } from '../services/posService';
 import { PosProductFilter, CreateSaleRequest } from '../lib/types';
 import { toast } from 'sonner';
 
+// Note: useSearchByBarcode is kept for future barcode scanner implementation
+
 export const useInventoryProducts = (filters: PosProductFilter) => {
     return useQuery({
         queryKey: ['pos', 'inventory-products', filters],
         queryFn: () => posService.getInventoryProducts(filters),
         placeholderData: keepPreviousData,
         enabled: !!filters.inventoryId,
+    });
+};
+
+export const useDraftSale = (inventoryId: string | null) => {
+    return useQuery({
+        queryKey: ['pos', 'draft-sale', inventoryId],
+        queryFn: () => posService.getOrCreateDraftSale(inventoryId!),
+        enabled: !!inventoryId,
+        staleTime: 0, // Always fetch fresh data
+        refetchOnWindowFocus: true,
     });
 };
 
@@ -19,34 +31,16 @@ export const useSearchByBarcode = () => {
     });
 };
 
-export const useGetSale = (saleId: string) => {
-    return useQuery({
-        queryKey: ['pos', 'sale', saleId],
-        queryFn: () => posService.getSale(saleId),
-        enabled: !!saleId,
-    });
-};
-
-export const useCreateSale = () => {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: (data: CreateSaleRequest) => posService.createSale(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['pos', 'sales'] });
-            toast.success('تم حفظ البيع بنجاح');
-        },
-    });
-};
-
 export const useUpdateSale = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: ({ saleId, data }: { saleId: string; data: CreateSaleRequest }) =>
             posService.updateSale(saleId, data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['pos', 'sales'] });
+        onSuccess: (_data, variables) => {
+            // Invalidate both the specific sale and the draft sale query
+            queryClient.invalidateQueries({ queryKey: ['pos', 'sale', variables.saleId] });
+            queryClient.invalidateQueries({ queryKey: ['pos', 'draft-sale'] });
             toast.success('تم تحديث البيع بنجاح');
         },
     });

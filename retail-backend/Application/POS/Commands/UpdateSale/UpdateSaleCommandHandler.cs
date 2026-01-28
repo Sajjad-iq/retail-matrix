@@ -48,6 +48,8 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, bool>
         }
 
         // Remove all existing items
+        // TODO: Optimize this by diffing and only updating changed items
+        // Current approach: Remove all, then add all (simple but inefficient)
         var itemsToRemove = sale.Items.ToList();
         foreach (var item in itemsToRemove)
         {

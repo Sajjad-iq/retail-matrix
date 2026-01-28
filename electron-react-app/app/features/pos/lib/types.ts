@@ -37,23 +37,6 @@ export interface PosProductDto {
     totalAvailableStock: number;
 }
 
-// Cart Item
-export interface CartItem {
-    id: string; // Unique cart item ID (packaging + temp ID)
-    productId: string;
-    productName: string;
-    packagingId: string;
-    packagingName: string;
-    barcode?: string;
-    quantity: number;
-    unitPrice: Price;
-    discountedPrice: Price;
-    discount?: Discount;
-    lineTotal: Price;
-    availableStock: number;
-    imageUrl?: string;
-}
-
 // Sale DTO (matches backend SaleDto)
 export interface SaleDto {
     saleId: string;
@@ -78,15 +61,15 @@ export interface CompletedSaleDto {
     totalDiscount: Price;
     grandTotal: Price;
     amountPaid: Price;
+    change: Price;
     totalItems: number;
 }
 
 // POS Cart Item DTO (matches backend)
 export interface PosCartItemDto {
+    itemId: string;
     productPackagingId: string;
     productName: string;
-    packagingName: string;
-    barcode?: string;
     quantity: number;
     unitPrice: Price;
     discount?: Discount;
