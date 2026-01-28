@@ -5,6 +5,7 @@ import { Search, Grid3x3, Loader2 } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 import { ProductDialog } from '../components/ProductDialog';
 import { CartDialog } from '../components/CartDialog';
+import { CheckoutDialog } from '../components/CheckoutDialog';
 import { FloatingCartButton } from '../components/FloatingCartButton';
 import { useInventoryProducts } from '../hooks/usePosActions';
 import { useCartStore } from '../stores/cartStore';
@@ -15,6 +16,7 @@ export default function PosPage() {
     const [selectedProduct, setSelectedProduct] = useState<PosProductDto | null>(null);
     const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
     const [isCartDialogOpen, setIsCartDialogOpen] = useState(false);
+    const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(0);
     const [pageSize] = useState(50);
@@ -49,7 +51,12 @@ export default function PosPage() {
     };
 
     const handleCheckout = () => {
-        // TODO: Implement checkout flow with payment dialog
+        setIsCartDialogOpen(false);
+        setIsCheckoutDialogOpen(true);
+    };
+
+    const handleCheckoutSuccess = () => {
+        setIsCheckoutDialogOpen(false);
     };
 
     const handleSearch = (e: React.FormEvent) => {
@@ -178,6 +185,13 @@ export default function PosPage() {
                 open={isCartDialogOpen}
                 onClose={() => setIsCartDialogOpen(false)}
                 onCheckout={handleCheckout}
+            />
+
+            {/* Checkout Dialog */}
+            <CheckoutDialog
+                open={isCheckoutDialogOpen}
+                onClose={() => setIsCheckoutDialogOpen(false)}
+                onSuccess={handleCheckoutSuccess}
             />
 
             {/* Floating Cart Button */}
