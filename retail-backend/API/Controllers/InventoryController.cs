@@ -1,6 +1,5 @@
 using API.Models;
 using Application.Inventory.Commands.CreateInventory;
-using Application.Inventory.Commands.CreateInventoryOperation;
 using Application.Inventory.Commands.UpdateInventory;
 using Application.Inventory.Queries.GetInventoryById;
 using Application.Inventory.Queries.GetInventoryOperationById;
@@ -95,18 +94,6 @@ public class InventoryController : ControllerBase
 
     #region Inventory Operations
 
-    /// <summary>
-    /// Create a new inventory operation (transfer, purchase, sale, adjustment, etc.)
-    /// </summary>
-    [HttpPost("operations")]
-    [ProducesResponseType(typeof(ApiResponse<Guid>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<Guid>>> CreateInventoryOperation([FromBody] CreateInventoryOperationCommand command)
-    {
-        var operationId = await _mediator.Send(command);
-        var response = ApiResponse<Guid>.SuccessResponse(operationId, "تم إنشاء عملية المخزون بنجاح");
-        return CreatedAtAction(nameof(GetInventoryOperationById), new { id = operationId }, response);
-    }
 
     /// <summary>
     /// Get inventory operation by ID with all details
