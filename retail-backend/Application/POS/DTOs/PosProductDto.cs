@@ -1,19 +1,23 @@
-using Domains.Shared.ValueObjects;
-
 namespace Application.POS.DTOs;
 
 /// <summary>
-/// DTO for product lookup result in POS (by barcode)
+/// DTO for product with all packagings and stock information for POS
 /// </summary>
 public record PosProductDto
 {
+    // Product Information
     public Guid ProductId { get; init; }
     public string ProductName { get; init; } = string.Empty;
-    public Guid PackagingId { get; init; }
-    public string PackagingName { get; init; } = string.Empty;
-    public string? Barcode { get; init; }
-    public Price SellingPrice { get; init; } = null!;
-    public Discount? Discount { get; init; }
-    public Price DiscountedPrice { get; init; } = null!;
-    public int AvailableStock { get; init; }
+    public Guid? CategoryId { get; init; }
+    public string? CategoryName { get; init; }
+    public List<string> ImageUrls { get; init; } = new();
+    
+    // All available packagings with stock information
+    public List<PosPackagingDto> Packagings { get; init; } = new();
+    
+    // Computed Properties
+    public int TotalPackagings => Packagings.Count;
+    public int InStockPackagings => Packagings.Count(p => p.InStock);
+    public bool HasStock => Packagings.Any(p => p.InStock);
+    public int TotalAvailableStock => Packagings.Sum(p => p.AvailableStock);
 }

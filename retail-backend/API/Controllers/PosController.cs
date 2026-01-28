@@ -4,9 +4,11 @@ using Application.POS.Commands.CompleteSale;
 using Application.POS.Commands.CreateSale;
 using Application.POS.Commands.UpdateSale;
 using Application.POS.DTOs;
+using Application.POS.Queries.GetInventoryProducts;
 using Application.POS.Queries.GetPosSalesHistory;
 using Application.POS.Queries.GetSale;
 using Application.POS.Queries.SearchProductByBarcode;
+using Domains.Products.Enums;
 using Domains.Sales.Enums;
 using Domains.Shared.Base;
 using Infrastructure.Filters;
@@ -150,6 +152,40 @@ public class PosController : ControllerBase
         }
 
         var response = ApiResponse<PosProductDto>.SuccessResponse(result, "تم العثور على المنتج");
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Get paginated products with stock availability for a specific inventory
+    /// </summary>
+    [HttpGet("inventory/{inventoryId}/products")]
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<PosProductDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResult<PosProductDto>>>> GetInventoryProducts(
+        Guid inventoryId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] Guid? categoryId = null,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? barcode = null,
+        [FromQuery] ProductStatus? status = null,
+        [FromQuery] bool? inStock = null,
+        [FromQuery] int? minQuantity = null)
+    {
+        var query = new GetInventoryProductsQuery
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            InventoryId = inventoryId,
+            CategoryId = categoryId,
+            SearchTerm = searchTerm,
+            Barcode = barcode,
+            Status = status,
+            InStock = inStock,
+            MinQuantity = minQuantity
+        };
+
+        var result = await _mediator.Send(query);
+        var response = ApiResponse<PagedResult<PosProductDto>>.SuccessResponse(result, "تم جلب قائمة المنتجات بنجاح");
         return Ok(response);
     }
 }

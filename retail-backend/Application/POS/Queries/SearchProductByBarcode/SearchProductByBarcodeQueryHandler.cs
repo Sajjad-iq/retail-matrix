@@ -42,17 +42,34 @@ public class SearchProductByBarcodeQueryHandler : IRequestHandler<SearchProductB
 
         var availableQuantity = stock?.TotalAvailableQuantity ?? 0;
 
-        return new PosProductDto
+        var packagingDto = new PosPackagingDto
         {
-            ProductId = packaging.ProductId,
-            ProductName = packaging.Product?.Name ?? packaging.Name,
             PackagingId = packaging.Id,
             PackagingName = packaging.Name,
+            Description = packaging.Description,
             Barcode = packaging.Barcode?.ToString(),
+            UnitsPerPackage = packaging.UnitsPerPackage,
+            UnitOfMeasure = packaging.UnitOfMeasure,
+            IsDefault = packaging.IsDefault,
+            Status = packaging.Status,
+            ImageUrls = packaging.ImageUrls,
+            Dimensions = packaging.Dimensions,
+            Weight = packaging.Weight,
+            Color = packaging.Color,
             SellingPrice = packaging.SellingPrice,
             Discount = packaging.Discount,
             DiscountedPrice = packaging.GetDiscountedPrice(),
             AvailableStock = availableQuantity
+        };
+
+        return new PosProductDto
+        {
+            ProductId = packaging.ProductId,
+            ProductName = packaging.Product?.Name ?? packaging.Name,
+            CategoryId = packaging.Product?.CategoryId,
+            CategoryName = packaging.Product?.Category?.Name,
+            ImageUrls = packaging.Product?.ImageUrls ?? new List<string>(),
+            Packagings = new List<PosPackagingDto> { packagingDto }
         };
     }
 }
