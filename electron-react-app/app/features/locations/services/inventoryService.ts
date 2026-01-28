@@ -42,4 +42,9 @@ export const inventoryLocationService = {
         const response = await httpService.getAxiosInstance().get<ApiResponse<InventoryOperationDto>>(`/api/Inventory/operations/${id}`);
         return response.data.data;
     },
+
+    getOperationItems: async (operationId: string) => {
+        const response = await httpService.getAxiosInstance().get<ApiResponse<any[]>>(`/api/Inventory/operations/${operationId}/items`);
+        return response.data.data;
+    },
 };

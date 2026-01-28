@@ -137,5 +137,18 @@ public class InventoryController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Get operation items for a specific inventory operation
+    /// </summary>
+    [HttpGet("operations/{id}/items")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<object>>> GetInventoryOperationItems(Guid id)
+    {
+        var items = await _mediator.Send(new Application.Inventory.Queries.GetInventoryOperationItems.GetInventoryOperationItemsQuery { OperationId = id });
+        var response = ApiResponse<object>.SuccessResponse(items, "تم جلب عناصر العملية بنجاح");
+        return Ok(response);
+    }
+
     #endregion
 }

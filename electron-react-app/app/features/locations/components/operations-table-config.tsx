@@ -1,7 +1,8 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { InventoryOperationDto, InventoryOperationType } from '../lib/types';
 import { Badge } from '@/app/components/ui/badge';
-import { Calendar } from 'lucide-react';
+import { Button } from '@/app/components/ui/button';
+import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 
 export const getOperationTypeLabel = (type: InventoryOperationType) => {
     switch (type) {
@@ -38,7 +39,24 @@ export const operationColumns: ColumnDef<InventoryOperationDto>[] = [
     {
         id: 'expander',
         header: () => null,
-        cell: () => null,
+        cell: ({ row }) => {
+            return (
+                <div className="flex items-center justify-center">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => row.toggleExpanded()}
+                        className="h-8 w-8 p-0"
+                    >
+                        {row.getIsExpanded() ? (
+                            <ChevronUp className="h-4 w-4" />
+                        ) : (
+                            <ChevronDown className="h-4 w-4" />
+                        )}
+                    </Button>
+                </div>
+            );
+        },
     },
     {
         accessorKey: 'operationNumber',

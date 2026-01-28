@@ -62,7 +62,6 @@ export interface InventoryOperationDto {
     status: number;
     notes?: string;
     insertDate: string;
-    items: InventoryOperationItemDto[];
 }
 
 export interface InventoryOperationItemDto {

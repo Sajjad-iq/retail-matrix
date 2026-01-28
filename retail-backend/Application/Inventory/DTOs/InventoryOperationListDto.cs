@@ -19,5 +19,4 @@ public record InventoryOperationListDto
     public InventoryOperationStatus Status { get; init; }
     public string? Notes { get; init; }
     public DateTime InsertDate { get; init; }
-    public List<InventoryOperationItemDto> Items { get; init; } = new();
 }
