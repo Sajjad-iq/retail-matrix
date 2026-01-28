@@ -3,12 +3,14 @@ using Application.Organizations.DTOs;
 using Application.Inventory.DTOs;
 using Application.Products.DTOs;
 using Application.Stocks.DTOs;
+using Application.Currencies.DTOs;
 using AutoMapper;
 using Domains.Users.Entities;
 using Domains.Organizations.Entities;
 using Domains.Inventory.Entities;
 using Domains.Products.Entities;
 using Domains.Stocks.Entities;
+using Domains.Common.Currency.Entities;
 using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
 namespace Application.Common.Mappings;
@@ -56,5 +58,8 @@ public class MappingProfile : Profile
 
         // StockBatch mappings
         CreateMap<StockBatch, StockBatchDto>();
+
+        // Currency mappings
+        CreateMap<Currency, CurrencyDto>();
     }
 }

@@ -84,7 +84,7 @@ export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps
             setCompletedSale(completed ?? null);
             clearCart();
 
-        } catch (error) {
+        } catch {
             // Error is handled by the interceptor
             setIsProcessing(false);
         } finally {

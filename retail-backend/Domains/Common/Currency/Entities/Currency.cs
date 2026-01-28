@@ -128,6 +128,24 @@ public class Currency : BaseEntity
         Status = CurrencyStatus.Inactive;
     }
 
+    public void SetBaseCurrency(bool isBase)
+    {
+        if (isBase)
+        {
+            ExchangeRate = 1.0m;
+        }
+        
+        IsBaseCurrency = isBase;
+    }
+
+    public void UpdateStatus(CurrencyStatus status)
+    {
+        if (status == CurrencyStatus.Inactive && IsBaseCurrency)
+            throw new InvalidOperationException("لا يمكن تعطيل العملة الأساسية");
+
+        Status = status;
+    }
+
     public decimal ConvertToBaseCurrency(decimal amount)
     {
         if (IsBaseCurrency)

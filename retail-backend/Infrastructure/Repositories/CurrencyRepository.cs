@@ -35,6 +35,44 @@ public class CurrencyRepository : Repository<CurrencyEntity>, ICurrencyRepositor
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<PagedResult<CurrencyEntity>> GetByOrganizationAsync(
+        Guid organizationId,
+        Domains.Common.Currency.Enums.CurrencyStatus? status,
+        string? searchTerm,
+        PagingParams pagingParams,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbSet.AsNoTracking().Where(c => c.OrganizationId == organizationId);
+
+        // Apply status filter
+        if (status.HasValue)
+        {
+            query = query.Where(c => c.Status == status.Value);
+        }
+
+        // Apply search filter
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.ToLower();
+            query = query.Where(c =>
+                c.Code.ToLower().Contains(term) ||
+                c.Name.ToLower().Contains(term) ||
+                c.Symbol.ToLower().Contains(term));
+        }
+
+        // Order by: Base currency first, then by code
+        query = query.OrderByDescending(c => c.IsBaseCurrency).ThenBy(c => c.Code);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip(pagingParams.Skip)
+            .Take(pagingParams.Take)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<CurrencyEntity>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
+    }
+
     public async Task<IEnumerable<CurrencyEntity>> GetActiveAsync(Guid organizationId, CancellationToken cancellationToken = default)
     {
         return await _dbSet

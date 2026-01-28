@@ -9,6 +9,7 @@ import ProductsPage from '@/app/features/products/pages/products-page';
 import StockListPage from '@/app/features/stock/pages/stock-list-page';
 import { InventoryPage, InventoryOperationsPage } from '@/app/features/locations';
 import { PosPage } from '@/app/features/pos';
+import { SettingsPage } from '@/app/features/settings';
 
 // Home page placeholder
 function HomePage() {
@@ -87,6 +88,10 @@ export const router = createHashRouter([
                     {
                         path: '/inventory/operations',
                         element: <InventoryOperationsPage />,
+                    },
+                    {
+                        path: '/settings',
+                        element: <SettingsPage />,
                     },
                 ],
             },
