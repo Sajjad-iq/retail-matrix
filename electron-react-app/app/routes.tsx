@@ -8,6 +8,7 @@ import SetupOrganizationPage from '@/app/features/organizations/pages/setup-orga
 import ProductsPage from '@/app/features/products/pages/products-page';
 import StockListPage from '@/app/features/stock/pages/stock-list-page';
 import { InventoryPage, InventoryOperationsPage } from '@/app/features/locations';
+import { PosPage } from '@/app/features/pos';
 
 // Home page placeholder
 function HomePage() {
@@ -66,6 +67,10 @@ export const router = createHashRouter([
                     {
                         path: '/',
                         element: <HomePage />,
+                    },
+                    {
+                        path: '/pos',
+                        element: <PosPage />,
                     },
                     {
                         path: '/products',

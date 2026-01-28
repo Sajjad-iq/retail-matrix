@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Users, Settings, LogOut, Package, ClipboardList, Warehouse } from 'lucide-react';
+import { Home, Users, Settings, LogOut, Package, ClipboardList, Warehouse, ShoppingCart } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -21,6 +21,11 @@ const menuItems = [
         title: 'الرئيسية',
         url: '/',
         icon: Home,
+    },
+    {
+        title: 'نقاط البيع',
+        url: '/pos',
+        icon: ShoppingCart,
     },
     {
         title: 'المنتجات',
