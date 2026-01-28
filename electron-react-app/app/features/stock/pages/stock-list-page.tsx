@@ -12,12 +12,13 @@ export default function StockListPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
-    
+
     // Initialize filters from URL params
     const [filters, setFilters] = useState<StockFilters>(() => {
         return {
             inventoryId: searchParams.get('inventoryId') || undefined,
-            productPackagingId: searchParams.get('packagingId') || undefined,
+            productId: searchParams.get('productId') || undefined,
+            productPackagingId: searchParams.get('productPackagingId') || undefined,
             productName: searchParams.get('productName') || undefined,
         };
     });
@@ -26,6 +27,7 @@ export default function StockListPage() {
         pageNumber: page + 1,
         pageSize: pageSize,
         inventoryId: filters.inventoryId,
+        productId: filters.productId,
         productPackagingId: filters.productPackagingId,
         productName: filters.productName,
     };
@@ -35,11 +37,12 @@ export default function StockListPage() {
     const handleFiltersChange = (newFilters: StockFilters) => {
         setFilters(newFilters);
         setPage(0); // Reset to first page when filters change
-        
+
         // Update URL params
         const newSearchParams = new URLSearchParams();
         if (newFilters.inventoryId) newSearchParams.set('inventoryId', newFilters.inventoryId);
-        if (newFilters.productPackagingId) newSearchParams.set('packagingId', newFilters.productPackagingId);
+        if (newFilters.productId) newSearchParams.set('productId', newFilters.productId);
+        if (newFilters.productPackagingId) newSearchParams.set('productPackagingId', newFilters.productPackagingId);
         if (newFilters.productName) newSearchParams.set('productName', newFilters.productName);
         setSearchParams(newSearchParams);
     };

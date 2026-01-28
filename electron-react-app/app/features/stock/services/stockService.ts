@@ -1,12 +1,15 @@
 import { httpService } from '@/app/lib/config/http';
-import { ApiResponse, PagedResult, PaginationParams } from '@/app/lib/types/global';
-import { AddStockBatchRequest, CreateStockRequest, StockListDto, StockStatus } from '../lib/types';
+import { ApiResponse, PagedResult } from '@/app/lib/types/global';
+import { AddStockBatchRequest, CreateStockRequest, StockListDto } from '../lib/types';
 
-export interface StockQueryParams extends PaginationParams {
+export interface StockQueryParams {
+    pageNumber: number;
+    pageSize: number;
     inventoryId?: string;
+    productId?: string;
     productPackagingId?: string;
     productName?: string;
-    stockStatus?: StockStatus;
+    stockStatus?: number;
     reorderLevel?: number;
 }
 
@@ -18,6 +21,7 @@ export const stockService = {
                 pageNumber: params.pageNumber,
                 pageSize: params.pageSize,
                 inventoryId: params.inventoryId,
+                productId: params.productId,
                 productPackagingId: params.productPackagingId,
                 productName: params.productName,
                 stockStatus: params.stockStatus,

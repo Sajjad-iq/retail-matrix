@@ -185,7 +185,7 @@ function ProductActions({ product }: { product: ProductWithPackagingsDto }) {
                 title="عرض المخزون"
                 asChild
             >
-                <Link to={`/inventory/stocks?productName=${encodeURIComponent(product.name)}`}>
+                <Link to={`/inventory/stocks?productId=${product.id}`}>
                     <PackageOpen className="h-4 w-4" />
                     <span className="sr-only">عرض المخزون</span>
                 </Link>

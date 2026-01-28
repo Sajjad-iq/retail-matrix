@@ -30,6 +30,7 @@ public interface IStockRepository : IRepository<Stock>
     Task<PagedResult<Stock>> GetByFiltersAsync(
         Guid organizationId,
         Guid? inventoryId,
+        Guid? productId,
         Guid? productPackagingId,
         string? productName,
         bool isLowStock,

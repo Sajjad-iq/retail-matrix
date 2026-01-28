@@ -1,16 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useFormContext } from 'react-hook-form';
 import { FormBuilder } from '@/app/components/form';
 import { Button } from '@/app/components/ui/button';
 import { X, Search } from 'lucide-react';
 import { useMyInventories } from '@/app/features/locations/hooks/useInventoryActions';
-import { useMyProducts } from '@/app/features/products/hooks/useProductActions';
 import { stockFiltersSchema, StockFiltersFormValues } from '../lib/validations';
 
 export interface StockFilters {
     inventoryId?: string;
+    productId?: string;
     productPackagingId?: string;
     productName?: string;
 }
@@ -20,15 +18,8 @@ interface StockFiltersProps {
     onFiltersChange: (filters: StockFilters) => void;
 }
 
-function FiltersContent({ onClear }: { onClear: () => void }) {
-    const { watch, setValue } = useFormContext<StockFiltersFormValues>();
-    
+function FiltersContent({ onClear, hasActiveFilters }: { onClear: () => void; hasActiveFilters: boolean }) {
     const { data: inventoriesData } = useMyInventories({ pageNumber: 1, pageSize: 100 });
-    const { data: productsData } = useMyProducts({ pageNumber: 1, pageSize: 100 });
-
-    const productId = watch('productId');
-    const selectedProduct = productsData?.items.find(p => p.id === productId);
-    const packagings = selectedProduct?.packagings || [];
 
     const inventoryOptions = [
         { label: 'جميع المخازن', value: 'all' },
@@ -38,42 +29,9 @@ function FiltersContent({ onClear }: { onClear: () => void }) {
         })) || [])
     ];
 
-    const productOptions = [
-        { label: 'جميع المنتجات', value: 'all' },
-        ...(productsData?.items.map(prod => ({
-            label: prod.name,
-            value: prod.id
-        })) || [])
-    ];
-
-    const packagingOptions = [
-        { label: 'جميع التعبئات', value: 'all' },
-        ...packagings.map(pkg => ({
-            label: pkg.name,
-            value: pkg.id
-        }))
-    ];
-
-    // Reset packaging when product changes
-    useEffect(() => {
-        if (productId && productId !== 'all') {
-            const currentPackagingId = watch('productPackagingId');
-            if (currentPackagingId && currentPackagingId !== 'all') {
-                const isValid = packagings.some(p => p.id === currentPackagingId);
-                if (!isValid) {
-                    setValue('productPackagingId', 'all');
-                }
-            }
-        }
-    }, [productId, packagings, watch, setValue]);
-
-    const hasActiveFilters = (watch('inventoryId') && watch('inventoryId') !== 'all') || 
-                             (watch('productPackagingId') && watch('productPackagingId') !== 'all') || 
-                             watch('productName');
-
     return (
         <div className="border rounded-lg p-4 bg-card">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormBuilder.Select
                     name="inventoryId"
                     label="المخزن"
@@ -84,19 +42,6 @@ function FiltersContent({ onClear }: { onClear: () => void }) {
                     name="productName"
                     label="اسم المنتج"
                     placeholder="ابحث عن منتج..."
-                />
-
-                <FormBuilder.Select
-                    name="productId"
-                    label="المنتج"
-                    options={productOptions}
-                />
-
-                <FormBuilder.Select
-                    name="productPackagingId"
-                    label="التعبئة"
-                    options={packagingOptions}
-                    disabled={!productId}
                 />
             </div>
 
@@ -125,7 +70,8 @@ export function StockFiltersComponent({ filters, onFiltersChange }: StockFilters
     const handleSubmit = (values: StockFiltersFormValues) => {
         onFiltersChange({
             inventoryId: values.inventoryId && values.inventoryId !== 'all' ? values.inventoryId : undefined,
-            productPackagingId: values.productPackagingId && values.productPackagingId !== 'all' ? values.productPackagingId : undefined,
+            productId: filters.productId, // Keep from URL params
+            productPackagingId: filters.productPackagingId, // Keep from URL params
             productName: values.productName || undefined,
         });
     };
@@ -134,19 +80,24 @@ export function StockFiltersComponent({ filters, onFiltersChange }: StockFilters
         onFiltersChange({});
     };
 
+    const hasActiveFilters = Boolean(
+        (filters.inventoryId && filters.inventoryId !== 'all') ||
+        filters.productName ||
+        filters.productId ||
+        filters.productPackagingId
+    );
+
     return (
         <FormBuilder
             schema={stockFiltersSchema}
             onSubmit={handleSubmit}
             defaultValues={{
                 inventoryId: filters.inventoryId || 'all',
-                productId: 'all',
-                productPackagingId: filters.productPackagingId || 'all',
                 productName: filters.productName || '',
             }}
             className="space-y-4"
         >
-            <FiltersContent onClear={handleClear} />
+            <FiltersContent onClear={handleClear} hasActiveFilters={hasActiveFilters} />
         </FormBuilder>
     );
 }

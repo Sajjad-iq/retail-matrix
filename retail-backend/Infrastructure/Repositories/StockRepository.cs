@@ -58,6 +58,7 @@ public class StockRepository : Repository<Stock>, IStockRepository
     public async Task<PagedResult<Stock>> GetByFiltersAsync(
         Guid organizationId,
         Guid? inventoryId,
+        Guid? productId,
         Guid? productPackagingId,
         string? productName,
         bool isLowStock,
@@ -77,6 +78,12 @@ public class StockRepository : Repository<Stock>, IStockRepository
         if (inventoryId.HasValue)
         {
             query = query.Where(s => s.InventoryId == inventoryId.Value);
+        }
+
+        if (productId.HasValue)
+        {
+            query = query.Where(s => s.ProductPackaging != null &&
+                                     s.ProductPackaging.ProductId == productId.Value);
         }
 
         if (productPackagingId.HasValue)

@@ -43,15 +43,16 @@ public class GetMyStocksQueryHandler : IRequestHandler<GetMyStocksQuery, PagedRe
 
         // 3. Query using single repository method with all filters
         var result = await _stockRepository.GetByFiltersAsync(
-            organizationId,
-            request.InventoryId,
-            request.ProductPackagingId,
-            request.ProductName,
+            organizationId: organizationId,
+            inventoryId: request.InventoryId,
+            productId: request.ProductId,
+            productPackagingId: request.ProductPackagingId,
+            productName: request.ProductName,
             isLowStock: request.StockStatus == StockStatus.LowStock,
-            request.ReorderLevel,
+            reorderLevel: request.ReorderLevel,
             isOutOfStock: request.StockStatus == StockStatus.OutOfStock,
-            pagingParams,
-            cancellationToken);
+            pagingParams: pagingParams,
+            cancellationToken: cancellationToken);
 
         // 4. Map to DTOs
         var dtos = _mapper.Map<List<StockListDto>>(result.Items);

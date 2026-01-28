@@ -35,8 +35,6 @@ export const addStockBatchSchema = z.object({
 
 export const stockFiltersSchema = z.object({
     inventoryId: z.string().optional(),
-    productId: z.string().optional(),
-    productPackagingId: z.string().optional(),
     productName: z.string().optional(),
 });
 
