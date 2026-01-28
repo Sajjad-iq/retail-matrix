@@ -103,6 +103,21 @@ public class Stock : BaseEntity
         );
 
         _batches.Add(batch);
+
+        // Raise domain event for auditing
+        RaiseDomainEvent(new Events.StockBatchCreatedEvent(
+            StockId: Id,
+            BatchId: batch.Id,
+            InventoryId: InventoryId,
+            ProductPackagingId: ProductPackagingId,
+            OrganizationId: OrganizationId,
+            BatchNumber: batchNumber,
+            Quantity: quantity,
+            ExpiryDate: expiryDate,
+            Condition: condition,
+            CostPrice: costPrice
+        ));
+
         return batch;
     }
 

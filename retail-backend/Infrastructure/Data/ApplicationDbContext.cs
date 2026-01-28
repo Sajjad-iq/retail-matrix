@@ -8,6 +8,7 @@ using Domains.Common.Currency.Entities;
 using Domains.Shared.Base;
 using Infrastructure.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
+using MediatR;
 using InventoryEntity = Domains.Inventory.Entities.Inventory;
 
 namespace Infrastructure.Data;
@@ -17,9 +18,12 @@ namespace Infrastructure.Data;
 /// </summary>
 public class ApplicationDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    private readonly IMediator? _mediator;
+
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IMediator? mediator)
         : base(options)
     {
+        _mediator = mediator;
     }
 
     // DbSets
@@ -75,6 +79,20 @@ public class ApplicationDbContext : DbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        // Get entities with domain events before saving
+        var entitiesWithEvents = ChangeTracker.Entries<BaseEntity>()
+            .Where(e => e.Entity.DomainEvents.Any())
+            .Select(e => e.Entity)
+            .ToList();
+
+        // Collect all domain events
+        var domainEvents = entitiesWithEvents
+            .SelectMany(e => e.DomainEvents)
+            .ToList();
+
+        // Clear events from entities
+        entitiesWithEvents.ForEach(e => e.ClearDomainEvents());
+
         // Automatically set audit fields
         var entries = ChangeTracker.Entries<BaseEntity>();
 
@@ -101,6 +119,18 @@ public class ApplicationDbContext : DbContext
             }
         }
 
-        return await base.SaveChangesAsync(cancellationToken);
+        // Save changes first
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        // Dispatch domain events after successful save (if mediator is available)
+        if (_mediator != null)
+        {
+            foreach (var domainEvent in domainEvents)
+            {
+                await _mediator.Publish(domainEvent, cancellationToken);
+            }
+        }
+
+        return result;
     }
 }
