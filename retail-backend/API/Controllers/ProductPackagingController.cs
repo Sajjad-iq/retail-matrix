@@ -123,13 +123,9 @@ public class ProductPackagingController : ControllerBase
     /// </summary>
     [HttpGet("products/my")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetMyProducts([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<ApiResponse<object>>> GetMyProducts([FromQuery] GetMyProductsQuery query)
     {
-        var products = await _mediator.Send(new GetMyProductsQuery
-        {
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        });
+        var products = await _mediator.Send(query);
         var response = ApiResponse<object>.SuccessResponse(products, "تم جلب قائمة المنتجات بنجاح");
         return Ok(response);
     }

@@ -33,9 +33,21 @@ public class GetMyProductsQueryHandler : IRequestHandler<GetMyProductsQuery, Pag
             PageSize = request.PageSize
         };
 
+        var filter = new Domains.Products.Models.ProductFilter
+        {
+            Ids = request.Ids,
+            CategoryId = request.CategoryId,
+            CategoryIds = request.CategoryIds,
+            SearchTerm = request.SearchTerm,
+            Status = request.Status,
+            IsSelling = request.IsSelling,
+            IsRawMaterial = request.IsRawMaterial
+        };
+
         // Get products with their packagings
-        var pagedProducts = await _productRepository.GetByOrganizationAsync(
+        var pagedProducts = await _productRepository.GetListAsync(
             organizationId,
+            filter,
             pagingParams,
             cancellationToken);
 

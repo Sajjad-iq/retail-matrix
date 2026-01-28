@@ -1,12 +1,15 @@
 import { httpService } from '@/app/lib/config/http';
 import { ApiResponse, PagedResult, PaginationParams } from '@/app/lib/types/global';
-import { ProductWithPackagingsDto } from '../lib/types';
+import { ProductFilter, ProductWithPackagingsDto } from '../lib/types';
 import { CreateProductRequest } from '../lib/validations';
 
 export const productService = {
-    getMyProducts: async (params: PaginationParams = {}) => {
+    getMyProducts: async (filters: ProductFilter = {}) => {
         const response = await httpService.getAxiosInstance().get<ApiResponse<PagedResult<ProductWithPackagingsDto>>>('/api/ProductPackaging/products/my', {
-            params,
+            params: filters,
+            paramsSerializer: {
+                indexes: null // Arrays like ids[] won't have indices needed for ASP.NET
+            }
         });
         return response.data.data;
     },

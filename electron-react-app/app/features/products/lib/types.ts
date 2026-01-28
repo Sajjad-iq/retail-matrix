@@ -1,4 +1,4 @@
-import { Barcode, Price } from "@/app/lib/types/global";
+import { Barcode, Price, PaginationParams } from "@/app/lib/types/global";
 
 export enum ProductStatus {
     Active = 0,
@@ -105,6 +105,16 @@ export interface ProductWithPackagingsDto {
     categoryName?: string;
     insertDate: string;
     packagings: ProductPackagingListDto[];
+}
+
+export interface ProductFilter extends PaginationParams {
+    ids?: string[];
+    categoryId?: string;
+    categoryIds?: string[];
+    searchTerm?: string;
+    status?: ProductStatus;
+    isSelling?: boolean;
+    isRawMaterial?: boolean;
 }
 
 

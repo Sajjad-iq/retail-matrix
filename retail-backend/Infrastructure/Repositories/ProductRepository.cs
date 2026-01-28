@@ -4,6 +4,7 @@ using Domains.Products.Enums;
 using Domains.Shared.Base;
 using Domains.Sales.Enums;
 using Domains.Products.Enums;
+using Domains.Products.Models;
 using Domains.Organizations.Enums;
 using Domains.Users.Enums;
 using Infrastructure.Data;
@@ -19,9 +20,9 @@ public class ProductRepository : Repository<Product>, IProductRepository
     public ProductRepository(ApplicationDbContext context) : base(context)
     {
     }
-
-    public async Task<PagedResult<Product>> GetByOrganizationAsync(
+    public async Task<PagedResult<Product>> GetListAsync(
         Guid organizationId,
+        ProductFilter filter,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default)
     {
@@ -29,8 +30,57 @@ public class ProductRepository : Repository<Product>, IProductRepository
             .AsNoTracking()
             .Include(p => p.Packagings)
             .Include(p => p.Category)
-            .Where(p => p.OrganizationId == organizationId)
-            .OrderBy(p => p.Id);
+            .Where(p => p.OrganizationId == organizationId);
+
+        // Filter by Ids
+        if (filter.Ids != null && filter.Ids.Any())
+        {
+            query = query.Where(p => filter.Ids.Contains(p.Id));
+        }
+
+        // Filter by Category
+        if (filter.CategoryId.HasValue)
+        {
+            query = query.Where(p => p.CategoryId == filter.CategoryId.Value);
+        }
+
+        if (filter.CategoryIds != null && filter.CategoryIds.Any())
+        {
+            query = query.Where(p => p.CategoryId.HasValue && filter.CategoryIds.Contains(p.CategoryId.Value));
+        }
+
+        // Filter by Status
+        if (filter.Status.HasValue)
+        {
+            query = query.Where(p => p.Status == filter.Status.Value);
+        }
+
+        // Filter by Name
+        if (!string.IsNullOrWhiteSpace(filter.Name))
+        {
+            query = query.Where(p => p.Name.Contains(filter.Name));
+        }
+
+        // Filter by SearchTerm (Name or Barcode/Description in packaging)
+        if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+        {
+            var term = filter.SearchTerm.ToLower();
+            query = query.Where(p =>
+                p.Name.ToLower().Contains(term) ||
+                p.Packagings.Any(pkg =>
+                    (pkg.Barcode != null && ((string)pkg.Barcode).ToLower().Contains(term)) ||
+                    (pkg.Description != null && pkg.Description.ToLower().Contains(term))
+                )
+            );
+        }
+
+        // Filter by Barcode directly
+        if (!string.IsNullOrWhiteSpace(filter.Barcode))
+        {
+            query = query.Where(p => p.Packagings.Any(pkg => pkg.Barcode == filter.Barcode));
+        }
+
+        query = query.OrderByDescending(p => p.InsertDate);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
@@ -42,24 +92,5 @@ public class ProductRepository : Repository<Product>, IProductRepository
         return new PagedResult<Product>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
     }
 
-    public async Task<PagedResult<Product>> GetByStatusAsync(
-        ProductStatus status,
-        Guid organizationId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default)
-    {
-        var query = _dbSet
-            .AsNoTracking()
-            .Where(p => p.Status == status && p.OrganizationId == organizationId)
-            .OrderBy(p => p.Id);
 
-        var totalCount = await query.CountAsync(cancellationToken);
-
-        var items = await query
-            .Skip(pagingParams.Skip)
-            .Take(pagingParams.Take)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<Product>(items, totalCount, pagingParams.PageNumber, pagingParams.PageSize);
-    }
 }

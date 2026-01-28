@@ -2,6 +2,8 @@ using Domains.Products.Entities;
 using Domains.Products.Enums;
 using Domains.Shared.Base;
 
+using Domains.Products.Models;
+
 namespace Domains.Products.Repositories;
 
 /// <summary>
@@ -10,14 +12,11 @@ namespace Domains.Products.Repositories;
 public interface IProductRepository : IRepository<Product>
 {
     // Paginated queries
-    Task<PagedResult<Product>> GetByOrganizationAsync(
+    Task<PagedResult<Product>> GetListAsync(
         Guid organizationId,
+        ProductFilter filter,
         PagingParams pagingParams,
         CancellationToken cancellationToken = default);
 
-    Task<PagedResult<Product>> GetByStatusAsync(
-        ProductStatus status,
-        Guid organizationId,
-        PagingParams pagingParams,
-        CancellationToken cancellationToken = default);
+
 }
