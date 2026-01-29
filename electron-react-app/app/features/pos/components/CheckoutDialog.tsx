@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogTrigger,
+    DialogClose,
 } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -16,12 +18,13 @@ import { CompletedSaleDto } from '../lib/types';
 import { toast } from 'sonner';
 
 interface CheckoutDialogProps {
-    open: boolean;
-    onClose: () => void;
-    onSuccess: () => void;
+    children: React.ReactNode;
+    onSuccess?: () => void;
 }
 
-export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps) {
+export function CheckoutDialog({ children, onSuccess }: CheckoutDialogProps) {
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+    
     const inventoryId = useCartStore(state => state.inventoryId);
     const items = useCartStore(state => state.items);
     const getTotal = useCartStore(state => state.getTotal);
@@ -36,21 +39,12 @@ export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps
 
     const createAndCompleteSale = useCreateAndCompleteSale();
     
+    // Calculate values
     const total = getTotal();
     const totalItems = getTotalItems();
     const currency = getCurrency();
     const amountPaidNum = parseFloat(amountPaid) || 0;
     const change = amountPaidNum - total;
-
-    // Reset state when dialog opens/closes
-    useEffect(() => {
-        if (open) {
-            setAmountPaid('');
-            setCompletedSale(null);
-            setIsProcessing(false);
-            setHasSubmitted(false);
-        }
-    }, [open]);
 
     const handleCompleteSale = async () => {
         // CRITICAL: Prevent duplicate submissions
@@ -112,10 +106,12 @@ export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps
             // Clear local cart
             clearCart();
             
-            // Call success callback
+            // Call success callback after short delay
             setTimeout(() => {
-                onSuccess();
-            }, 2000); // Show success screen for 2 seconds
+                closeButtonRef.current?.click();
+                setCompletedSale(null);
+                onSuccess?.();
+            }, 2000);
         } catch {
             setIsProcessing(false);
             setHasSubmitted(false);
@@ -130,19 +126,22 @@ export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps
         setAmountPaid(amount.toString());
     };
 
-    const handleClose = () => {
-        if (completedSale) {
-            // If sale completed, trigger success callback
-            onSuccess();
-        } else {
-            onClose();
-        }
-    };
-
     // Success Screen
     if (completedSale) {
         return (
-            <Dialog open={open} onOpenChange={handleClose}>
+            <Dialog onOpenChange={(open) => {
+                if (!open) {
+                    // Reset when dialog closes
+                    setAmountPaid('');
+                    setCompletedSale(null);
+                    setIsProcessing(false);
+                    setHasSubmitted(false);
+                }
+            }}>
+                <DialogTrigger asChild>
+                    {children}
+                </DialogTrigger>
+                <DialogClose ref={closeButtonRef} className="hidden" />
                 <DialogContent className="max-w-md">
                     <div className="flex flex-col items-center justify-center space-y-4 py-8">
                         <div className="rounded-full bg-green-100 p-4">
@@ -193,10 +192,6 @@ export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps
                                 </span>
                             </div>
                         </div>
-
-                        <Button onClick={handleClose} className="w-full" size="lg">
-                            إنهاء
-                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>
@@ -205,7 +200,19 @@ export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps
 
     // Checkout Screen
     return (
-        <Dialog open={open} onOpenChange={handleClose}>
+        <Dialog onOpenChange={(open) => {
+            if (!open) {
+                // Reset when dialog closes
+                setAmountPaid('');
+                setCompletedSale(null);
+                setIsProcessing(false);
+                setHasSubmitted(false);
+            }
+        }}>
+            <DialogTrigger asChild>
+                {children}
+            </DialogTrigger>
+            <DialogClose ref={closeButtonRef} className="hidden" />
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-2xl">إتمام الشراء</DialogTitle>
@@ -332,14 +339,15 @@ export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps
 
                     {/* Action Buttons */}
                     <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            onClick={handleClose}
-                            disabled={isProcessing || hasSubmitted}
-                            className="flex-1"
-                        >
-                            إلغاء
-                        </Button>
+                        <DialogClose asChild>
+                            <Button
+                                variant="outline"
+                                disabled={isProcessing || hasSubmitted}
+                                className="flex-1"
+                            >
+                                إلغاء
+                            </Button>
+                        </DialogClose>
                         <Button
                             onClick={handleCompleteSale}
                             disabled={

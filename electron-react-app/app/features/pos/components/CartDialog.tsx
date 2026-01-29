@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogFooter,
+    DialogTrigger,
+    DialogClose,
 } from '@/app/components/ui/dialog';
 import {
     AlertDialog,
@@ -22,14 +24,13 @@ import { Minus, Plus, Trash2, ShoppingBag, X } from 'lucide-react';
 import { useCartStore } from '../stores/cartStore';
 import { formatPrice } from '@/lib/utils';
 import { toast } from 'sonner';
+import { CheckoutDialog } from './CheckoutDialog';
 
 interface CartDialogProps {
-    open: boolean;
-    onClose: () => void;
-    onCheckout: () => void;
+    children: React.ReactNode;
 }
 
-export function CartDialog({ open, onClose, onCheckout }: CartDialogProps) {
+export function CartDialog({ children }: CartDialogProps) {
     const items = useCartStore(state => state.items);
     const updateQuantity = useCartStore(state => state.updateQuantity);
     const removeItem = useCartStore(state => state.removeItem);
@@ -40,6 +41,7 @@ export function CartDialog({ open, onClose, onCheckout }: CartDialogProps) {
     const getCurrency = useCartStore(state => state.getCurrency);
     
     const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
 
     const totalItems = getTotalItems();
     const subtotal = getTotal();
@@ -68,16 +70,7 @@ export function CartDialog({ open, onClose, onCheckout }: CartDialogProps) {
         clearCart();
         setShowClearConfirm(false);
         toast.success('تم مسح السلة');
-        onClose();
-    };
-
-    const handleCheckout = () => {
-        if (items.length === 0) {
-            toast.error('السلة فارغة');
-            return;
-        }
-        onClose();
-        onCheckout();
+        closeButtonRef.current?.click();
     };
 
     const calculateLineTotal = (item: typeof items[0]) => {
@@ -86,7 +79,11 @@ export function CartDialog({ open, onClose, onCheckout }: CartDialogProps) {
 
     return (
         <>
-            <Dialog open={open} onOpenChange={onClose}>
+            <Dialog>
+                <DialogTrigger asChild>
+                    {children}
+                </DialogTrigger>
+                <DialogClose ref={closeButtonRef} className="hidden" />
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                         <div className="flex items-center justify-between">
@@ -229,18 +226,23 @@ export function CartDialog({ open, onClose, onCheckout }: CartDialogProps) {
 
                     {/* Actions */}
                     <DialogFooter className="gap-2">
-                        <Button variant="outline" onClick={onClose}>
-                            إغلاق
-                        </Button>
-                        <Button
-                            onClick={handleCheckout}
-                            disabled={items.length === 0}
-                            size="lg"
-                            className="flex-1"
+                        <DialogClose asChild>
+                            <Button variant="outline">
+                                إغلاق
+                            </Button>
+                        </DialogClose>
+                        <CheckoutDialog 
+                            onSuccess={() => closeButtonRef.current?.click()}
                         >
-                            <ShoppingBag className="ml-2 h-5 w-5" />
-                            إتمام الشراء ({totalItems})
-                        </Button>
+                            <Button
+                                disabled={items.length === 0}
+                                size="lg"
+                                className="flex-1"
+                            >
+                                <ShoppingBag className="ml-2 h-5 w-5" />
+                                إتمام الشراء ({totalItems})
+                            </Button>
+                        </CheckoutDialog>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -6,7 +6,7 @@ import { formatPrice } from '@/lib/utils';
 
 interface ProductCardProps {
     product: PosProductDto;
-    onClick: () => void;
+    onClick?: () => void;
 }
 
 export function ProductCard({ product, onClick }: ProductCardProps) {
@@ -18,7 +18,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
             className={`cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
                 !hasStock ? 'opacity-60' : ''
             }`}
-            onClick={onClick}
+            {...(onClick && { onClick })}
         >
             <CardContent className="p-0">
                 {/* Product Image */}

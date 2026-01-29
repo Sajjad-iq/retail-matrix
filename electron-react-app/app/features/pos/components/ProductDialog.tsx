@@ -1,47 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogDescription,
+    DialogTrigger,
+    DialogClose,
 } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
-import { Minus, Plus, Package, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, ShoppingCart } from 'lucide-react';
 import { PosProductDto, PosPackagingDto } from '../lib/types';
 import { formatPrice } from '@/lib/utils';
 import { useCartStore } from '../stores/cartStore';
 import { toast } from 'sonner';
 
 interface ProductDialogProps {
-    product: PosProductDto | null;
-    open: boolean;
-    onClose: () => void;
+    product: PosProductDto;
+    children: React.ReactNode;
 }
 
-export function ProductDialog({ product, open, onClose }: ProductDialogProps) {
+export function ProductDialog({ product, children }: ProductDialogProps) {
     const [selectedPackaging, setSelectedPackaging] = useState<PosPackagingDto | null>(null);
     const [quantity, setQuantity] = useState(1);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
     
     const addItem = useCartStore(state => state.addItem);
 
-    // Reset state when dialog opens/closes
-    const handleOpenChange = (isOpen: boolean) => {
-        if (!isOpen) {
-            setSelectedPackaging(null);
-            setQuantity(1);
-            onClose();
-        }
-    };
-
     // Set default packaging when product changes
     useEffect(() => {
-        if (product && open && product.packagings.length > 0) {
+        if (product.packagings.length > 0) {
             const defaultPkg = product.packagings.find(p => p.isDefault) || product.packagings[0];
             setSelectedPackaging(defaultPkg);
+            setQuantity(1);
         }
-    }, [product, open]);
+    }, [product]);
 
     const handleAddToCart = () => {
         if (!product || !selectedPackaging) return;
@@ -64,7 +58,7 @@ export function ProductDialog({ product, open, onClose }: ProductDialogProps) {
         });
 
         toast.success('تمت الإضافة إلى السلة');
-        handleOpenChange(false);
+        closeButtonRef.current?.click();
     };
 
     const handleQuantityChange = (delta: number) => {
@@ -73,10 +67,12 @@ export function ProductDialog({ product, open, onClose }: ProductDialogProps) {
         setQuantity(newQuantity);
     };
 
-    if (!product) return null;
-
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog>
+            <DialogTrigger asChild>
+                {children}
+            </DialogTrigger>
+            <DialogClose ref={closeButtonRef} className="hidden" />
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-2xl">{product.productName}</DialogTitle>

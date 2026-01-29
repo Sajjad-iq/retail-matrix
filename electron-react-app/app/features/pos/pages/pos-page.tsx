@@ -4,19 +4,12 @@ import { Input } from '@/app/components/ui/input';
 import { Search, Grid3x3, Loader2 } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 import { ProductDialog } from '../components/ProductDialog';
-import { CartDialog } from '../components/CartDialog';
-import { CheckoutDialog } from '../components/CheckoutDialog';
 import { FloatingCartButton } from '../components/FloatingCartButton';
 import { useInventoryProducts } from '../hooks/usePosActions';
 import { useCartStore } from '../stores/cartStore';
-import { PosProductDto } from '../lib/types';
 import { useMyInventories } from '@/app/features/locations/hooks/useInventoryActions';
 
 export default function PosPage() {
-    const [selectedProduct, setSelectedProduct] = useState<PosProductDto | null>(null);
-    const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
-    const [isCartDialogOpen, setIsCartDialogOpen] = useState(false);
-    const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(0);
     const [pageSize] = useState(50);
@@ -44,20 +37,6 @@ export default function PosPage() {
         searchTerm: searchTerm || undefined,
         inStock: true, // Only show items in stock
     });
-
-    const handleProductClick = (product: PosProductDto) => {
-        setSelectedProduct(product);
-        setIsProductDialogOpen(true);
-    };
-
-    const handleCheckout = () => {
-        setIsCartDialogOpen(false);
-        setIsCheckoutDialogOpen(true);
-    };
-
-    const handleCheckoutSuccess = () => {
-        setIsCheckoutDialogOpen(false);
-    };
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -129,11 +108,9 @@ export default function PosPage() {
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {productsData.items.map((product) => (
-                            <ProductCard
-                                key={product.productId}
-                                product={product}
-                                onClick={() => handleProductClick(product)}
-                            />
+                            <ProductDialog key={product.productId} product={product}>
+                                <ProductCard product={product} />
+                            </ProductDialog>
                         ))}
                     </div>
 
@@ -170,32 +147,8 @@ export default function PosPage() {
                 </div>
             )}
 
-            {/* Product Dialog */}
-            <ProductDialog
-                product={selectedProduct}
-                open={isProductDialogOpen}
-                onClose={() => {
-                    setIsProductDialogOpen(false);
-                    setSelectedProduct(null);
-                }}
-            />
-
-            {/* Cart Dialog */}
-            <CartDialog
-                open={isCartDialogOpen}
-                onClose={() => setIsCartDialogOpen(false)}
-                onCheckout={handleCheckout}
-            />
-
-            {/* Checkout Dialog */}
-            <CheckoutDialog
-                open={isCheckoutDialogOpen}
-                onClose={() => setIsCheckoutDialogOpen(false)}
-                onSuccess={handleCheckoutSuccess}
-            />
-
             {/* Floating Cart Button */}
-            <FloatingCartButton onClick={() => setIsCartDialogOpen(true)} />
+            <FloatingCartButton />
         </div>
     );
 }
