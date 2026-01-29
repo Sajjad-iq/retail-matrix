@@ -44,7 +44,7 @@ public class CompleteSaleCommandHandler : IRequestHandler<CompleteSaleCommand, C
             throw new ValidationException("البيع مكتمل بالفعل");
         }
 
-        // Deduct stock for each item using FEFO
+        // Deduct stock for each item
         foreach (var item in sale.Items)
         {
             var stock = await _stockRepository.GetByPackagingAsync(
@@ -58,7 +58,7 @@ public class CompleteSaleCommandHandler : IRequestHandler<CompleteSaleCommand, C
                 throw new ValidationException($"المخزون غير موجود للمنتج: {item.ProductName}");
             }
 
-            // Deduct from batches using FEFO
+            // Deduct from batches (no reservation release needed)
             var remainingQuantity = item.Quantity;
             var availableBatches = stock.GetAvailableBatches().ToList();
 
@@ -75,8 +75,6 @@ public class CompleteSaleCommandHandler : IRequestHandler<CompleteSaleCommand, C
             {
                 throw new ValidationException($"الكمية المتاحة غير كافية للمنتج: {item.ProductName}");
             }
-
-            await _stockRepository.UpdateAsync(stock, cancellationToken);
         }
 
         // Record payment amount
@@ -89,8 +87,8 @@ public class CompleteSaleCommandHandler : IRequestHandler<CompleteSaleCommand, C
         // Complete the sale
         sale.CompleteSale();
 
+        // Save all changes once (both sale and stock changes will be persisted together)
         await _saleRepository.SaveChangesAsync(cancellationToken);
-        await _stockRepository.SaveChangesAsync(cancellationToken);
 
         // Calculate change
         var change = Domains.Shared.ValueObjects.Price.Create(

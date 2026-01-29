@@ -131,17 +131,8 @@ public class CreateSaleCommandHandler : IRequestHandler<CreateSaleCommand, Guid>
             throw new ValidationException($"الكمية المتاحة في المخزون ({available}) أقل من المطلوبة ({itemInput.Quantity}) للمنتج: {packaging.Name}");
         }
 
-        // Reserve stock using FEFO (First Expired, First Out) strategy
-        var remainingToReserve = itemInput.Quantity;
-        foreach (var batch in stock.GetAvailableBatches())
-        {
-            if (remainingToReserve <= 0)
-                break;
-
-            var quantityToReserve = Math.Min(remainingToReserve, batch.AvailableQuantity);
-            batch.Reserve(quantityToReserve);
-            remainingToReserve -= quantityToReserve;
-        }
+        // Stock validation only - no reservation for POS flow
+        // The actual deduction happens in CompleteSale command
 
         // Get product name
         var productName = packaging.Product?.Name ?? packaging.Name;
