@@ -56,6 +56,9 @@ export function ProductDialog({ product, open, onClose }: ProductDialogProps) {
     }, [product, open]);
 
     const handleAddToCart = async () => {
+        // Prevent duplicate submissions
+        if (updateSale.isPending) return;
+        
         if (!product || !selectedPackaging || !draftSale || !inventoryId) return;
 
         if (quantity > selectedPackaging.availableStock) {

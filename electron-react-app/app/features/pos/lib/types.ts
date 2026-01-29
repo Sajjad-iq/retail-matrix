@@ -74,6 +74,7 @@ export interface PosCartItemDto {
     unitPrice: Price;
     discount?: Discount;
     lineTotal: Price;
+    availableStock: number;
 }
 
 // API Requests (matches backend Commands)

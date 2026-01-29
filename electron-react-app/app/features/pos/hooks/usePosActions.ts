@@ -20,7 +20,7 @@ export const useDraftSale = (inventoryId: string | null) => {
         queryFn: () => posService.getOrCreateDraftSale(inventoryId!),
         enabled: !!inventoryId,
         staleTime: 0, // Always fetch fresh data
-        refetchOnWindowFocus: true,
+        refetchOnWindowFocus: false, // Prevent automatic refetch that could cause race conditions
     });
 };
 
@@ -37,10 +37,10 @@ export const useUpdateSale = () => {
     return useMutation({
         mutationFn: ({ saleId, data }: { saleId: string; data: CreateSaleRequest }) =>
             posService.updateSale(saleId, data),
-        onSuccess: (_data, variables) => {
-            // Invalidate both the specific sale and the draft sale query
-            queryClient.invalidateQueries({ queryKey: ['pos', 'sale', variables.saleId] });
-            queryClient.invalidateQueries({ queryKey: ['pos', 'draft-sale'] });
+        onSuccess: async (_data, variables) => {
+            // Await invalidation to ensure cache is updated before proceeding
+            await queryClient.invalidateQueries({ queryKey: ['pos', 'sale', variables.saleId] });
+            await queryClient.invalidateQueries({ queryKey: ['pos', 'draft-sale'] });
             toast.success('تم تحديث البيع بنجاح');
         },
     });
@@ -64,9 +64,12 @@ export const useCompleteSale = () => {
     return useMutation({
         mutationFn: ({ saleId, inventoryId, amountPaid }: { saleId: string; inventoryId: string; amountPaid: number }) =>
             posService.completeSale(saleId, { inventoryId, amountPaid }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['pos'] });
-            queryClient.invalidateQueries({ queryKey: ['stocks'] });
+        onSuccess: async () => {
+            // CRITICAL: Completely clear all POS-related queries to force fresh draft sale creation
+            await queryClient.invalidateQueries({ queryKey: ['pos'] });
+            await queryClient.invalidateQueries({ queryKey: ['stocks'] });
+            // Remove all cached draft sale data to force a new draft on next interaction
+            queryClient.removeQueries({ queryKey: ['pos', 'draft-sale'] });
             toast.success('تم إتمام عملية البيع بنجاح');
         },
     });

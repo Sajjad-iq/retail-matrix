@@ -4,6 +4,7 @@ using Domains.Sales.Entities;
 using Domains.Sales.Enums;
 using Domains.Sales.Repositories;
 using Domains.Shared.ValueObjects;
+using Domains.Stocks.Repositories;
 using MediatR;
 
 namespace Application.POS.Queries.GetOrCreateDraftSale;
@@ -11,13 +12,16 @@ namespace Application.POS.Queries.GetOrCreateDraftSale;
 public class GetOrCreateDraftSaleQueryHandler : IRequestHandler<GetOrCreateDraftSaleQuery, SaleDto>
 {
     private readonly ISaleRepository _saleRepository;
+    private readonly IStockRepository _stockRepository;
     private readonly IOrganizationContext _organizationContext;
 
     public GetOrCreateDraftSaleQueryHandler(
         ISaleRepository saleRepository,
+        IStockRepository stockRepository,
         IOrganizationContext organizationContext)
     {
         _saleRepository = saleRepository;
+        _stockRepository = stockRepository;
         _organizationContext = organizationContext;
     }
 
@@ -36,36 +40,54 @@ public class GetOrCreateDraftSaleQueryHandler : IRequestHandler<GetOrCreateDraft
         
         if (existingSale != null)
         {
+            // IMPORTANT: Always use the existing draft sale to prevent duplicates
             sale = existingSale;
         }
         else
         {
-            // Create new draft sale
+            // Create new draft sale only if none exists
             sale = Sale.Create(
                 organizationId,
                 userId);
+
+            // Add notes to track which inventory this sale is for
+            sale.AddNotes($"InventoryId:{request.InventoryId}");
 
             await _saleRepository.AddAsync(sale, cancellationToken);
             await _saleRepository.SaveChangesAsync(cancellationToken);
         }
 
-        // Map to DTO
+        // Map to DTO with current stock information
+        var itemDtos = new List<PosCartItemDto>();
+        foreach (var item in sale.Items)
+        {
+            // Get current available stock
+            var stock = await _stockRepository.GetByPackagingAsync(
+                item.ProductPackagingId,
+                organizationId,
+                request.InventoryId,
+                cancellationToken);
+
+            itemDtos.Add(new PosCartItemDto
+            {
+                ItemId = item.Id,
+                ProductPackagingId = item.ProductPackagingId,
+                ProductName = item.ProductName,
+                Quantity = item.Quantity,
+                UnitPrice = item.UnitPrice,
+                Discount = item.Discount,
+                LineTotal = item.LineTotal,
+                AvailableStock = stock?.TotalAvailableQuantity ?? 0
+            });
+        }
+
         return new SaleDto
         {
             SaleId = sale.Id,
             SaleNumber = sale.SaleNumber,
             SaleDate = sale.SaleDate,
             Status = sale.Status.ToString(),
-            Items = sale.Items.Select(i => new PosCartItemDto
-            {
-                ItemId = i.Id,
-                ProductPackagingId = i.ProductPackagingId,
-                ProductName = i.ProductName,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                Discount = i.Discount,
-                LineTotal = i.LineTotal
-            }).ToList(),
+            Items = itemDtos,
             TotalDiscount = sale.TotalDiscount,
             GrandTotal = sale.GrandTotal,
             AmountPaid = sale.AmountPaid,

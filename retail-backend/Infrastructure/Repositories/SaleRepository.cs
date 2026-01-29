@@ -36,7 +36,27 @@ public class SaleRepository : Repository<Sale>, ISaleRepository
 
     public async Task<Sale?> GetActiveDraftSaleAsync(Guid inventoryId, Guid userId, CancellationToken cancellationToken = default)
     {
-        // Note: Sale doesn't store InventoryId, so we just get the most recent draft sale for the user
+        // CRITICAL FIX: Find draft sale specifically for this inventory to prevent mixing sales from different inventories
+        // Sales have InventoryId stored in Notes field as "InventoryId:xxxxx"
+        var inventoryIdString = $"InventoryId:{inventoryId}";
+        
+        var saleWithInventory = await _dbSet
+            .Include(s => s.Items)
+            .AsNoTracking()
+            .Where(s => s.SalesPersonId == userId && 
+                       s.Status == SaleStatus.Draft &&
+                       s.Notes != null &&
+                       s.Notes.Contains(inventoryIdString))
+            .OrderByDescending(s => s.SaleDate)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (saleWithInventory != null)
+        {
+            return saleWithInventory;
+        }
+
+        // Fallback: Get most recent draft sale for user (for backwards compatibility)
+        // But this should rarely be used after the fix
         return await _dbSet
             .Include(s => s.Items)
             .AsNoTracking()

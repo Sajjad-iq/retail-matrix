@@ -38,6 +38,12 @@ public class CompleteSaleCommandHandler : IRequestHandler<CompleteSaleCommand, C
             throw new UnauthorizedException("غير مصرح بالوصول إلى هذا البيع");
         }
 
+        // CRITICAL: Check if sale is already completed to prevent duplicate processing
+        if (sale.Status == Domains.Sales.Enums.SaleStatus.Completed)
+        {
+            throw new ValidationException("البيع مكتمل بالفعل");
+        }
+
         // Deduct stock for each item using FEFO
         foreach (var item in sale.Items)
         {
@@ -92,6 +98,29 @@ public class CompleteSaleCommandHandler : IRequestHandler<CompleteSaleCommand, C
             sale.GrandTotal.Currency
         );
 
+        // Map items with remaining stock (after deduction)
+        var itemDtos = new List<PosCartItemDto>();
+        foreach (var item in sale.Items)
+        {
+            var stock = await _stockRepository.GetByPackagingAsync(
+                item.ProductPackagingId,
+                organizationId,
+                request.InventoryId,
+                cancellationToken);
+
+            itemDtos.Add(new PosCartItemDto
+            {
+                ItemId = item.Id,
+                ProductPackagingId = item.ProductPackagingId,
+                ProductName = item.ProductName,
+                Quantity = item.Quantity,
+                UnitPrice = item.UnitPrice,
+                Discount = item.Discount,
+                LineTotal = item.LineTotal,
+                AvailableStock = stock?.TotalAvailableQuantity ?? 0
+            });
+        }
+
         // Return completed sale DTO
         return new CompletedSaleDto
         {
@@ -99,16 +128,7 @@ public class CompleteSaleCommandHandler : IRequestHandler<CompleteSaleCommand, C
             SaleNumber = sale.SaleNumber,
             SaleDate = sale.SaleDate,
             CompletedAt = DateTime.UtcNow,
-            Items = sale.Items.Select(i => new PosCartItemDto
-            {
-                ItemId = i.Id,
-                ProductPackagingId = i.ProductPackagingId,
-                ProductName = i.ProductName,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                Discount = i.Discount,
-                LineTotal = i.LineTotal
-            }).ToList(),
+            Items = itemDtos,
             TotalDiscount = sale.TotalDiscount,
             GrandTotal = sale.GrandTotal,
             AmountPaid = sale.AmountPaid,

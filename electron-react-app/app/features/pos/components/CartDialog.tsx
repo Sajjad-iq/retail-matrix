@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -15,130 +15,252 @@ import { useDraftSale, useUpdateSale, useCancelSale } from '../hooks/usePosActio
 import { formatPrice } from '@/lib/utils';
 import { ConfirmDialog } from '@/app/components/ui/confirm-dialog';
 import { toast } from 'sonner';
+import { PosCartItemDto, SaleDto } from '../lib/types';
 
 interface CartDialogProps {
     open: boolean;
     onClose: () => void;
-    onCheckout: () => void;
+    onCheckout: (draftSale: SaleDto) => void;
 }
 
 export function CartDialog({ open, onClose, onCheckout }: CartDialogProps) {
     const inventoryId = useCartStore(state => state.inventoryId);
-    const { data: draftSale, isLoading } = useDraftSale(inventoryId);
+    const { data: draftSale, isLoading, refetch } = useDraftSale(inventoryId);
     const updateSale = useUpdateSale();
     const cancelSale = useCancelSale();
-    const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
+    
+    // Local state for optimistic UI updates
+    const [localItems, setLocalItems] = useState<PosCartItemDto[]>([]);
+    const [hasChanges, setHasChanges] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
 
-    const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
-        if (!draftSale || !inventoryId) return;
+    // Sync local state with backend data when dialog opens
+    useEffect(() => {
+        if (open && draftSale?.items) {
+            setLocalItems(draftSale.items);
+            setHasChanges(false);
+        }
+    }, [open, draftSale?.items]);
 
-        setUpdatingItemId(itemId);
+    // Sync changes to backend
+    const syncToBackend = async (): Promise<boolean> => {
+        if (!draftSale || !inventoryId || isSyncing || !hasChanges) {
+            return true;
+        }
+
+        setIsSyncing(true);
 
         try {
-            const updatedItems = draftSale.items
-                .map(item => {
-                    if (item.itemId === itemId) {
-                        return newQuantity > 0
-                            ? {
-                                  productPackagingId: item.productPackagingId,
-                                  quantity: newQuantity,
-                                  discount: item.discount
-                                      ? {
-                                            amount: item.discount.value,
-                                            isPercentage: item.discount.type === 1,
-                                        }
-                                      : undefined,
-                              }
-                            : null;
-                    }
-                    return {
-                        productPackagingId: item.productPackagingId,
-                        quantity: item.quantity,
-                        discount: item.discount
-                            ? {
-                                  amount: item.discount.value,
-                                  isPercentage: item.discount.type === 1,
-                              }
-                            : undefined,
-                    };
-                })
-                .filter(Boolean);
+            const saleItems = localItems.map(item => ({
+                productPackagingId: item.productPackagingId,
+                quantity: item.quantity,
+                discount: item.discount
+                    ? {
+                          amount: item.discount.value,
+                          isPercentage: item.discount.type === 1,
+                      }
+                    : undefined,
+            }));
 
             await updateSale.mutateAsync({
                 saleId: draftSale.saleId,
                 data: {
                     inventoryId,
-                    items: updatedItems as any,
+                    items: saleItems,
                     notes: draftSale.notes,
                 },
             });
+
+            setHasChanges(false);
+            return true;
         } catch {
-            // Error handled by interceptor
+            // On error, revert to backend state
+            if (draftSale?.items) {
+                setLocalItems(draftSale.items);
+                setHasChanges(false);
+            }
+            return false;
         } finally {
-            setUpdatingItemId(null);
+            setIsSyncing(false);
         }
     };
 
-    const handleRemoveItem = async (itemId: string) => {
-        if (!draftSale || !inventoryId) return;
+    const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
+        if (!draftSale) return;
 
-        setUpdatingItemId(itemId);
+        // Update local state immediately for instant UI feedback
+        const updatedItems = localItems
+            .map(item => {
+                if (item.itemId === itemId) {
+                    return newQuantity > 0
+                        ? { ...item, quantity: newQuantity }
+                        : null;
+                }
+                return item;
+            })
+            .filter((item): item is PosCartItemDto => item !== null);
 
-        try {
-            const updatedItems = draftSale.items
-                .filter(item => item.itemId !== itemId)
-                .map(item => ({
-                    productPackagingId: item.productPackagingId,
-                    quantity: item.quantity,
-                    discount: item.discount
-                        ? {
-                              amount: item.discount.value,
-                              isPercentage: item.discount.type === 1,
-                          }
-                        : undefined,
-                }));
+        setLocalItems(updatedItems);
+        setHasChanges(true);
+    };
 
-            await updateSale.mutateAsync({
-                saleId: draftSale.saleId,
-                data: {
-                    inventoryId,
-                    items: updatedItems,
-                    notes: draftSale.notes,
-                },
-            });
-        } catch {
-            // Error handled by interceptor
-        } finally {
-            setUpdatingItemId(null);
-        }
+    const handleRemoveItem = (itemId: string) => {
+        if (!draftSale) return;
+
+        // Update local state immediately
+        const updatedItems = localItems.filter(item => item.itemId !== itemId);
+        
+        setLocalItems(updatedItems);
+        setHasChanges(true);
     };
 
     const handleClearCart = async () => {
+        // Prevent duplicate submissions
+        if (cancelSale.isPending || isSyncing) return;
+        
         if (!draftSale) return;
 
         try {
             await cancelSale.mutateAsync(draftSale.saleId);
+            setLocalItems([]);
+            setHasChanges(false);
             toast.success('تم مسح السلة');
         } catch {
             // Error handled by interceptor
         }
     };
 
-    const handleCheckout = () => {
-        onCheckout();
+    const handleCheckout = async () => {
+        // Prevent multiple simultaneous checkout attempts
+        if (isSyncing || updateSale.isPending) {
+            toast.error('جاري الحفظ، يرجى الانتظار');
+            return;
+        }
+
+        if (!draftSale) {
+            toast.error('لا يوجد بيع نشط');
+            return;
+        }
+
+        try {
+            console.log('🛒 Cart Checkout - Start', { 
+                hasChanges, 
+                draftSaleId: draftSale.saleId,
+                itemsCount: localItems.length 
+            });
+
+            // Sync changes to backend before checkout
+            if (hasChanges) {
+                console.log('🛒 Cart - Syncing changes to backend...');
+                const success = await syncToBackend();
+                if (!success) {
+                    toast.error('فشل حفظ التغييرات');
+                    return;
+                }
+                console.log('🛒 Cart - Sync completed successfully');
+            }
+
+            // Wait for query invalidation to complete
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // DON'T refetch - use the SAME draft sale we already have!
+            // Refetching might return a different draft sale due to backend bug
+            console.log('🛒 Cart - Using existing draft sale:', draftSale.saleId);
+            
+            // Create a fresh copy with updated items from local state
+            const checkoutData: SaleDto = {
+                ...draftSale,
+                items: localItems,
+                totalItems: localItems.length
+            };
+            
+            console.log('🛒 Cart - Passing data to checkout:', checkoutData.saleId);
+            onCheckout(checkoutData);
+            onClose();
+        } catch (error) {
+            console.error('🛒 Cart Checkout error:', error);
+            toast.error('حدث خطأ أثناء إتمام العملية');
+        }
+    };
+
+    const handleClose = () => {
+        // Discard local changes and close
+        if (draftSale?.items) {
+            setLocalItems(draftSale.items);
+        }
+        setHasChanges(false);
         onClose();
     };
 
-    const items = draftSale?.items || [];
-    const subtotal = draftSale?.grandTotal || { amount: 0, currency: 'IQD' };
-    const totalDiscount = draftSale?.totalDiscount || { amount: 0, currency: 'IQD' };
+    // Calculate line total for an item
+    const calculateLineTotal = (item: PosCartItemDto) => {
+        const baseAmount = item.unitPrice.amount * item.quantity;
+        let itemDiscount = 0;
+
+        if (item.discount && item.discount.value > 0) {
+            if (item.discount.type === 1) {
+                // Percentage discount
+                itemDiscount = (baseAmount * item.discount.value) / 100;
+            } else {
+                // Fixed discount
+                itemDiscount = item.discount.value * item.quantity;
+            }
+        }
+
+        return { amount: baseAmount - itemDiscount, currency: item.unitPrice.currency };
+    };
+
+    // Calculate totals from local items with updated quantities
+    const calculateTotals = () => {
+        let subtotal = 0;
+        let totalDiscount = 0;
+
+        localItems.forEach(item => {
+            const baseAmount = item.unitPrice.amount * item.quantity;
+            let itemDiscount = 0;
+
+            if (item.discount && item.discount.value > 0) {
+                if (item.discount.type === 1) {
+                    // Percentage discount
+                    itemDiscount = (baseAmount * item.discount.value) / 100;
+                } else {
+                    // Fixed discount
+                    itemDiscount = item.discount.value * item.quantity;
+                }
+            }
+
+            totalDiscount += itemDiscount;
+            subtotal += baseAmount - itemDiscount;
+        });
+        
+        return {
+            subtotal: { amount: subtotal, currency: 'IQD' },
+            totalDiscount: { amount: totalDiscount, currency: 'IQD' },
+        };
+    };
+
+    const { subtotal, totalDiscount } = calculateTotals();
+    const items = localItems;
 
     return (
-        <Dialog open={open} onOpenChange={onClose}>
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
             <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
                 <DialogHeader>
                     <div className="flex items-center justify-between">
-                        <DialogTitle className="text-2xl">السلة</DialogTitle>
+                        <div className="flex items-center gap-3">
+                            <DialogTitle className="text-2xl">السلة</DialogTitle>
+                            {hasChanges && !isSyncing && (
+                                <Badge variant="secondary" className="text-xs">
+                                    تغييرات غير محفوظة
+                                </Badge>
+                            )}
+                            {isSyncing && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <span>جاري الحفظ...</span>
+                                </div>
+                            )}
+                        </div>
                         {items.length > 0 && (
                             <ConfirmDialog
                                 title="مسح السلة"
@@ -152,7 +274,7 @@ export function CartDialog({ open, onClose, onCheckout }: CartDialogProps) {
                                     variant="ghost" 
                                     size="sm" 
                                     className="gap-2"
-                                    disabled={cancelSale.isPending}
+                                    disabled={cancelSale.isPending || isSyncing}
                                 >
                                     {cancelSale.isPending ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -209,13 +331,9 @@ export function CartDialog({ open, onClose, onCheckout }: CartDialogProps) {
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-                                                    disabled={updatingItemId === item.itemId}
+                                                    disabled={isSyncing || updateSale.isPending}
                                                 >
-                                                    {updatingItemId === item.itemId ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                    ) : (
-                                                        <X className="h-4 w-4" />
-                                                    )}
+                                                    <X className="h-4 w-4" />
                                                 </Button>
                                             </ConfirmDialog>
                                         </div>
@@ -228,32 +346,31 @@ export function CartDialog({ open, onClose, onCheckout }: CartDialogProps) {
                                                     size="icon"
                                                     className="h-8 w-8"
                                                     onClick={() => handleUpdateQuantity(item.itemId, item.quantity - 1)}
-                                                    disabled={item.quantity <= 1 || updatingItemId === item.itemId}
+                                                    disabled={item.quantity <= 1 || isSyncing || updateSale.isPending}
                                                 >
                                                     <Minus className="h-3 w-3" />
                                                 </Button>
                                                 <span className="w-12 text-center font-semibold">
-                                                    {updatingItemId === item.itemId ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin inline" />
-                                                    ) : (
-                                                        item.quantity
-                                                    )}
+                                                    {item.quantity}
                                                 </span>
                                                 <Button
                                                     variant="outline"
                                                     size="icon"
                                                     className="h-8 w-8"
                                                     onClick={() => handleUpdateQuantity(item.itemId, item.quantity + 1)}
-                                                    disabled={updatingItemId === item.itemId}
+                                                    disabled={item.quantity >= item.availableStock || isSyncing || updateSale.isPending}
                                                 >
                                                     <Plus className="h-3 w-3" />
                                                 </Button>
+                                                <span className={`text-xs ${item.availableStock < item.quantity ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
+                                                    متوفر: {item.availableStock}
+                                                </span>
                                             </div>
 
                                             {/* Line Total */}
                                             <div className="text-left">
                                                 <div className="font-bold text-primary">
-                                                    {formatPrice(item.lineTotal)}
+                                                    {formatPrice(calculateLineTotal(item))}
                                                 </div>
                                                 {item.discount && item.discount.value > 0 && (
                                                     <Badge variant="destructive" className="text-xs">
@@ -287,13 +404,27 @@ export function CartDialog({ open, onClose, onCheckout }: CartDialogProps) {
                             </div>
                         </div>
 
-                        <DialogFooter className="gap-2">
-                            <Button variant="outline" onClick={onClose}>
-                                إغلاق
+                        <DialogFooter className="gap-2 flex-col sm:flex-row">
+                            {hasChanges && (
+                                <p className="text-xs text-muted-foreground w-full text-center sm:text-right">
+                                    * سيتم حفظ التغييرات عند إتمام الشراء
+                                </p>
+                            )}
+                            <Button variant="outline" onClick={handleClose} disabled={isSyncing || updateSale.isPending}>
+                                {hasChanges ? 'إلغاء' : 'إغلاق'}
                             </Button>
-                            <Button onClick={handleCheckout} size="lg" className="gap-2">
-                                <ShoppingBag className="h-5 w-5" />
-                                إتمام الشراء ({items.length})
+                            <Button onClick={handleCheckout} size="lg" className="gap-2" disabled={isSyncing || updateSale.isPending}>
+                                {(isSyncing || updateSale.isPending) ? (
+                                    <>
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                        جاري الحفظ...
+                                    </>
+                                ) : (
+                                    <>
+                                        <ShoppingBag className="h-5 w-5" />
+                                        إتمام الشراء ({items.length})
+                                    </>
+                                )}
                             </Button>
                         </DialogFooter>
                     </>

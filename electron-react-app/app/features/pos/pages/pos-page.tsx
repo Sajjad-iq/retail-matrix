@@ -9,7 +9,7 @@ import { CheckoutDialog } from '../components/CheckoutDialog';
 import { FloatingCartButton } from '../components/FloatingCartButton';
 import { useInventoryProducts, useDraftSale } from '../hooks/usePosActions';
 import { useCartStore } from '../stores/cartStore';
-import { PosProductDto } from '../lib/types';
+import { PosProductDto, SaleDto } from '../lib/types';
 import { useMyInventories } from '@/app/features/locations/hooks/useInventoryActions';
 
 export default function PosPage() {
@@ -17,6 +17,7 @@ export default function PosPage() {
     const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
     const [isCartDialogOpen, setIsCartDialogOpen] = useState(false);
     const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
+    const [checkoutDraftSale, setCheckoutDraftSale] = useState<SaleDto | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(0);
     const [pageSize] = useState(50);
@@ -61,13 +62,15 @@ export default function PosPage() {
         setIsProductDialogOpen(true);
     };
 
-    const handleCheckout = () => {
+    const handleCheckout = (draftSaleData: SaleDto) => {
+        setCheckoutDraftSale(draftSaleData);
         setIsCartDialogOpen(false);
         setIsCheckoutDialogOpen(true);
     };
 
     const handleCheckoutSuccess = () => {
         setIsCheckoutDialogOpen(false);
+        setCheckoutDraftSale(null);
     };
 
     const handleSearch = (e: React.FormEvent) => {
@@ -201,8 +204,12 @@ export default function PosPage() {
             {/* Checkout Dialog */}
             <CheckoutDialog
                 open={isCheckoutDialogOpen}
-                onClose={() => setIsCheckoutDialogOpen(false)}
+                onClose={() => {
+                    setIsCheckoutDialogOpen(false);
+                    setCheckoutDraftSale(null);
+                }}
                 onSuccess={handleCheckoutSuccess}
+                draftSale={checkoutDraftSale}
             />
 
             {/* Floating Cart Button */}

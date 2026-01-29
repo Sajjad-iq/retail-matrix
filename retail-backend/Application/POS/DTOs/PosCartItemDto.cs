@@ -14,4 +14,5 @@ public record PosCartItemDto
     public Price UnitPrice { get; init; } = null!;
     public Discount? Discount { get; init; }
     public Price LineTotal { get; init; } = null!;
+    public int AvailableStock { get; init; }
 }
