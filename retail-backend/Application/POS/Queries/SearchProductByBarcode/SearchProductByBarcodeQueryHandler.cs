@@ -33,14 +33,14 @@ public class SearchProductByBarcodeQueryHandler : IRequestHandler<SearchProductB
             return null;
         }
 
-        // Get stock availability
+        // Get stock availability (including expired items for POS)
         var stock = await _stockRepository.GetByPackagingAsync(
             packaging.Id,
             organizationId,
             request.InventoryId,
             cancellationToken);
 
-        var availableQuantity = stock?.TotalAvailableQuantity ?? 0;
+        var availableQuantity = stock?.GetAvailableBatches().Sum(b => b.AvailableQuantity) ?? 0;
 
         var packagingDto = new PosPackagingDto
         {

@@ -158,6 +158,5 @@ public class Stock : BaseEntity
         _batches.Where(b => b.IsNearExpiry(daysThreshold));
 
     public IEnumerable<StockBatch> GetAvailableBatches() =>
-        _batches.Where(b => b.AvailableQuantity > 0 && !b.IsExpired)
-                .OrderBy(b => b.ExpiryDate ?? DateTime.MaxValue); // FEFO: First Expired, First Out
+        _batches.Where(b => b.AvailableQuantity > 0); // Include all items with available quantity
 }

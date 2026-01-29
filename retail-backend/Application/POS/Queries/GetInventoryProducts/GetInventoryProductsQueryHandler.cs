@@ -78,7 +78,8 @@ public class GetInventoryProductsQueryHandler : IRequestHandler<GetInventoryProd
                     request.InventoryId,
                     cancellationToken);
 
-                var availableQuantity = stock?.TotalAvailableQuantity ?? 0;
+                // Count all available batches (including expired ones for POS)
+                var availableQuantity = stock?.GetAvailableBatches().Sum(b => b.AvailableQuantity) ?? 0;
 
                 // Filter by stock availability if specified
                 if (request.InStock.HasValue)
