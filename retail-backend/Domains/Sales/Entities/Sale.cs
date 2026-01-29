@@ -152,11 +152,12 @@ public class Sale : BaseEntity
         if (paymentAmount.Amount <= 0)
             throw new ArgumentException("المبلغ يجب أن يكون أكبر من صفر", nameof(paymentAmount));
 
-        // Validate overpayment (Price.Add will validate currency)
+        // Validate currency matches (Price.Add will validate currency)
         var totalAfterPayment = AmountPaid.Add(paymentAmount);
-        if (totalAfterPayment.Amount > GrandTotal.Amount)
-            throw new InvalidOperationException("المبلغ المدفوع يتجاوز الإجمالي المطلوب");
-
+        
+        // For POS systems, overpayment is allowed (customer receives change)
+        // Only validate that payment is not negative and currency matches
+        
         // Update amount paid
         AmountPaid = totalAfterPayment;
 

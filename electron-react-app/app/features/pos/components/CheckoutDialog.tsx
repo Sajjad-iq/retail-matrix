@@ -4,159 +4,176 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
 } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Separator } from '@/app/components/ui/separator';
-import { CheckCircle2, Loader2, Receipt, X } from 'lucide-react';
-import { useCartStore } from '../stores/cartStore';
-import { useCompleteSale } from '../hooks/usePosActions';
+import { CheckCircle, Loader2, CreditCard, DollarSign } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
-import { CompletedSaleDto, SaleDto } from '../lib/types';
+import { useCartStore } from '../stores/cartStore';
+import { useCreateAndCompleteSale } from '../hooks/usePosActions';
+import { CompletedSaleDto } from '../lib/types';
+import { toast } from 'sonner';
 
 interface CheckoutDialogProps {
     open: boolean;
     onClose: () => void;
     onSuccess: () => void;
-    draftSale: SaleDto | null;
 }
 
-export function CheckoutDialog({ open, onClose, onSuccess, draftSale }: CheckoutDialogProps) {
+export function CheckoutDialog({ open, onClose, onSuccess }: CheckoutDialogProps) {
+    const inventoryId = useCartStore(state => state.inventoryId);
+    const items = useCartStore(state => state.items);
+    const getTotal = useCartStore(state => state.getTotal);
+    const getTotalItems = useCartStore(state => state.getTotalItems);
+    const getCurrency = useCartStore(state => state.getCurrency);
+    const clearCart = useCartStore(state => state.clearCart);
+    
     const [amountPaid, setAmountPaid] = useState('');
     const [completedSale, setCompletedSale] = useState<CompletedSaleDto | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [hasSubmitted, setHasSubmitted] = useState(false);
 
-    const inventoryId = useCartStore(state => state.inventoryId);
-    const completeSale = useCompleteSale();
+    const createAndCompleteSale = useCreateAndCompleteSale();
+    
+    const total = getTotal();
+    const totalItems = getTotalItems();
+    const currency = getCurrency();
+    const amountPaidNum = parseFloat(amountPaid) || 0;
+    const change = amountPaidNum - total;
 
-    // Reset state when dialog opens
+    // Reset state when dialog opens/closes
     useEffect(() => {
         if (open) {
-            console.log('💳 Checkout Dialog - Opened with data:', {
-                saleId: draftSale?.saleId,
-                itemsCount: draftSale?.items?.length,
-                grandTotal: draftSale?.grandTotal?.amount
-            });
             setAmountPaid('');
             setCompletedSale(null);
             setIsProcessing(false);
             setHasSubmitted(false);
         }
-    }, [open, draftSale]);
-
-    const total = draftSale?.grandTotal.amount || 0;
-    const totalDiscount = draftSale?.totalDiscount || { amount: 0, currency: 'IQD' };
-    const amountPaidNum = parseFloat(amountPaid) || 0;
-    const change = amountPaidNum - total;
-
-    const handleOpenChange = (isOpen: boolean) => {
-        if (!isOpen && !isProcessing) {
-            setAmountPaid('');
-            setCompletedSale(null);
-            onClose();
-        }
-    };
+    }, [open]);
 
     const handleCompleteSale = async () => {
-        console.log('💳 Checkout - Complete Sale Called', {
-            hasSubmitted,
-            isProcessing,
-            isPending: completeSale.isPending,
-            saleId: draftSale?.saleId,
-            inventoryId
-        });
-
-        // CRITICAL: Prevent duplicate submissions with multiple guards
-        if (hasSubmitted || isProcessing || completeSale.isPending) {
-            console.log('💳 Checkout - BLOCKED by guard', { hasSubmitted, isProcessing, isPending: completeSale.isPending });
+        // CRITICAL: Prevent duplicate submissions
+        if (hasSubmitted || isProcessing || createAndCompleteSale.isPending) {
             return;
         }
         
-        if (!inventoryId || !draftSale) {
-            console.log('💳 Checkout - BLOCKED missing data', { hasInventoryId: !!inventoryId, hasDraftSale: !!draftSale });
+        if (!inventoryId) {
             return;
         }
 
         if (amountPaidNum < total) {
-            console.log('💳 Checkout - BLOCKED insufficient payment', { paid: amountPaidNum, total });
             return; // Amount paid is less than total
         }
-
-        console.log('💳 Checkout - Proceeding with completion', { saleId: draftSale.saleId });
 
         // Set guards immediately
         setHasSubmitted(true);
         setIsProcessing(true);
 
         try {
-            console.log('💳 Checkout - Calling completeSale API...');
-            const completed = await completeSale.mutateAsync({
-                saleId: draftSale.saleId,
+            // Validate cart items have required fields
+            if (items.length === 0) {
+                toast.error('السلة فارغة');
+                setIsProcessing(false);
+                setHasSubmitted(false);
+                return;
+            }
+            
+            // Check if all items have productPackagingId
+            const invalidItems = items.filter(item => !item.productPackagingId);
+            if (invalidItems.length > 0) {
+                toast.error('خطأ في بيانات السلة، يرجى حذف العناصر وإضافتها مرة أخرى');
+                setIsProcessing(false);
+                setHasSubmitted(false);
+                return;
+            }
+            
+            // Convert local cart items to SaleItemInput format
+            const saleItems = items.map(item => ({
+                productPackagingId: item.productPackagingId,
+                quantity: item.quantity,
+                discount: item.discount
+                    ? {
+                        amount: item.discount.value,
+                        isPercentage: item.discount.type === 1,
+                    }
+                    : undefined,
+            }));
+
+            // Create and complete sale in one transaction
+            const completed = await createAndCompleteSale.mutateAsync({
                 inventoryId,
-                amountPaid: amountPaidNum
+                items: saleItems,
+                amountPaid: amountPaidNum,
             });
 
-            console.log('💳 Checkout - Sale completed successfully', { 
-                completedSaleId: completed?.saleId,
-                saleNumber: completed?.saleNumber 
-            });
-            setCompletedSale(completed ?? null);
-        } catch (error) {
-            console.error('💳 Checkout - Error completing sale:', error);
-            // On error, allow retry
-            setHasSubmitted(false);
-            // Error is handled by the interceptor
-        } finally {
+            setCompletedSale(completed);
+            
+            // Clear local cart
+            clearCart();
+            
+            // Call success callback
+            setTimeout(() => {
+                onSuccess();
+            }, 2000); // Show success screen for 2 seconds
+        } catch {
             setIsProcessing(false);
+            setHasSubmitted(false);
         }
     };
 
-    const handleFinish = () => {
-        setAmountPaid('');
-        setCompletedSale(null);
-        onSuccess();
-        onClose();
+    const handleSetExactAmount = () => {
+        setAmountPaid(total.toString());
     };
 
-    // Show success screen if sale is completed
+    const handleQuickAmount = (amount: number) => {
+        setAmountPaid(amount.toString());
+    };
+
+    const handleClose = () => {
+        if (completedSale) {
+            // If sale completed, trigger success callback
+            onSuccess();
+        } else {
+            onClose();
+        }
+    };
+
+    // Success Screen
     if (completedSale) {
         return (
-            <Dialog open={open} onOpenChange={handleOpenChange}>
+            <Dialog open={open} onOpenChange={handleClose}>
                 <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <div className="flex flex-col items-center gap-4 py-4">
-                            <div className="rounded-full bg-green-100 p-3">
-                                <CheckCircle2 className="h-12 w-12 text-green-600" />
-                            </div>
-                            <DialogTitle className="text-2xl text-center">
-                                تمت عملية البيع بنجاح!
-                            </DialogTitle>
+                    <div className="flex flex-col items-center justify-center space-y-4 py-8">
+                        <div className="rounded-full bg-green-100 p-4">
+                            <CheckCircle className="h-16 w-16 text-green-600" />
                         </div>
-                    </DialogHeader>
-
-                    <div className="space-y-4">
-                        <div className="bg-muted p-4 rounded-lg space-y-2">
+                        <h2 className="text-2xl font-bold text-center">
+                            تمت عملية البيع بنجاح!
+                        </h2>
+                        
+                        <Separator />
+                        
+                        <div className="w-full space-y-2 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">رقم البيع:</span>
-                                <span className="font-semibold">{completedSale.saleNumber}</span>
+                                <span className="font-medium">{completedSale.saleNumber}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">التاريخ:</span>
-                                <span className="font-semibold">
-                                    {new Date(completedSale.saleDate).toLocaleDateString('ar')}
+                                <span className="font-medium">
+                                    {new Date(completedSale.saleDate).toLocaleDateString('ar-IQ')}
                                 </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">عدد الأصناف:</span>
-                                <span className="font-semibold">{completedSale.totalItems}</span>
+                                <span className="font-medium">{completedSale.totalItems}</span>
                             </div>
                         </div>
 
                         <Separator />
 
-                        <div className="space-y-2">
+                        <div className="w-full space-y-2">
                             <div className="flex justify-between text-lg">
                                 <span>الإجمالي:</span>
                                 <span className="font-bold">
@@ -169,188 +186,185 @@ export function CheckoutDialog({ open, onClose, onSuccess, draftSale }: Checkout
                                     {formatPrice(completedSale.amountPaid)}
                                 </span>
                             </div>
-                            {completedSale.change.amount > 0 && (
-                                <div className="flex justify-between text-lg text-green-600">
-                                    <span>الباقي:</span>
-                                    <span className="font-bold">
-                                        {formatPrice(completedSale.change)}
-                                    </span>
-                                </div>
-                            )}
+                            <div className="flex justify-between text-xl text-green-600">
+                                <span className="font-semibold">الباقي:</span>
+                                <span className="font-bold">
+                                    {formatPrice(completedSale.change)}
+                                </span>
+                            </div>
                         </div>
-                    </div>
 
-                    <DialogFooter className="gap-2">
-                        <Button variant="outline" onClick={handleFinish} className="flex-1 gap-2">
-                            <Receipt className="h-4 w-4" />
-                            طباعة الفاتورة
-                        </Button>
-                        <Button onClick={handleFinish} className="flex-1">
+                        <Button onClick={handleClose} className="w-full" size="lg">
                             إنهاء
                         </Button>
-                    </DialogFooter>
+                    </div>
                 </DialogContent>
             </Dialog>
         );
     }
 
-    // Show checkout form
+    // Checkout Screen
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="max-w-md">
+        <Dialog open={open} onOpenChange={handleClose}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <div className="flex items-center justify-between">
-                        <DialogTitle className="text-2xl">إتمام الشراء</DialogTitle>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenChange(false)}
-                            disabled={isProcessing}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
+                    <DialogTitle className="text-2xl">إتمام الشراء</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-6">
-                    {/* Items List with Stock */}
-                    {draftSale && draftSale.items.length > 0 && (
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">المنتجات:</label>
-                            <div className="bg-muted p-3 rounded-lg space-y-2 max-h-48 overflow-y-auto">
-                                {draftSale.items.map((item) => (
-                                    <div key={item.itemId} className="flex items-center justify-between text-sm bg-background p-2 rounded">
-                                        <div className="flex-1">
-                                            <div className="font-medium">{item.productName}</div>
-                                            <div className="text-xs text-muted-foreground flex items-center gap-2">
-                                                <span>الكمية: {item.quantity}</span>
-                                                <span>•</span>
-                                                <span className={item.availableStock < item.quantity ? 'text-destructive font-semibold' : 'text-green-600'}>
-                                                    المتوفر: {item.availableStock}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="font-semibold">{formatPrice(item.lineTotal)}</div>
+                    {/* Order Summary */}
+                    <div className="bg-muted p-4 rounded-lg space-y-3">
+                        <h3 className="font-semibold mb-3">المنتجات:</h3>
+                        <div className="max-h-64 overflow-y-auto space-y-2">
+                            {items.map((item) => (
+                                <div
+                                    key={item.productPackagingId}
+                                    className="flex justify-between items-start text-sm"
+                                >
+                                    <div className="flex-1">
+                                        <div className="font-medium">{item.productName}</div>
+                                        <div className="text-muted-foreground text-xs">
+                                            {item.packagingName} • الكمية: {item.quantity} • المتوفر: {item.availableStock}
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Sale Summary */}
-                    <div className="bg-muted p-4 rounded-lg space-y-2">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">عدد الأصناف:</span>
-                            <span className="font-semibold">{draftSale?.totalItems || 0}</span>
-                        </div>
-                        {totalDiscount.amount > 0 && (
-                            <div className="flex justify-between text-green-600">
-                                <span>الخصم:</span>
-                                <span className="font-semibold">-{formatPrice(totalDiscount)}</span>
-                            </div>
-                        )}
-                        <Separator />
-                        <div className="flex justify-between text-lg font-bold">
-                            <span>الإجمالي:</span>
-                            <span className="text-primary">{formatPrice({ amount: total, currency: 'IQD' })}</span>
-                        </div>
-                    </div>
-
-                    {/* Amount Paid Input */}
-                    <div className="space-y-3">
-                        <label className="text-sm font-medium">المبلغ المدفوع:</label>
-                        <Input
-                            type="number"
-                            placeholder="0.00"
-                            value={amountPaid}
-                            onChange={(e) => setAmountPaid(e.target.value)}
-                            className="text-2xl text-center font-bold"
-                            autoFocus
-                            disabled={isProcessing}
-                        />
-
-                        {/* Quick Amount Buttons */}
-                        <div className="grid grid-cols-4 gap-2">
-                            {[1000, 5000, 10000, 20000].map((amount) => (
-                                <Button
-                                    key={amount}
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setAmountPaid(String(amount))}
-                                    disabled={isProcessing}
-                                >
-                                    {amount.toLocaleString()}
-                                </Button>
+                                    <div className="font-semibold">
+                                        {formatPrice({
+                                            amount: item.unitPrice.amount * item.quantity,
+                                            currency: item.unitPrice.currency,
+                                        })}
+                                    </div>
+                                </div>
                             ))}
                         </div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => setAmountPaid(String(total))}
-                            disabled={isProcessing}
-                        >
-                            المبلغ المضبوط
-                        </Button>
+
+                        <Separator />
+
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">عدد الأصناف:</span>
+                                <span className="font-medium">{totalItems}</span>
+                            </div>
+                            <div className="flex justify-between text-lg font-bold">
+                                <span>الإجمالي:</span>
+                                <span className="text-primary">
+                                    {formatPrice({ amount: total, currency })}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Change Display */}
-                    {amountPaidNum > 0 && (
-                        <div className="p-4 bg-muted rounded-lg">
-                            {amountPaidNum < total ? (
-                                <div className="text-center text-destructive">
-                                    <p className="text-sm font-medium">المبلغ غير كافٍ</p>
-                                    <p className="text-xs">
-                                        المتبقي: {formatPrice({ amount: total - amountPaidNum, currency: 'IQD' })}
-                                    </p>
-                                </div>
-                            ) : change > 0 ? (
-                                <div className="text-center">
-                                    <p className="text-sm text-muted-foreground">الباقي:</p>
-                                    <p className="text-2xl font-bold text-green-600">
-                                        {formatPrice({ amount: change, currency: 'IQD' })}
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="text-center">
-                                    <p className="text-sm font-medium text-green-600">
-                                        ✓ المبلغ المضبوط
-                                    </p>
-                                </div>
-                            )}
+                    {/* Payment Section */}
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-sm font-medium mb-2 block">
+                                المبلغ المدفوع:
+                            </label>
+                            <div className="relative">
+                                <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                <Input
+                                    type="number"
+                                    value={amountPaid}
+                                    onChange={(e) => setAmountPaid(e.target.value)}
+                                    placeholder="أدخل المبلغ المدفوع"
+                                    className="pr-10 text-lg"
+                                    disabled={isProcessing}
+                                />
+                            </div>
                         </div>
-                    )}
-                </div>
 
-                <DialogFooter className="gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={() => handleOpenChange(false)}
-                        disabled={isProcessing}
-                    >
-                        إلغاء
-                    </Button>
-                    <Button
-                        onClick={handleCompleteSale}
-                        disabled={amountPaidNum < total || isProcessing || completeSale.isPending || hasSubmitted || !draftSale}
-                        className="flex-1 gap-2"
-                        size="lg"
-                    >
-                        {(isProcessing || completeSale.isPending || hasSubmitted) ? (
-                            <>
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                                جاري المعالجة...
-                            </>
-                        ) : (
-                            <>
-                                <CheckCircle2 className="h-5 w-5" />
-                                إتمام البيع
-                            </>
+                        {/* Quick Amount Buttons */}
+                        <div className="grid grid-cols-5 gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => handleQuickAmount(1000)}
+                                disabled={isProcessing}
+                            >
+                                1,000
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => handleQuickAmount(5000)}
+                                disabled={isProcessing}
+                            >
+                                5,000
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => handleQuickAmount(10000)}
+                                disabled={isProcessing}
+                            >
+                                10,000
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => handleQuickAmount(20000)}
+                                disabled={isProcessing}
+                            >
+                                20,000
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={handleSetExactAmount}
+                                disabled={isProcessing}
+                            >
+                                المبلغ المضبوط
+                            </Button>
+                        </div>
+
+                        {/* Change Display */}
+                        {amountPaidNum > 0 && (
+                            <div className={`p-4 rounded-lg ${
+                                change >= 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+                            }`}>
+                                <div className="flex justify-between items-center">
+                                    <span className="font-medium">
+                                        {change >= 0 ? 'الباقي:' : 'المبلغ غير كافٍ:'}
+                                    </span>
+                                    <span className={`text-2xl font-bold ${
+                                        change >= 0 ? 'text-green-600' : 'text-red-600'
+                                    }`}>
+                                        {formatPrice({ amount: Math.abs(change), currency })}
+                                    </span>
+                                </div>
+                            </div>
                         )}
-                    </Button>
-                </DialogFooter>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={handleClose}
+                            disabled={isProcessing || hasSubmitted}
+                            className="flex-1"
+                        >
+                            إلغاء
+                        </Button>
+                        <Button
+                            onClick={handleCompleteSale}
+                            disabled={
+                                amountPaidNum < total ||
+                                isProcessing ||
+                                hasSubmitted ||
+                                createAndCompleteSale.isPending
+                            }
+                            className="flex-1"
+                            size="lg"
+                        >
+                            {isProcessing || createAndCompleteSale.isPending ? (
+                                <>
+                                    <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                                    جاري المعالجة...
+                                </>
+                            ) : (
+                                <>
+                                    <CreditCard className="ml-2 h-5 w-5" />
+                                    إتمام البيع
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </div>
             </DialogContent>
         </Dialog>
     );

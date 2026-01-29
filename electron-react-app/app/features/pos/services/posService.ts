@@ -6,18 +6,11 @@ import {
     CreateSaleRequest, 
     CompleteSaleRequest, 
     SaleDto,
-    CompletedSaleDto
+    CompletedSaleDto,
+    CreateAndCompleteSaleRequest
 } from '../lib/types';
 
 export const posService = {
-    // Get or create draft sale for inventory
-    getOrCreateDraftSale: async (inventoryId: string) => {
-        const response = await httpService.getAxiosInstance().get<ApiResponse<SaleDto>>(
-            `/api/Pos/inventory/${inventoryId}/draft-sale`
-        );
-        return response.data.data;
-    },
-
     // Get inventory products for POS
     getInventoryProducts: async (filters: PosProductFilter) => {
         const { inventoryId, ...params } = filters;
@@ -37,29 +30,29 @@ export const posService = {
         return response.data.data;
     },
 
-    // Sale operations
-    updateSale: async (saleId: string, data: CreateSaleRequest) => {
-        const response = await httpService.getAxiosInstance().put<ApiResponse<boolean>>(
-            `/api/Pos/sales/${saleId}`,
-            data
+    // Create and complete sale in one go (for local cart approach)
+    createAndCompleteSale: async (data: CreateAndCompleteSaleRequest): Promise<CompletedSaleDto> => {
+        // Step 1: Create sale (backend returns just the Guid/string saleId)
+        const createResponse = await httpService.getAxiosInstance().post<ApiResponse<string>>(
+            '/api/Pos/sales',
+            {
+                inventoryId: data.inventoryId,
+                items: data.items,
+                notes: data.notes
+            } as CreateSaleRequest
         );
-        return response.data.data; // Returns boolean
-    },
-
-    cancelSale: async (saleId: string) => {
-        const response = await httpService.getAxiosInstance().post<ApiResponse<boolean>>(
-            `/api/Pos/sales/${saleId}/cancel`,
-            {}
-        );
-        return response.data.data; // Returns boolean
-    },
-
-    // Complete sale
-    completeSale: async (saleId: string, data: CompleteSaleRequest) => {
-        const response = await httpService.getAxiosInstance().post<ApiResponse<CompletedSaleDto>>(
+        
+        const saleId = createResponse.data.data; // This is just a string (Guid)
+        
+        // Step 2: Immediately complete it
+        const completeResponse = await httpService.getAxiosInstance().post<ApiResponse<CompletedSaleDto>>(
             `/api/Pos/sales/${saleId}/complete`,
-            data
+            {
+                inventoryId: data.inventoryId,
+                amountPaid: data.amountPaid
+            } as CompleteSaleRequest
         );
-        return response.data.data; // Returns CompletedSaleDto
+        
+        return completeResponse.data.data;
     },
 };

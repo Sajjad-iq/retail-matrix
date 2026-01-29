@@ -8,11 +8,10 @@ import {
 } from '@/app/components/ui/dialog';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
-import { Minus, Plus, Package, ShoppingCart, Loader2 } from 'lucide-react';
+import { Minus, Plus, Package, ShoppingCart } from 'lucide-react';
 import { PosProductDto, PosPackagingDto } from '../lib/types';
 import { formatPrice } from '@/lib/utils';
 import { useCartStore } from '../stores/cartStore';
-import { useUpdateSale, useDraftSale } from '../hooks/usePosActions';
 import { toast } from 'sonner';
 
 interface ProductDialogProps {
@@ -25,18 +24,7 @@ export function ProductDialog({ product, open, onClose }: ProductDialogProps) {
     const [selectedPackaging, setSelectedPackaging] = useState<PosPackagingDto | null>(null);
     const [quantity, setQuantity] = useState(1);
     
-    const inventoryId = useCartStore(state => state.inventoryId);
-    const draftSaleId = useCartStore(state => state.draftSaleId);
-    
-    const { data: draftSale } = useDraftSale(inventoryId);
-    const updateSale = useUpdateSale();
-
-    // Set draft sale ID when it's loaded
-    useEffect(() => {
-        if (draftSale?.saleId && draftSale.saleId !== draftSaleId) {
-            useCartStore.getState().setDraftSaleId(draftSale.saleId);
-        }
-    }, [draftSale, draftSaleId]);
+    const addItem = useCartStore(state => state.addItem);
 
     // Reset state when dialog opens/closes
     const handleOpenChange = (isOpen: boolean) => {
@@ -55,288 +43,193 @@ export function ProductDialog({ product, open, onClose }: ProductDialogProps) {
         }
     }, [product, open]);
 
-    const handleAddToCart = async () => {
-        // Prevent duplicate submissions
-        if (updateSale.isPending) return;
-        
-        if (!product || !selectedPackaging || !draftSale || !inventoryId) return;
+    const handleAddToCart = () => {
+        if (!product || !selectedPackaging) return;
 
         if (quantity > selectedPackaging.availableStock) {
             toast.error(`الكمية المتوفرة: ${selectedPackaging.availableStock}`);
             return;
         }
 
-        // Check if item already exists in draft sale
-        const existingItem = draftSale.items.find(
-            item => item.productPackagingId === selectedPackaging.packagingId
-        );
+        // Add to local cart
+        addItem({
+            productPackagingId: selectedPackaging.packagingId,
+            productName: product.productName,
+            packagingName: selectedPackaging.packagingName,
+            quantity,
+            unitPrice: selectedPackaging.discountedPrice,
+            discount: selectedPackaging.discount,
+            availableStock: selectedPackaging.availableStock,
+            imageUrl: selectedPackaging.imageUrls[0] || product.imageUrls[0],
+        });
 
-        // Prepare updated items list - map to SaleItemInput format
-        const updatedItems = existingItem
-            ? draftSale.items.map(item =>
-                  item.productPackagingId === selectedPackaging.packagingId
-                      ? {
-                            productPackagingId: item.productPackagingId,
-                            quantity: item.quantity + quantity,
-                            discount: item.discount
-                                ? {
-                                      amount: item.discount.value,
-                                      isPercentage: item.discount.type === 1,
-                                  }
-                                : undefined,
-                        }
-                      : {
-                            productPackagingId: item.productPackagingId,
-                            quantity: item.quantity,
-                            discount: item.discount
-                                ? {
-                                      amount: item.discount.value,
-                                      isPercentage: item.discount.type === 1,
-                                  }
-                                : undefined,
-                        }
-              )
-            : [
-                  ...draftSale.items.map(item => ({
-                      productPackagingId: item.productPackagingId,
-                      quantity: item.quantity,
-                      discount: item.discount
-                          ? {
-                                amount: item.discount.value,
-                                isPercentage: item.discount.type === 1,
-                            }
-                          : undefined,
-                  })),
-                  {
-                      productPackagingId: selectedPackaging.packagingId,
-                      quantity,
-                      discount: selectedPackaging.discount
-                          ? {
-                                amount: selectedPackaging.discount.value,
-                                isPercentage: selectedPackaging.discount.type === 1,
-                            }
-                          : undefined,
-                  },
-              ];
+        toast.success('تمت الإضافة إلى السلة');
+        handleOpenChange(false);
+    };
 
-        try {
-            await updateSale.mutateAsync({
-                saleId: draftSale.saleId,
-                data: {
-                    inventoryId,
-                    items: updatedItems,
-                    notes: draftSale.notes,
-                },
-            });
-
-            toast.success('تمت الإضافة إلى السلة');
-            handleOpenChange(false);
-        } catch {
-            // Error handled by interceptor
-        }
+    const handleQuantityChange = (delta: number) => {
+        if (!selectedPackaging) return;
+        const newQuantity = Math.max(1, Math.min(quantity + delta, selectedPackaging.availableStock));
+        setQuantity(newQuantity);
     };
 
     if (!product) return null;
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-2xl">{product.productName}</DialogTitle>
                     {product.categoryName && (
-                        <DialogDescription>{product.categoryName}</DialogDescription>
+                        <DialogDescription>
+                            {product.categoryName}
+                        </DialogDescription>
                     )}
                 </DialogHeader>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div className="space-y-6">
                     {/* Product Images */}
-                    <div className="space-y-4">
-                        <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                            {product.imageUrls.length > 0 ? (
+                    {product.imageUrls.length > 0 && (
+                        <div className="grid grid-cols-3 gap-2">
+                            {product.imageUrls.slice(0, 3).map((url, index) => (
                                 <img
-                                    src={product.imageUrls[0]}
-                                    alt={product.productName}
-                                    className="w-full h-full object-cover"
+                                    key={index}
+                                    src={url}
+                                    alt={`${product.productName} ${index + 1}`}
+                                    className="w-full h-32 object-cover rounded-lg border"
                                 />
-                            ) : (
-                                <div className="flex items-center justify-center h-full">
-                                    <Package className="h-24 w-24 text-muted-foreground" />
-                                </div>
-                            )}
+                            ))}
                         </div>
+                    )}
 
-                        {/* Thumbnail Gallery */}
-                        {product.imageUrls.length > 1 && (
-                            <div className="grid grid-cols-4 gap-2">
-                                {product.imageUrls.slice(1, 5).map((url, index) => (
-                                    <div
-                                        key={index}
-                                        className="aspect-square bg-muted rounded-lg overflow-hidden"
-                                    >
-                                        <img
-                                            src={url}
-                                            alt={`${product.productName} ${index + 2}`}
-                                            className="w-full h-full object-cover"
-                                        />
+                    {/* Packaging Selection */}
+                    <div>
+                        <label className="text-sm font-medium mb-2 block">
+                            التغليف:
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {product.packagings.map((pkg) => (
+                                <button
+                                    key={pkg.packagingId}
+                                    onClick={() => setSelectedPackaging(pkg)}
+                                    className={`p-3 border rounded-lg text-right transition-colors ${
+                                        selectedPackaging?.packagingId === pkg.packagingId
+                                            ? 'border-primary bg-primary/10'
+                                            : 'border-gray-300 hover:border-primary/50'
+                                    }`}
+                                    disabled={!pkg.inStock}
+                                >
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            <div className="font-medium">{pkg.packagingName}</div>
+                                            <div className="text-sm text-muted-foreground">
+                                                {formatPrice(pkg.discountedPrice)}
+                                            </div>
+                                            {pkg.hasDiscount && (
+                                                <div className="text-xs text-red-600">
+                                                    خصم {pkg.discountPercentage}%
+                                                </div>
+                                            )}
+                                        </div>
+                                        {!pkg.inStock && (
+                                            <Badge variant="destructive" className="text-xs">
+                                                نفذت الكمية
+                                            </Badge>
+                                        )}
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Product Details */}
-                    <div className="space-y-6">
-                        {/* Packaging Selection */}
-                        <div className="space-y-3">
-                            <label className="text-sm font-medium">اختر وحدة البيع:</label>
-                            <div className="grid grid-cols-1 gap-2">
-                                {product.packagings.map((pkg) => (
-                                    <button
-                                        key={pkg.packagingId}
-                                        onClick={() => {
-                                            setSelectedPackaging(pkg);
-                                            setQuantity(1);
-                                        }}
-                                        className={`p-4 rounded-lg border-2 text-right transition-all ${
-                                            selectedPackaging?.packagingId === pkg.packagingId
-                                                ? 'border-primary bg-primary/5'
-                                                : 'border-border hover:border-primary/50'
-                                        } ${!pkg.inStock ? 'opacity-50' : ''}`}
-                                        disabled={!pkg.inStock}
-                                    >
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="font-semibold">{pkg.packagingName}</span>
-                                                    {pkg.isDefault && (
-                                                        <Badge variant="outline" className="text-xs">
-                                                            افتراضي
-                                                        </Badge>
-                                                    )}
-                                                    {!pkg.inStock && (
-                                                        <Badge variant="destructive" className="text-xs">
-                                                            نفذ
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                                {pkg.description && (
-                                                    <p className="text-xs text-muted-foreground mb-2">
-                                                        {pkg.description}
-                                                    </p>
-                                                )}
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <span>المخزون: {pkg.availableStock}</span>
-                                                    {pkg.barcode && (
-                                                        <span className="text-xs">• {pkg.barcode}</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="text-left">
-                                                <div className="text-xl font-bold text-primary">
-                                                    {formatPrice(pkg.discountedPrice)}
-                                                </div>
-                                                {pkg.hasDiscount && (
-                                                    <div className="text-sm text-muted-foreground line-through">
-                                                        {formatPrice(pkg.sellingPrice)}
-                                                    </div>
-                                                )}
-                                                {pkg.hasDiscount && (
-                                                    <Badge variant="destructive" className="mt-1">
-                                                        خصم {pkg.discountPercentage}%
-                                                    </Badge>
-                                                )}
-                                            </div>
+                    {/* Selected Packaging Details */}
+                    {selectedPackaging && (
+                        <div className="space-y-4 p-4 bg-muted rounded-lg">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-lg font-semibold">
+                                        {formatPrice(selectedPackaging.discountedPrice)}
+                                    </div>
+                                    {selectedPackaging.hasDiscount && (
+                                        <div className="text-sm text-muted-foreground line-through">
+                                            {formatPrice(selectedPackaging.sellingPrice)}
                                         </div>
-                                    </button>
-                                ))}
+                                    )}
+                                </div>
+                                <Badge variant={selectedPackaging.inStock ? 'default' : 'destructive'}>
+                                    متوفر: {selectedPackaging.availableStock}
+                                </Badge>
                             </div>
-                        </div>
 
-                        {/* Quantity Selection */}
-                        {selectedPackaging && selectedPackaging.inStock && (
-                            <div className="space-y-3">
-                                <label className="text-sm font-medium">الكمية:</label>
-                                <div className="flex items-center gap-4">
+                            {/* Packaging Info */}
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                {selectedPackaging.barcode && (
+                                    <div>
+                                        <span className="text-muted-foreground">الباركود: </span>
+                                        <span>{selectedPackaging.barcode}</span>
+                                    </div>
+                                )}
+                                <div>
+                                    <span className="text-muted-foreground">الوحدات: </span>
+                                    <span>{selectedPackaging.unitsPerPackage}</span>
+                                </div>
+                            </div>
+
+                            {selectedPackaging.description && (
+                                <p className="text-sm text-muted-foreground">
+                                    {selectedPackaging.description}
+                                </p>
+                            )}
+
+                            {/* Quantity Selector */}
+                            <div className="flex items-center justify-between">
+                                <span className="font-medium">الكمية:</span>
+                                <div className="flex items-center gap-2">
                                     <Button
-                                        variant="outline"
                                         size="icon"
-                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                        variant="outline"
+                                        onClick={() => handleQuantityChange(-1)}
                                         disabled={quantity <= 1}
                                     >
                                         <Minus className="h-4 w-4" />
                                     </Button>
-                                    <div className="flex-1">
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max={selectedPackaging.availableStock}
-                                            value={quantity}
-                                            onChange={(e) => {
-                                                const val = parseInt(e.target.value) || 1;
-                                                setQuantity(
-                                                    Math.min(
-                                                        Math.max(1, val),
-                                                        selectedPackaging.availableStock
-                                                    )
-                                                );
-                                            }}
-                                            className="w-full text-center text-2xl font-bold border rounded-lg p-2"
-                                        />
-                                    </div>
+                                    <span className="w-12 text-center font-semibold text-lg">
+                                        {quantity}
+                                    </span>
                                     <Button
-                                        variant="outline"
                                         size="icon"
-                                        onClick={() =>
-                                            setQuantity(
-                                                Math.min(quantity + 1, selectedPackaging.availableStock)
-                                            )
-                                        }
+                                        variant="outline"
+                                        onClick={() => handleQuantityChange(1)}
                                         disabled={quantity >= selectedPackaging.availableStock}
                                     >
                                         <Plus className="h-4 w-4" />
                                     </Button>
                                 </div>
-                                <p className="text-xs text-muted-foreground text-center">
-                                    المتوفر: {selectedPackaging.availableStock}
-                                </p>
                             </div>
-                        )}
 
-                        {/* Total Price */}
-                        {selectedPackaging && selectedPackaging.inStock && (
-                            <div className="p-4 bg-muted rounded-lg">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium">الإجمالي:</span>
-                                    <span className="text-2xl font-bold text-primary">
-                                        {formatPrice({
-                                            amount: selectedPackaging.discountedPrice.amount * quantity,
-                                            currency: selectedPackaging.discountedPrice.currency
-                                        })}
-                                    </span>
-                                </div>
+                            {/* Total */}
+                            <div className="flex items-center justify-between pt-2 border-t">
+                                <span className="font-medium">الإجمالي:</span>
+                                <span className="text-xl font-bold text-primary">
+                                    {formatPrice({
+                                        amount: selectedPackaging.discountedPrice.amount * quantity,
+                                        currency: selectedPackaging.discountedPrice.currency,
+                                    })}
+                                </span>
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {/* Add to Cart Button */}
-                        <Button
-                            className="w-full gap-2"
-                            size="lg"
-                            onClick={handleAddToCart}
-                            disabled={!selectedPackaging || !selectedPackaging.inStock || updateSale.isPending}
-                        >
-                            {updateSale.isPending ? (
-                                <>
-                                    <Loader2 className="h-5 w-5 animate-spin" />
-                                    جاري الإضافة...
-                                </>
-                            ) : (
-                                <>
-                                    <ShoppingCart className="h-5 w-5" />
-                                    إضافة إلى السلة
-                                </>
-                            )}
-                        </Button>
-                    </div>
+                    {/* Add to Cart Button */}
+                    <Button
+                        className="w-full"
+                        size="lg"
+                        onClick={handleAddToCart}
+                        disabled={!selectedPackaging || !selectedPackaging.inStock}
+                    >
+                        <ShoppingCart className="ml-2 h-5 w-5" />
+                        إضافة إلى السلة
+                    </Button>
                 </div>
             </DialogContent>
         </Dialog>

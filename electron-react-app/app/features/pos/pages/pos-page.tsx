@@ -7,9 +7,9 @@ import { ProductDialog } from '../components/ProductDialog';
 import { CartDialog } from '../components/CartDialog';
 import { CheckoutDialog } from '../components/CheckoutDialog';
 import { FloatingCartButton } from '../components/FloatingCartButton';
-import { useInventoryProducts, useDraftSale } from '../hooks/usePosActions';
+import { useInventoryProducts } from '../hooks/usePosActions';
 import { useCartStore } from '../stores/cartStore';
-import { PosProductDto, SaleDto } from '../lib/types';
+import { PosProductDto } from '../lib/types';
 import { useMyInventories } from '@/app/features/locations/hooks/useInventoryActions';
 
 export default function PosPage() {
@@ -17,20 +17,15 @@ export default function PosPage() {
     const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
     const [isCartDialogOpen, setIsCartDialogOpen] = useState(false);
     const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
-    const [checkoutDraftSale, setCheckoutDraftSale] = useState<SaleDto | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(0);
     const [pageSize] = useState(50);
     const [selectedInventoryId, setSelectedInventoryId] = useState<string>('');
 
     const setInventoryId = useCartStore(state => state.setInventoryId);
-    const setDraftSaleId = useCartStore(state => state.setDraftSaleId);
 
     // Get inventories for selection
     const { data: inventoriesData } = useMyInventories({ pageNumber: 1, pageSize: 100 });
-
-    // Initialize draft sale for selected inventory
-    const { data: draftSale } = useDraftSale(selectedInventoryId || null);
 
     // Auto-select first inventory
     useEffect(() => {
@@ -40,13 +35,6 @@ export default function PosPage() {
             setInventoryId(firstInventory.id);
         }
     }, [selectedInventoryId, inventoriesData, setInventoryId]);
-
-    // Set draft sale ID when it's loaded
-    useEffect(() => {
-        if (draftSale?.saleId) {
-            setDraftSaleId(draftSale.saleId);
-        }
-    }, [draftSale, setDraftSaleId]);
 
     // Fetch products
     const { data: productsData, isLoading } = useInventoryProducts({
@@ -62,15 +50,13 @@ export default function PosPage() {
         setIsProductDialogOpen(true);
     };
 
-    const handleCheckout = (draftSaleData: SaleDto) => {
-        setCheckoutDraftSale(draftSaleData);
+    const handleCheckout = () => {
         setIsCartDialogOpen(false);
         setIsCheckoutDialogOpen(true);
     };
 
     const handleCheckoutSuccess = () => {
         setIsCheckoutDialogOpen(false);
-        setCheckoutDraftSale(null);
     };
 
     const handleSearch = (e: React.FormEvent) => {
@@ -204,12 +190,8 @@ export default function PosPage() {
             {/* Checkout Dialog */}
             <CheckoutDialog
                 open={isCheckoutDialogOpen}
-                onClose={() => {
-                    setIsCheckoutDialogOpen(false);
-                    setCheckoutDraftSale(null);
-                }}
+                onClose={() => setIsCheckoutDialogOpen(false)}
                 onSuccess={handleCheckoutSuccess}
-                draftSale={checkoutDraftSale}
             />
 
             {/* Floating Cart Button */}

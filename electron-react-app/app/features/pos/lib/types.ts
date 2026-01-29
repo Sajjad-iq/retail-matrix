@@ -77,6 +77,18 @@ export interface PosCartItemDto {
     availableStock: number;
 }
 
+// Local Cart Item (for frontend only)
+export interface LocalCartItem {
+    productPackagingId: string;
+    productName: string;
+    packagingName: string;
+    quantity: number;
+    unitPrice: Price;
+    discount?: Discount;
+    availableStock: number;
+    imageUrl?: string;
+}
+
 // API Requests (matches backend Commands)
 export interface DiscountInput {
     amount: number;
@@ -99,6 +111,13 @@ export interface CreateSaleRequest {
 export interface CompleteSaleRequest {
     inventoryId: string;
     amountPaid: number;  // Decimal, not Price object
+}
+
+export interface CreateAndCompleteSaleRequest {
+    inventoryId: string;
+    items: SaleItemInput[];
+    amountPaid: number;
+    notes?: string;
 }
 
 // Filters
